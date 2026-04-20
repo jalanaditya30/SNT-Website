@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNT — Shree Narayani Traders</title>
+<script src="data.js"></script>
+<!-- Fonts: preconnect first, then load async so they never block render -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style"
+  href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+  onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</noscript>
+<!-- Fallback font stack while web fonts load — no layout shift, no blank text -->
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; }
+  .logo-title, .m-prod, .p-head h2 { font-family: Georgia, 'Times New Roman', serif; }
+  .h-pill strong, td.c-pts, td.c-num, td.c-sr, .kv .v.price, .kv .v.mono,
+  .tab-ct, .sco-num, .pack-tag, kbd { font-family: 'Courier New', monospace; }
+</style>
+<style>
+/* ═══════════════════════════════════════════════════════
+   BRAND TOKENS
+═══════════════════════════════════════════════════════ */
+:root {
+  --cream:      #f7f3ed;
+  --cream-dark: #ede6da;
+  --charcoal:   #2f2d28;
+  --charcoal-2: #4a4640;
+  --terra-1:    #b54a1e;
+  --terra-2:    #c4622a;
+  --terra-3:    #c89a6e;
+  --terra-lt:   #f5e8dc;
+  --terra-xlt:  #faf3ec;
+
+  --bg:       #f0ece4;
+  --surface:  #ffffff;
+  --surface2: #faf8f5;
+  --surface3: #f2ede5;
+  --border:   #e0d8cc;
+  --border2:  #cec4b4;
+
+  --text:   #2f2d28;
+  --text-2: #4a4640;
+  --text-3: #7a7268;
+  --text-4: #a89e94;
+
+  --salt-bg:     #fff8ee;
+  --salt-border: #e8b87a;
+  --salt-text:   #7a4200;
+
+  --sh1: 0 1px 3px rgba(47,45,40,.07),  0 1px 2px rgba(47,45,40,.04);
+  --sh2: 0 4px 14px rgba(47,45,40,.09), 0 1px 4px rgba(47,45,40,.05);
+  --sh3: 0 8px 28px rgba(47,45,40,.13), 0 2px 6px rgba(47,45,40,.06);
+  --sh4: 0 20px 60px rgba(47,45,40,.20),0 4px 16px rgba(47,45,40,.08);
+
+  --r:  10px;
+  --r2: 14px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:14px; }
+body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; }
+::selection { background:var(--terra-lt); color:var(--terra-1); }
+
+/* ═══════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════ */
+header {
+  background:var(--charcoal);
+  position:sticky; top:0; z-index:200;
+  box-shadow:0 2px 20px rgba(0,0,0,.25);
+}
+.header-inner {
+  display:flex; align-items:center;
+  padding:0 28px; height:76px; gap:20px;
+}
+.logo-wrap {
+  display:flex; align-items:center; gap:16px;
+  flex-shrink:0; text-decoration:none;
+}
+.logo-img-ring {
+  width:56px; height:56px; border-radius:50%;
+  border:2.5px solid rgba(200,154,110,.4);
+  overflow:hidden; flex-shrink:0;
+  box-shadow:0 0 0 4px rgba(200,154,110,.12),0 3px 14px rgba(0,0,0,.35);
+  background:#f7f3ed;
+}
+.logo-img-ring img { width:100%; height:100%; object-fit:cover; display:block; }
+.logo-text-block { line-height:1; }
+.logo-title {
+  font-family:'Playfair Display',serif; font-weight:800; font-size:20px;
+  color:#f7f3ed; letter-spacing:-.2px; line-height:1.2;
+}
+.logo-divider {
+  display:inline-block; width:24px; height:2px;
+  background:linear-gradient(90deg,var(--terra-1),var(--terra-3));
+  border-radius:2px; margin:5px 0 4px;
+}
+.logo-sub { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--terra-3); }
+
+.header-right { display:flex; align-items:center; gap:10px; margin-left:auto; }
+.h-pill {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+  border-radius:8px; padding:5px 12px;
+  font-size:12px; color:rgba(247,243,237,.75); white-space:nowrap;
+}
+.h-pill strong { color:var(--terra-3); font-family:'JetBrains Mono',monospace; font-size:12.5px; }
+.h-dot { width:7px; height:7px; border-radius:50%; background:#4ade80; flex-shrink:0;
+  box-shadow:0 0 0 2px rgba(74,222,128,.25); animation:hpulse 2.5s ease-in-out infinite; }
+@keyframes hpulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+kbd { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:4px;
+  padding:1px 6px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:rgba(247,243,237,.7); }
+
+/* ═══════════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════════ */
+.tab-bar {
+  background:var(--surface); border-bottom:2px solid var(--border);
+  padding:0 28px; display:flex; gap:2px; align-items:flex-end;
+  overflow-x:auto; scrollbar-width:none; box-shadow:var(--sh1);
+}
+.tab-bar::-webkit-scrollbar { display:none; }
+.tab {
+  flex-shrink:0; padding:11px 20px; border:none; background:none; cursor:pointer;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:500; color:var(--text-3);
+  border-bottom:2.5px solid transparent; margin-bottom:-2px;
+  transition:all .15s; display:flex; align-items:center; gap:8px;
+}
+.tab:hover { color:var(--text-2); }
+.tab.active { color:var(--terra-1); border-bottom-color:var(--terra-1); font-weight:700; }
+.tab-ct {
+  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+  padding:1px 8px; border-radius:20px;
+  background:var(--surface3); color:var(--text-3); transition:all .15s;
+}
+.tab.active .tab-ct { background:var(--terra-1); color:#fff; }
+
+/* ═══════════════════════════════════════════════════════
+   TOOLBAR
+═══════════════════════════════════════════════════════ */
+.toolbar { display:flex; align-items:center; gap:10px; padding:18px 28px 0; flex-wrap:wrap; }
+.search-wrap { flex:1; min-width:260px; position:relative; }
+.search-wrap svg.sico {
+  position:absolute; left:13px; top:50%; transform:translateY(-50%);
+  width:16px; height:16px; color:var(--text-4); pointer-events:none;
+}
+.search-wrap input {
+  width:100%; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r);
+  font-family:'Inter',sans-serif; font-size:14.5px; color:var(--text);
+  padding:11px 44px 11px 40px; outline:none;
+  transition:border-color .15s,box-shadow .15s; box-shadow:var(--sh1);
+}
+.search-wrap input:focus { border-color:var(--terra-2); box-shadow:0 0 0 3px rgba(196,98,42,.12); }
+.search-wrap input::placeholder { color:var(--text-4); }
+.search-wrap .clr-btn {
+  position:absolute; right:11px; top:50%; transform:translateY(-50%);
+  width:22px; height:22px; border-radius:50%; background:var(--surface3);
+  border:1px solid var(--border); cursor:pointer; display:none;
+  align-items:center; justify-content:center; font-size:10px; color:var(--text-3);
+  transition:all .12s;
+}
+.search-wrap input:not(:placeholder-shown)~.clr-btn { display:flex; }
+.search-wrap .clr-btn:hover { background:#fecaca; color:#b91c1c; }
+.tbtn {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:10px 16px; border-radius:var(--r); cursor:pointer;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+  border:1.5px solid var(--border); background:var(--surface); color:var(--text-2);
+  transition:all .12s; box-shadow:var(--sh1); white-space:nowrap;
+}
+.tbtn:hover { border-color:var(--border2); background:var(--surface2); }
+.tbtn.reset:hover { border-color:#fca5a5; background:#fff8f8; color:#b91c1c; }
+.tbtn svg { width:14px; height:14px; }
+
+/* ═══════════════════════════════════════════════════════
+   QUICK PILLS
+═══════════════════════════════════════════════════════ */
+.pills-row { display:flex; align-items:center; gap:7px; padding:12px 28px 0; flex-wrap:wrap; }
+.p-lbl { font-size:10.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
+  color:var(--text-4); margin-right:2px; white-space:nowrap; }
+.pill {
+  padding:4px 13px; border-radius:20px; font-size:12.5px; font-weight:500;
+  color:var(--text-2); background:var(--surface); border:1.5px solid var(--border);
+  cursor:pointer; transition:all .12s; white-space:nowrap;
+  display:inline-flex; align-items:center; gap:5px;
+}
+.pill:hover { border-color:var(--terra-2); color:var(--terra-1); background:var(--terra-xlt); }
+.pill.on { background:var(--terra-1); border-color:var(--terra-1); color:#fff; font-weight:600; }
+
+/* ═══════════════════════════════════════════════════════
+   SUMMARY STRIP
+═══════════════════════════════════════════════════════ */
+.summary {
+  margin:14px 28px 0; background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r); padding:9px 18px;
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  box-shadow:var(--sh1); min-height:42px;
+}
+.sco { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:7px; font-size:12.5px; }
+.sco-num { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13.5px; }
+.s-sep { width:1px; height:18px; background:var(--border); }
+.s-right { margin-left:auto; font-size:12.5px; color:var(--text-3); }
+.s-right b { font-family:'JetBrains Mono',monospace; color:var(--terra-1); font-size:13px; }
+
+/* ═══════════════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════════════ */
+.tbl-wrap {
+  margin:14px 28px 48px; background:var(--surface);
+  border:1.5px solid var(--border); border-radius:var(--r2);
+  overflow:hidden; box-shadow:var(--sh2);
+}
+table { width:100%; border-collapse:collapse; }
+thead { background:var(--charcoal); }
+thead tr { border-bottom:none; }
+th {
+  padding:11px 14px; text-align:left;
+  font-family:'Inter',sans-serif; font-size:10px; font-weight:700;
+  letter-spacing:1.2px; text-transform:uppercase;
+  color:rgba(247,243,237,.55); cursor:pointer; user-select:none; white-space:nowrap;
+  transition:color .12s;
+}
+th:hover { color:var(--terra-3); }
+th.sorted { color:var(--terra-3); }
+.sarr { margin-left:3px; font-size:10px; }
+th .num-head { text-align:right; display:block; }
+
+tbody tr { border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:var(--terra-xlt); }
+td { padding:10px 14px; vertical-align:middle; font-size:13px; color:var(--text-2); }
+td.c-sr  { font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-4); width:48px; }
+td.c-prod { color:var(--text); font-weight:600; font-size:13.5px; max-width:250px; line-height:1.4; }
+td.c-co  { white-space:nowrap; }
+td.c-pack { white-space:nowrap; width:70px; max-width:80px; }
+td.c-pts  { text-align:right; padding-right:16px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; color:#1a7a4a; }
+td.c-num  { text-align:right; padding-right:20px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-3); }
+td.c-salt { max-width:520px; min-width:300px; }
+
+/* Company badge — base only; colors injected dynamically */
+.co-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:3px 9px; border-radius:20px; font-size:11.5px; font-weight:600;
+}
+
+/* Pack tag */
+.pack-tag {
+  display:inline-block; background:var(--surface3); border:1px solid var(--border);
+  border-radius:5px; padding:2px 6px; font-size:11.5px;
+  font-family:'JetBrains Mono',monospace; color:var(--text-2);
+}
+
+/* Salt chips */
+.salts { display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
+.salt-chip {
+  display:inline-block; background:var(--salt-bg); border:1px solid var(--salt-border);
+  border-radius:5px; padding:2px 8px; font-size:11.5px; font-weight:500;
+  color:var(--salt-text); white-space:nowrap; line-height:1.5;
+}
+.salt-plus { font-size:10.5px; color:var(--text-4); font-weight:600; margin:0 1px; }
+.salt-more { font-size:11px; color:var(--text-4); font-style:italic; cursor:pointer; }
+mark { background:#fef3c7; color:#92400e; border-radius:2px; padding:0 1px; }
+
+/* Camera indicator on rows that have photos */
+.photo-dot {
+  display:inline-block; margin-left:6px; font-size:11px;
+  opacity:.5; vertical-align:middle; pointer-events:none; transition:opacity .1s;
+}
+tbody tr:hover .photo-dot { opacity:1; }
+
+/* ═══════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════ */
+.empty { text-align:center; padding:80px 32px; display:none; }
+.empty-ico { font-size:48px; margin-bottom:14px; opacity:.5; }
+.empty h3 { font-size:18px; color:var(--text-2); margin-bottom:6px; font-weight:600; }
+.empty p { font-size:13.5px; color:var(--text-3); }
+
+/* ═══════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════ */
+.overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(47,45,40,.65); z-index:500;
+  backdrop-filter:blur(6px);
+  align-items:center; justify-content:center; padding:20px;
+}
+.overlay.open { display:flex; }
+.modal {
+  background:var(--surface); border-radius:20px;
+  max-width:780px; width:100%;
+  box-shadow:var(--sh4); overflow:hidden;
+  animation:mPop .22s cubic-bezier(.34,1.4,.64,1);
+  border:1.5px solid var(--border);
+  max-height:90vh; overflow-y:auto;
+}
+@keyframes mPop { from{transform:scale(.93) translateY(10px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+
+/* Modal header */
+.m-head { background:var(--charcoal); position:relative; overflow:hidden; }
+.m-head-accent {
+  position:absolute; bottom:0; left:0; right:0; height:4px;
+  background:linear-gradient(90deg,var(--terra-1) 0%,var(--terra-2) 50%,var(--terra-3) 100%);
+}
+.m-head-inner { padding:20px 24px 22px; }
+.m-co-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.m-co-name {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+  border-radius:20px; padding:3px 11px;
+  font-size:11.5px; font-weight:600; color:rgba(247,243,237,.9);
+}
+.m-sr { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--terra-3); margin-left:auto; }
+.m-prod { font-family:'Playfair Display',serif; font-size:19px; font-weight:700; color:#f7f3ed; line-height:1.35; padding-right:36px; }
+.m-pack-hint { margin-top:6px; font-size:12.5px; color:rgba(247,243,237,.55); }
+.m-close {
+  position:absolute; top:16px; right:18px;
+  width:30px; height:30px; border-radius:8px;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+  color:rgba(247,243,237,.8); font-size:15px;
+  cursor:pointer; display:grid; place-items:center; transition:background .12s;
+}
+.m-close:hover { background:rgba(181,74,30,.6); }
+
+/* Modal body */
+.m-body { padding:20px 24px 24px; }
+
+/* ──────── Photo Panel ──────── */
+.m-photo-panel {
+  width:100%; height:260px; margin-bottom:18px;
+  border-radius:var(--r); overflow:hidden;
+  border:1.5px solid var(--border); background:var(--surface3);
+  position:relative; display:flex; align-items:center; justify-content:center;
+  transition:border-color .2s;
+}
+.m-photo-panel img#mPhotoImg {
+  width:100%; height:100%; object-fit:contain; display:none;
+  transition:transform .3s ease;
+}
+.m-photo-panel.has-photo {
+  cursor:zoom-in; background:#18161200;
+  border-color:var(--border2);
+}
+.m-photo-panel.has-photo:hover img#mPhotoImg { transform:scale(1.04); }
+
+/* Placeholder */
+.m-photo-placeholder {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px; padding:24px;
+}
+.ph-icon {
+  width:56px; height:56px; border-radius:16px; background:var(--border);
+  display:flex; align-items:center; justify-content:center; opacity:.45;
+}
+.ph-title { font-size:13px; font-weight:600; color:var(--text-3); }
+.ph-sub { font-size:11.5px; color:var(--text-4); text-align:center; line-height:1.65; }
+.ph-filename {
+  display:inline-block; margin-top:6px; background:var(--surface);
+  border:1px solid var(--border2); border-radius:6px; padding:3px 12px;
+  font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--terra-2);
+  user-select:all; cursor:text; letter-spacing:.2px;
+}
+
+/* Zoom badge overlaid on photo */
+.ph-zoom-badge {
+  position:absolute; top:10px; right:10px; z-index:2;
+  background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15);
+  border-radius:7px; padding:3px 9px;
+  font-size:10.5px; color:rgba(255,255,255,.85);
+  display:none; align-items:center; gap:5px; pointer-events:none;
+}
+.m-photo-panel.has-photo .ph-zoom-badge { display:flex; }
+
+/* ──────── KV Grid ──────── */
+.m-kv { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+.kv label {
+  font-size:10px; font-weight:700; letter-spacing:1px;
+  text-transform:uppercase; color:var(--text-4); display:block; margin-bottom:4px;
+}
+.kv .v { font-size:14px; color:var(--text); font-weight:500; }
+.kv .v.price { font-family:'JetBrains Mono',monospace; font-size:24px; font-weight:700; color:#1a7a4a; }
+.kv .v.mono  { font-family:'JetBrains Mono',monospace; }
+
+/* Composition */
+.m-salt-box {
+  background:var(--salt-bg); border:1.5px solid var(--salt-border);
+  border-radius:var(--r); padding:14px 16px; margin-bottom:16px;
+}
+.m-salt-box label {
+  font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  color:var(--salt-text); display:block; margin-bottom:8px;
+}
+.m-salt-list { display:flex; flex-wrap:wrap; gap:6px; }
+.m-salt-item {
+  background:#fff; border:1.5px solid var(--salt-border); border-radius:7px;
+  padding:5px 12px; font-size:13px; font-weight:500; color:var(--salt-text); line-height:1.4;
+}
+
+/* Actions */
+.m-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.mact {
+  flex:1; min-width:110px; padding:9px 14px; border-radius:8px;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:500; cursor:pointer;
+  border:1.5px solid var(--border); background:var(--surface2); color:var(--text-2);
+  transition:all .12s; text-align:center;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.mact:hover { border-color:var(--terra-2); color:var(--terra-1); background:var(--terra-xlt); }
+.mact.primary { background:var(--charcoal); border-color:var(--charcoal); color:#f7f3ed; }
+.mact.primary:hover { background:var(--charcoal-2); }
+
+/* ═══════════════════════════════════════════════════════
+   PAGINATION
+═══════════════════════════════════════════════════════ */
+.pg-bar {
+  display:flex; align-items:center; justify-content:center; gap:16px;
+  padding:14px 20px; border-top:1px solid var(--border);
+  background:var(--surface2);
+}
+.pg-btn {
+  padding:6px 16px; border-radius:8px; cursor:pointer;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+  border:1.5px solid var(--border); background:var(--surface); color:var(--text-2);
+  transition:all .12s;
+}
+.pg-btn:hover:not(:disabled) { border-color:var(--terra-2); color:var(--terra-1); background:var(--terra-xlt); }
+.pg-btn:disabled { opacity:.35; cursor:default; }
+.pg-info {
+  font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-3);
+  min-width:120px; text-align:center;
+}
+.lightbox {
+  display:none; position:fixed; inset:0; z-index:900;
+  background:rgba(12,10,8,.95); backdrop-filter:blur(12px);
+  align-items:center; justify-content:center; cursor:zoom-out;
+}
+.lightbox.open { display:flex; animation:lbFade .18s ease; }
+@keyframes lbFade { from{opacity:0} to{opacity:1} }
+.lightbox img {
+  max-width:92vw; max-height:88vh; object-fit:contain;
+  border-radius:12px;
+  box-shadow:0 30px 100px rgba(0,0,0,.65);
+  animation:lbPop .22s cubic-bezier(.34,1.4,.64,1);
+  pointer-events:none;
+}
+@keyframes lbPop { from{transform:scale(.86);opacity:0} to{transform:scale(1);opacity:1} }
+.lb-close {
+  position:absolute; top:20px; right:22px;
+  width:38px; height:38px; border-radius:10px;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18);
+  color:#f7f3ed; font-size:16px; cursor:pointer;
+  display:grid; place-items:center; transition:background .12s;
+}
+.lb-close:hover { background:rgba(181,74,30,.7); }
+.lb-caption {
+  position:absolute; bottom:24px; left:50%; transform:translateX(-50%);
+  background:rgba(12,10,8,.75); border:1px solid rgba(255,255,255,.1);
+  border-radius:10px; padding:8px 22px;
+  font-size:13px; color:rgba(247,243,237,.85); white-space:nowrap;
+  max-width:60vw; overflow:hidden; text-overflow:ellipsis;
+}
+.lb-copy-btn {
+  position:absolute; bottom:24px; right:24px;
+  display:flex; align-items:center; gap:7px;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22);
+  border-radius:10px; padding:8px 16px;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+  color:rgba(247,243,237,.9); cursor:pointer;
+  transition:background .15s, transform .1s;
+}
+.lb-copy-btn:hover  { background:rgba(255,255,255,.22); }
+.lb-copy-btn:active { transform:scale(.96); }
+.lb-copy-btn.copied {
+  background:rgba(74,222,128,.2); border-color:rgba(74,222,128,.4);
+  color:#4ade80;
+}
+.lb-copy-btn svg { flex-shrink:0; }
+
+/* ═══════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════ */
+.toast {
+  position:fixed; bottom:28px; left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:var(--charcoal); color:var(--cream);
+  padding:10px 22px; border-radius:10px; font-size:13.5px;
+  box-shadow:var(--sh3); z-index:950; opacity:0;
+  transition:all .25s cubic-bezier(.34,1.4,.64,1); pointer-events:none;
+  border-left:3px solid var(--terra-2); white-space:nowrap;
+}
+.toast.on { transform:translateX(-50%) translateY(0); opacity:1; }
+
+/* ═══════════════════════════════════════════════════════
+   PRINT
+═══════════════════════════════════════════════════════ */
+@media print {
+  header,.tab-bar,.toolbar,.pills-row,.summary,.overlay,.lightbox,.toast { display:none !important; }
+  .tbl-wrap { margin:0; border:none; box-shadow:none; }
+  body { background:white; font-size:11px; }
+  .p-head { display:block !important; text-align:center; padding:12px 0; border-bottom:2px solid #333; margin-bottom:10px; }
+  .p-head h2 { font-family:'Playfair Display',serif; font-size:18px; }
+  .p-head p { font-size:10px; color:#666; margin-top:3px; }
+  tbody tr:hover { background:transparent !important; }
+  thead { background:#333 !important; }
+}
+.p-head { display:none; }
+
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR + RESPONSIVE
+═══════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE — Tablet breakpoint
+═══════════════════════════════════════════════════════ */
+@media (max-width:768px) {
+  html { font-size:13.5px; }
+
+  /* Header — compact */
+  header { box-shadow:0 2px 10px rgba(0,0,0,.2); }
+  .header-inner { padding:0 12px; height:60px; gap:10px; }
+  .logo-img-ring { width:40px; height:40px; border-width:2px; box-shadow:0 0 0 2px rgba(200,154,110,.12),0 2px 8px rgba(0,0,0,.3); }
+  .logo-title { font-size:14.5px; }
+  .logo-divider { width:18px; margin:3px 0 2px; }
+  .logo-sub { font-size:8.5px; letter-spacing:1.2px; }
+  .header-right .h-pill { padding:4px 9px; font-size:10.5px; }
+  .header-right .h-pill:nth-last-child(-n+2) { display:none; } /* hide "updated" + Ctrl+K pills */
+
+  /* Tabs — compact */
+  .tab-bar { padding:0 12px; }
+  .tab { padding:9px 13px; font-size:12px; gap:6px; }
+  .tab-ct { padding:1px 6px; font-size:10px; }
+
+  /* Toolbar — stack button row */
+  .toolbar { padding:12px 12px 0; gap:8px; }
+  .search-wrap { flex:1 1 100%; min-width:0; }
+  .search-wrap input { padding:10px 40px 10px 36px; font-size:14px; }
+  .tbtn { padding:9px 13px; font-size:12px; }
+
+  /* Pills row */
+  .pills-row { padding:10px 12px 0; gap:6px; }
+  .p-lbl { display:none; } /* hide "Quick:" label to save space */
+  .pill { padding:4px 11px; font-size:12px; }
+
+  /* Summary strip */
+  .summary { margin:10px 12px 0; padding:8px 12px; gap:6px; font-size:12px; }
+  .sco { padding:2px 8px; font-size:11.5px; }
+  .s-right { font-size:11.5px; width:100%; margin-left:0; text-align:center; padding-top:4px; border-top:1px dashed var(--border); }
+
+  /* ─────────── TABLE → CARDS ─────────── */
+  .tbl-wrap {
+    margin:10px 10px 40px;
+    background:transparent; border:none; box-shadow:none; border-radius:0;
+  }
+  table, tbody, tr { display:block; width:100%; }
+  thead { display:none; }
+  tbody tr {
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    box-shadow:var(--sh1);
+    position:relative;
+  }
+  tbody tr:last-child { border-bottom:1.5px solid var(--border); } /* restore border */
+  tbody tr:hover { background:var(--surface); } /* no hover tint on mobile */
+  td { display:inline-block; padding:0; border:none; vertical-align:middle; }
+
+  /* Row 1: SR + Product name */
+  td.c-sr {
+    font-size:10px; color:var(--text-4); margin-right:6px;
+    vertical-align:top; padding-top:2px;
+  }
+  td.c-sr::before { content:"#"; }
+  td.c-prod {
+    font-size:14px; font-weight:600; line-height:1.35;
+    max-width:calc(100% - 40px); margin-bottom:8px;
+    white-space:normal;
+  }
+
+  /* Row 2: Company badge + Pack + PTS inline */
+  td.c-co { margin-right:6px; margin-bottom:6px; }
+  td.c-pack { margin-right:6px; margin-bottom:6px; }
+  td.c-pack .pack-tag { font-size:11px; padding:2px 7px; }
+  .co-badge { font-size:11px; padding:2px 8px; }
+
+  /* PTS — prominent, right-aligned */
+  td.c-pts {
+    float:right; text-align:right; padding:0;
+    font-size:15px; color:#1a7a4a;
+  }
+  td.c-pts::before {
+    content:"₹ ";
+    font-size:11px; color:var(--text-4); font-weight:500;
+  }
+
+  /* Hide In Boxes + Shipper Qty on mobile (available in modal on tap) */
+  td.c-num { display:none; }
+
+  /* Composition row */
+  td.c-salt {
+    display:block; width:100%; clear:both;
+    max-width:none; min-width:0;
+    padding-top:8px; margin-top:4px;
+    border-top:1px dashed var(--border);
+  }
+  .salts { gap:3px; }
+  .salt-chip { font-size:10.5px; padding:1px 6px; }
+
+  /* Pagination */
+  .pg-bar { padding:10px; gap:10px; }
+  .pg-btn { padding:6px 12px; font-size:12px; }
+  .pg-info { font-size:11.5px; min-width:90px; }
+
+  /* Modal */
+  .overlay { padding:0; align-items:flex-end; }
+  .modal {
+    max-width:100%; max-height:95vh;
+    border-radius:18px 18px 0 0;
+    animation:mSlide .22s cubic-bezier(.34,1.4,.64,1);
+  }
+  @keyframes mSlide { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .m-head-inner { padding:16px 18px 18px; }
+  .m-prod { font-size:16.5px; padding-right:32px; }
+  .m-close { top:12px; right:14px; width:28px; height:28px; }
+  .m-body { padding:16px 18px 18px; }
+  .m-photo-panel { height:200px; margin-bottom:14px; }
+  .m-kv { grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .kv .v.price { font-size:20px; }
+  .kv .v { font-size:13px; }
+  .m-salt-box { padding:12px 13px; margin-bottom:12px; }
+  .m-actions { gap:6px; }
+  .mact { font-size:12px; padding:8px 10px; min-width:0; }
+
+  /* Toast — visible over cards */
+  .toast { bottom:16px; font-size:12.5px; padding:9px 18px; }
+
+  /* Empty state */
+  .empty { padding:60px 24px; }
+  .empty-ico { font-size:40px; }
+  .empty h3 { font-size:16px; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE — Narrow phones (iPhone SE etc.)
+═══════════════════════════════════════════════════════ */
+@media (max-width:380px) {
+  .logo-sub { display:none; }
+  .logo-title { font-size:13px; }
+  .header-right { display:none; } /* hide all header pills on tiny screens */
+  .tab { padding:8px 10px; font-size:11.5px; }
+  .pill { font-size:11px; padding:3px 9px; }
+  .m-kv { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="p-head" id="pHead">
+  <h2>Shree Narayani Traders — Product Catalogue</h2>
+  <p id="pMeta"></p>
+</div>
+
+<!-- ═══════ HEADER ═══════ -->
+<header>
+  <div class="header-inner">
+    <a class="logo-wrap" href="#">
+      <div class="logo-img-ring">
+        <img id="logoImg" src="logo.png" alt="SNT Logo" />
+      </div>
+      <div class="logo-text-block">
+        <div class="logo-title">Shree Narayani Traders</div>
+        <div class="logo-divider"></div>
+        <div class="logo-sub">Pharmaceutical Product Catalogue</div>
+      </div>
+    </a>
+    <div class="header-right">
+      <div class="h-pill"><span class="h-dot"></span>Updated:&nbsp;<strong id="updAt">—</strong></div>
+      <div class="h-pill"><strong id="hdTot">—</strong>&nbsp;products</div>
+      <div class="h-pill" style="display:flex;gap:4px;align-items:center">
+        <kbd>Ctrl</kbd><kbd>K</kbd>&nbsp;search
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════ TABS (built dynamically) ═══════ -->
+<div class="tab-bar" id="tabBar">
+  <button class="tab active" data-co="" onclick="setTab(this,'')">
+    All <span class="tab-ct" id="tc-all">—</span>
+  </button>
+</div>
+
+<!-- ═══════ TOOLBAR ═══════ -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <svg class="sico" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input id="searchInput" type="text"
+      placeholder="Search product name, salt / composition, pack size…"
+      autocomplete="off" spellcheck="false" />
+    <button class="clr-btn" onclick="clearSearch()">✕</button>
+  </div>
+  <button class="tbtn reset" onclick="resetAll()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+    </svg>Reset
+  </button>
+  <button class="tbtn" onclick="window.print()">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+    </svg>Print
+  </button>
+</div>
+
+<!-- ═══════ PILLS ═══════ -->
+<div class="pills-row">
+  <span class="p-lbl">Quick:</span>
+  <span class="pill" onclick="togglePill(this,'tablet')">💊 Tablets</span>
+  <span class="pill" onclick="togglePill(this,'syrup')">🍶 Syrups</span>
+  <span class="pill" onclick="togglePill(this,'capsule')">🔴 Capsules</span>
+  <span class="pill" onclick="togglePill(this,'injection')">💉 Injections</span>
+  <span class="pill" onclick="togglePill(this,'infusion')">🧪 Infusions</span>
+  <span class="pill" onclick="togglePill(this,'suspension')">🧴 Suspensions</span>
+  <span class="pill" onclick="togglePill(this,'cream')">🫙 Creams</span>
+  <span class="pill" onclick="togglePill(this,'gel')">💧 Gels</span>
+  <span class="pill" onclick="togglePill(this,'drops')">💦 Drops</span>
+  <span class="pill" onclick="togglePill(this,'soap')">🧼 Soaps</span>
+  <span class="pill" onclick="togglePill(this,'spray')">🌫 Sprays</span>
+  <span class="pill" onclick="togglePill(this,'sachet')">📦 Sachets</span>
+</div>
+
+<!-- ═══════ SUMMARY ═══════ -->
+<div class="summary" id="summary"></div>
+
+<!-- ═══════ TABLE ═══════ -->
+<div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th onclick="sortBy('sr')">#<span class="sarr" id="arr-sr">↑</span></th>
+        <th onclick="sortBy('product')" style="min-width:200px">Product Name<span class="sarr" id="arr-product"></span></th>
+        <th onclick="sortBy('company')">Company<span class="sarr" id="arr-company"></span></th>
+        <th onclick="sortBy('pack')" style="width:76px">Pack<span class="sarr" id="arr-pack"></span></th>
+        <th onclick="sortBy('pts')"><span class="num-head">PTS ₹<span class="sarr" id="arr-pts"></span></span></th>
+        <th onclick="sortBy('inBoxes')"><span class="num-head">In Boxes<span class="sarr" id="arr-inBoxes"></span></span></th>
+        <th onclick="sortBy('shipperQty')"><span class="num-head">Shipper Qty<span class="sarr" id="arr-shipperQty"></span></span></th>
+        <th>Composition / Salt</th>
+      </tr>
+    </thead>
+    <tbody id="tBody"></tbody>
+  </table>
+  <div class="empty" id="emptyState">
+    <div class="empty-ico">🔬</div>
+    <h3>No products found</h3>
+    <p>Try different keywords or reset the filters</p>
+  </div>
+  <!-- Pagination bar -->
+  <div class="pg-bar" id="pgBar" style="display:none">
+    <button class="pg-btn" id="pgPrev" onclick="goPage(-1)">&#8592; Prev</button>
+    <span class="pg-info" id="pgInfo"></span>
+    <button class="pg-btn" id="pgNext" onclick="goPage(1)">Next &#8594;</button>
+  </div>
+</div>
+
+<!-- ═══════ MODAL ═══════ -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="m-head">
+      <div class="m-head-inner">
+        <div class="m-co-row">
+          <span class="m-co-name" id="mCoBadge"></span>
+          <span class="m-sr" id="mSR"></span>
+        </div>
+        <div class="m-prod" id="mProd"></div>
+        <div class="m-pack-hint" id="mPackHint"></div>
+      </div>
+      <div class="m-head-accent"></div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+
+    <div class="m-body">
+
+      <!-- ── Photo Panel ── -->
+      <div class="m-photo-panel" id="mPhotoPanel" onclick="openLightbox()">
+        <img id="mPhotoImg" src="" alt="" />
+        <div class="m-photo-placeholder" id="mPhotoPlaceholder">
+          <div class="ph-icon">
+            <svg width="28" height="28" fill="none" stroke="var(--charcoal)" stroke-width="1.4" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <circle cx="12" cy="13" r="3"/>
+            </svg>
+          </div>
+          <div class="ph-title">No photo added yet</div>
+          <div class="ph-sub">
+            Save the image in the <strong>Photos</strong> folder as:<br>
+            <span class="ph-filename" id="mPhotoHint"></span>
+          </div>
+        </div>
+        <div class="ph-zoom-badge">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Click to zoom
+        </div>
+      </div>
+
+      <!-- ── Key-Value Grid ── -->
+      <div class="m-kv">
+        <div class="kv"><label>PTS Price</label><div class="v price" id="mPTS"></div></div>
+        <div class="kv"><label>In Boxes</label><div class="v mono"  id="mBoxes"></div></div>
+        <div class="kv"><label>Shipper Qty</label><div class="v mono" id="mShipper"></div></div>
+        <div class="kv"><label>Company</label><div class="v" id="mCo2"></div></div>
+        <div class="kv"><label>Pack</label><div class="v" id="mPack"></div></div>
+        <div class="kv"><label>Remark</label><div class="v" id="mRemark" style="font-size:12.5px;color:var(--text-3)"></div></div>
+      </div>
+
+      <!-- ── Composition ── -->
+      <div class="m-salt-box">
+        <label>🧬 Composition / Salt</label>
+        <div class="m-salt-list" id="mSalts"></div>
+      </div>
+
+      <!-- ── Actions ── -->
+      <div class="m-actions">
+        <button class="mact" onclick="copyIt('comp')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>Copy Composition
+        </button>
+        <button class="mact" onclick="copyIt('name')">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>Copy Name
+        </button>
+        <button class="mact primary" onclick="closeModal()">Close</button>
+      </div>
+
+    </div><!-- /.m-body -->
+  </div><!-- /.modal -->
+</div><!-- /.overlay -->
+
+<!-- ═══════ LIGHTBOX ═══════ -->
+<div class="lightbox" id="lightbox" onclick="lbBackdropClick(event)">
+  <img id="lbImg" src="" alt="" />
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <div class="lb-caption" id="lbCaption"></div>
+  <button class="lb-copy-btn" id="lbCopyBtn" onclick="copyLightboxImage(event)">
+    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <rect x="9" y="9" width="13" height="13" rx="2"/>
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+    </svg>
+    <span id="lbCopyLabel">Copy Image</span>
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPT
+═══════════════════════════════════════════════════════ -->
+<script>
+/* ── State ── */
+let DATA = [], filtered = [];
+let sF = 'sr', sA = true;
+let qT = '', qC = '';
+let curP = null;
+let lbSrc = '';
+
+/* ── Pagination ── */
+const PAGE_SIZE = 100;   // rows visible per page
+let curPage = 0;         // 0-based
+
+/* ── Debounce helper ── */
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+/* ══════════════════════════════════════════════════════
+   DYNAMIC COMPANY COLOR SYSTEM
+   12 carefully chosen color pairs. Companies are
+   assigned in the order they appear in
+   CATALOGUE_META.companies (set by convert.py).
+   Add a new company to Excel, run convert.py,
+   and it appears automatically with its own color.
+══════════════════════════════════════════════════════ */
+const CO_PALETTE = [
+  { bg:'#dce8ff', text:'#1a4db5' },  // indigo
+  { bg:'#d4f0e2', text:'#1a7a4a' },  // green
+  { bg:'#ffe0e0', text:'#8b1a1a' },  // red
+  { bg:'#eedcff', text:'#6b2fa0' },  // purple
+  { bg:'#ffecc8', text:'#b56a00' },  // amber
+  { bg:'#cffafe', text:'#0e7490' },  // cyan
+  { bg:'#fce7f3', text:'#9d174d' },  // pink
+  { bg:'#dcfce7', text:'#166534' },  // emerald
+  { bg:'#fff7ed', text:'#9a3412' },  // orange
+  { bg:'#f0f9ff', text:'#0c4a6e' },  // sky
+  { bg:'#fdf4ff', text:'#86198f' },  // fuchsia
+  { bg:'#f7fee7', text:'#3f6212' },  // lime
+];
+
+/* Built dynamically in initCompanies() */
+let CO_CLASS  = {};
+let CO_SHORT  = {};
+let CO_COLORS = {};
+
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof CATALOGUE_DATA === 'undefined') {
+    document.body.innerHTML =
+      '<div style="padding:40px;font-family:sans-serif;color:#c00">' +
+      '<h2>⚠ data.js not found</h2>' +
+      '<p>Run: <code>python convert.py</code> to generate it.</p></div>';
+    return;
+  }
+
+  if (typeof LOGO_B64 !== 'undefined') {
+    document.getElementById('logoImg').src = LOGO_B64;
+  }
+
+  DATA = CATALOGUE_DATA;
+  document.getElementById('updAt').textContent = CATALOGUE_META.updatedAt;
+  document.getElementById('hdTot').textContent = DATA.length.toLocaleString('en-IN');
+  document.getElementById('pMeta').textContent =
+    `Printed ${new Date().toLocaleDateString('en-IN')} · ${DATA.length} products · Updated ${CATALOGUE_META.updatedAt}`;
+
+  initCompanies();
+  buildTabs();
+  refreshArrows();
+  render();
+
+  const si = document.getElementById('searchInput');
+  const debouncedSearch = debounce(val => { qT = val; clearPills(); curPage = 0; render(); }, 220);
+  si.addEventListener('input', e => debouncedSearch(e.target.value));
+
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey||e.metaKey) && e.key === 'k') { e.preventDefault(); si.focus(); si.select(); }
+    if (e.key === 'Escape') { closeLightbox(); closeModal(); }
+  });
+});
+
+/* ══════════════════════════════════════════════════════
+   COMPANY INIT — fully dynamic, zero hardcoding
+══════════════════════════════════════════════════════ */
+function initCompanies() {
+  const styleEl = document.createElement('style');
+  CATALOGUE_META.companies.forEach((co, i) => {
+    const pal = CO_PALETTE[i % CO_PALETTE.length];
+    const cls = `co-dyn-${i}`;
+    CO_CLASS[co]  = cls;
+    CO_COLORS[co] = pal;
+    CO_SHORT[co]  = makeShortName(co);
+    styleEl.textContent += `.${cls}{background:${pal.bg};color:${pal.text};}`;
+  });
+  document.head.appendChild(styleEl);
+}
+
+/*
+  Smart short-name rules (in order):
+  1. Has " - " → take everything after the last " - "
+     "Alkem - Novo" → "Novo"
+  2. Already short (≤ 12 chars) → use as-is
+  3. Has multiple words → use first non-trivial word, title-cased
+  4. Long single word → first 12 chars + "…"
+*/
+function makeShortName(co) {
+  const dashIdx = co.lastIndexOf(' - ');
+  if (dashIdx > -1) {
+    const part = co.substring(dashIdx + 3).trim();
+    if (part.length > 0) return part;
+  }
+  if (co.length <= 12) return co;
+  const skip = new Set(['the','a','an','and','of','for','by','&']);
+  const words = co.split(/\s+/);
+  const word = words.find(w => !skip.has(w.toLowerCase())) || words[0];
+  const title = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  return title.length > 14 ? title.slice(0, 13) + '…' : title;
+}
+
+/* ══════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════ */
+function buildTabs() {
+  const bar = document.getElementById('tabBar');
+  document.getElementById('tc-all').textContent = DATA.length.toLocaleString('en-IN');
+  CATALOGUE_META.companies.forEach(co => {
+    const cnt  = DATA.filter(d => d.company === co).length;
+    const btn  = document.createElement('button');
+    btn.className  = 'tab';
+    btn.dataset.co = co;
+    btn.innerHTML  = `${esc(CO_SHORT[co]||co)} <span class="tab-ct">${cnt.toLocaleString('en-IN')}</span>`;
+    btn.onclick    = () => setTab(btn, co);
+    bar.appendChild(btn);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   PHOTO HELPERS
+   sanitizePhotoName() MUST produce identical output
+   to sanitize_photo_name() in convert.py — both strip
+   the same illegal filename characters and lowercase.
+══════════════════════════════════════════════════════ */
+function sanitizePhotoName(name) {
+  // Strip chars illegal in Windows/Linux filenames, then trim + lowercase
+  return (name || '').replace(/[/\\:*?"<>|]/g, '').trim().toLowerCase();
+}
+
+function getPhotoFile(productName) {
+  if (typeof PHOTO_MAP === 'undefined') return null;
+  return PHOTO_MAP[sanitizePhotoName(productName)] || null;
+}
+
+function hasPhoto(productName) {
+  return getPhotoFile(productName) !== null;
+}
+
+/* ══════════════════════════════════════════════════════
+   FILTER + SORT
+══════════════════════════════════════════════════════ */
+function applyFilters() {
+  const q = qT.trim().toLowerCase();
+  filtered = DATA.filter(p => {
+    if (qC && p.company !== qC) return false;
+    if (!q) return true;
+    return (
+      p.product.toLowerCase().includes(q) ||
+      p.composition.toLowerCase().includes(q) ||
+      p.pack.toLowerCase().includes(q) ||
+      String(p.sr) === q
+    );
+  });
+  filtered.sort((a, b) => {
+    let va = a[sF] ?? '', vb = b[sF] ?? '';
+    if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+    return va < vb ? (sA?-1:1) : va > vb ? (sA?1:-1) : 0;
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   SALT RENDERING
+══════════════════════════════════════════════════════ */
+function parseSalts(c) {
+  return c ? c.split('+').map(s => s.trim()).filter(Boolean) : [];
+}
+function saltRow(comp, q) {
+  const salts = parseSalts(comp);
+  if (!salts.length) return '—';
+  const MAX = 3, show = salts.slice(0, MAX), rest = salts.length - MAX;
+  let h = '<div class="salts">';
+  show.forEach((s, i) => {
+    h += `<span class="salt-chip">${q ? hi(s,q) : esc(s)}</span>`;
+    if (i < show.length - 1) h += '<span class="salt-plus">+</span>';
+  });
+  if (rest > 0) h += `<span class="salt-more">+${rest} more</span>`;
+  h += '</div>';
+  return h;
+}
+
+/* ══════════════════════════════════════════════════════
+   RENDER — only paints PAGE_SIZE rows at a time.
+   Rebuilding 100 rows instead of 1276 is ~12× faster.
+══════════════════════════════════════════════════════ */
+function render() {
+  applyFilters();
+  const q     = qT.trim().toLowerCase();
+  const tbody = document.getElementById('tBody');
+  const empty = document.getElementById('emptyState');
+  const pgBar = document.getElementById('pgBar');
+
+  updateSummary();
+
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    pgBar.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Clamp page
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  if (curPage >= totalPages) curPage = totalPages - 1;
+  if (curPage < 0) curPage = 0;
+
+  const start = curPage * PAGE_SIZE;
+  const slice = filtered.slice(start, start + PAGE_SIZE);
+
+  // Build HTML for this page only
+  const frag = document.createDocumentFragment();
+  const tmp  = document.createElement('tbody');
+  tmp.innerHTML = slice.map(p => {
+    const cls  = CO_CLASS[p.company]  || 'co-dyn-0';
+    const sh   = CO_SHORT[p.company]  || p.company;
+    const pts  = p.pts        != null ? fmtN(p.pts)        : '—';
+    const box  = p.inBoxes    != null ? fmtN(p.inBoxes)    : '—';
+    const ship = p.shipperQty != null ? fmtN(p.shipperQty) : '—';
+    const cam  = hasPhoto(p.product)  ? `<span class="photo-dot" title="Photo available">📷</span>` : '';
+    return `<tr onclick="openModal(${p.sr})">
+      <td class="c-sr">${p.sr}</td>
+      <td class="c-prod">${q ? hi(p.product,q) : esc(p.product)}${cam}</td>
+      <td class="c-co"><span class="co-badge ${cls}">${esc(sh)}</span></td>
+      <td class="c-pack"><span class="pack-tag">${q ? hi(p.pack,q) : esc(p.pack)}</span></td>
+      <td class="c-pts">${pts}</td>
+      <td class="c-num">${box}</td>
+      <td class="c-num">${ship}</td>
+      <td class="c-salt">${saltRow(p.composition, q)}</td>
+    </tr>`;
+  }).join('');
+  while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+
+  tbody.innerHTML = '';
+  tbody.appendChild(frag);
+
+  // Pagination controls
+  if (totalPages <= 1) {
+    pgBar.style.display = 'none';
+  } else {
+    pgBar.style.display = 'flex';
+    document.getElementById('pgPrev').disabled = (curPage === 0);
+    document.getElementById('pgNext').disabled = (curPage === totalPages - 1);
+    document.getElementById('pgInfo').textContent =
+      `${curPage + 1} / ${totalPages}  (${filtered.length.toLocaleString('en-IN')} items)`;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SUMMARY STRIP
+══════════════════════════════════════════════════════ */
+function updateSummary() {
+  const all = filtered.length;
+  let h = '';
+  CATALOGUE_META.companies.forEach((co, i) => {
+    const cnt = filtered.filter(d => d.company === co).length;
+    const col = CO_COLORS[co] || { bg:'#f0ece4', text:'#4a4640' };
+    const sh  = CO_SHORT[co]  || co;
+    if (i > 0) h += '<div class="s-sep"></div>';
+    h += `<div class="sco" style="background:${col.bg}">
+      <span class="sco-num" style="color:${col.text}">${cnt.toLocaleString('en-IN')}</span>
+      <span style="color:${col.text};font-size:12px">${esc(sh)}</span>
+    </div>`;
+  });
+  const q = qT.trim();
+  h += `<div class="s-right">${q||qC
+    ? `Showing <b>${all.toLocaleString('en-IN')}</b> of ${DATA.length.toLocaleString('en-IN')}`
+    : `All <b>${all.toLocaleString('en-IN')}</b> products`
+  }</div>`;
+  document.getElementById('summary').innerHTML = h;
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL — open
+══════════════════════════════════════════════════════ */
+function openModal(sr) {
+  const p = DATA.find(x => x.sr === sr);
+  if (!p) return;
+  curP = p;
+
+  const cls = CO_CLASS[p.company] || 'co-dyn-0';
+  const sh  = CO_SHORT[p.company] || p.company;
+
+  document.getElementById('mCoBadge').textContent  = p.company;
+  document.getElementById('mSR').textContent       = `#${p.sr}`;
+  document.getElementById('mProd').textContent     = p.product;
+  document.getElementById('mPackHint').textContent = `Pack: ${p.pack||'—'}`;
+  document.getElementById('mPTS').textContent      = p.pts        != null ? `₹ ${fmtN(p.pts)}`     : '—';
+  document.getElementById('mBoxes').textContent    = p.inBoxes    != null ? fmtN(p.inBoxes)         : '—';
+  document.getElementById('mShipper').textContent  = p.shipperQty != null ? fmtN(p.shipperQty)      : '—';
+  document.getElementById('mCo2').innerHTML        = `<span class="co-badge ${cls}">${esc(sh)}</span>`;
+  document.getElementById('mPack').textContent     = p.pack   || '—';
+  document.getElementById('mRemark').textContent   = p.remark || '—';
+
+  const salts = parseSalts(p.composition);
+  document.getElementById('mSalts').innerHTML = salts.length
+    ? salts.map(s => `<span class="m-salt-item">${esc(s)}</span>`).join('')
+    : '<span style="color:var(--text-4)">No composition data</span>';
+
+  loadModalPhoto(p.product);
+
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL — photo loader
+
+   Strategy:
+   1. PHOTO_MAP (built by convert.py scanning Photos/)
+      gives the exact filename → fastest, no guessing.
+   2. If PHOTO_MAP not present OR product added after
+      last convert.py run → try common extensions.
+   Either way: graceful placeholder if nothing loads.
+══════════════════════════════════════════════════════ */
+function loadModalPhoto(productName) {
+  const panel       = document.getElementById('mPhotoPanel');
+  const img         = document.getElementById('mPhotoImg');
+  const placeholder = document.getElementById('mPhotoPlaceholder');
+  const hint        = document.getElementById('mPhotoHint');
+
+  // Reset
+  img.style.display = 'none';
+  img.src = '';
+  placeholder.style.display = 'flex';
+  panel.classList.remove('has-photo');
+  lbSrc = '';
+
+  // Show the suggested save-as filename in placeholder
+  const safeName = productName.replace(/[/\\:*?"<>|]/g, '').trim();
+  hint.textContent = `${safeName}.jpg`;
+
+  // Try PHOTO_MAP first (exact match, case-insensitive via convert.py key)
+  const knownFile = getPhotoFile(productName);
+  if (knownFile) {
+    applyPhoto(`Photos/${knownFile}`, productName);
+    return;
+  }
+
+  // Fallback: probe extensions (useful if photo added after last convert.py run)
+  const exts = ['jpg', 'jpeg', 'png', 'webp'];
+  let i = 0;
+  function next() {
+    if (i >= exts.length) return;
+    const src = `Photos/${safeName}.${exts[i++]}`;
+    const probe = new Image();
+    probe.onload  = () => applyPhoto(src, productName);
+    probe.onerror = next;
+    probe.src = src;
+  }
+  next();
+}
+
+function applyPhoto(src, productName) {
+  const panel       = document.getElementById('mPhotoPanel');
+  const img         = document.getElementById('mPhotoImg');
+  const placeholder = document.getElementById('mPhotoPlaceholder');
+
+  img.onload = () => {
+    placeholder.style.display = 'none';
+    img.style.display = 'block';
+    panel.classList.add('has-photo');
+    lbSrc = src;
+  };
+  img.onerror = () => { /* placeholder stays */ };
+  img.src = src;
+  img.alt = productName;
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL — close
+══════════════════════════════════════════════════════ */
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  closeLightbox();
+}
+function overlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
+
+/* ══════════════════════════════════════════════════════
+   LIGHTBOX
+══════════════════════════════════════════════════════ */
+function openLightbox() {
+  if (!lbSrc) return;
+  document.getElementById('lbImg').src              = lbSrc;
+  document.getElementById('lbCaption').textContent  = curP ? curP.product : '';
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  // Reset copy button
+  const btn = document.getElementById('lbCopyBtn');
+  btn.classList.remove('copied');
+  document.getElementById('lbCopyLabel').textContent = 'Copy Image';
+}
+function lbBackdropClick(e) {
+  // Close only if clicking the dark backdrop, not the image or buttons
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+}
+
+/* ══════════════════════════════════════════════════════
+   COPY IMAGE TO CLIPBOARD
+   Works in Chrome/Edge (most common on Android too).
+   Draws the image onto a hidden canvas → exports as PNG
+   blob → writes to clipboard. User can then paste
+   directly into WhatsApp, email, etc.
+══════════════════════════════════════════════════════ */
+async function copyLightboxImage(e) {
+  e.stopPropagation(); // don't close lightbox
+  const btn   = document.getElementById('lbCopyBtn');
+  const label = document.getElementById('lbCopyLabel');
+  const img   = document.getElementById('lbImg');
+
+  if (!img.src || btn.classList.contains('copied')) return;
+
+  label.textContent = 'Copying…';
+
+  try {
+    // Draw to canvas so we always produce a PNG blob
+    // (clipboard only accepts image/png in most browsers)
+    const canvas = document.createElement('canvas');
+    canvas.width  = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+
+    // Success state
+    btn.classList.add('copied');
+    btn.querySelector('svg').innerHTML =
+      '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
+    label.textContent = 'Copied!';
+
+    // Reset after 3 seconds
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.querySelector('svg').innerHTML =
+        '<rect x="9" y="9" width="13" height="13" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>';
+      label.textContent = 'Copy Image';
+    }, 3000);
+
+  } catch (err) {
+    // Clipboard API blocked (Firefox, some browsers, non-HTTPS)
+    label.textContent = 'Copy Image';
+    toast('⚠ Browser blocked clipboard access.\nTry right-click → Copy Image.');
+    console.warn('Clipboard write failed:', err);
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   PAGINATION
+══════════════════════════════════════════════════════ */
+function goPage(delta) {
+  curPage += delta;
+  render();
+  // Scroll back to top of table smoothly
+  document.querySelector('.tbl-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function hi(text, q) {
+  if (!q||!text) return esc(text||'');
+  return esc(text).replace(
+    new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),
+    '<mark>$1</mark>'
+  );
+}
+function fmtN(n) {
+  if (n == null) return '—';
+  const num = typeof n === 'number' ? n : parseFloat(n);
+  if (isNaN(num)) return '—';
+  return num === Math.floor(num)
+    ? Math.round(num).toLocaleString('en-IN')
+    : num.toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+/* ══════════════════════════════════════════════════════
+   ACTIONS
+══════════════════════════════════════════════════════ */
+function setTab(btn, co) {
+  qC = co; curPage = 0;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+function togglePill(el, kw) {
+  const was = el.classList.contains('on');
+  clearPills();
+  curPage = 0;
+  if (!was) {
+    el.classList.add('on');
+    document.getElementById('searchInput').value = kw; qT = kw;
+  } else {
+    document.getElementById('searchInput').value = ''; qT = '';
+  }
+  render();
+}
+function clearPills() { document.querySelectorAll('.pill').forEach(p => p.classList.remove('on')); }
+function clearSearch() { document.getElementById('searchInput').value = ''; qT = ''; curPage = 0; clearPills(); render(); }
+function resetAll() {
+  qT=''; qC=''; sF='sr'; sA=true; curPage=0;
+  document.getElementById('searchInput').value = '';
+  clearPills();
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab[data-co=""]').classList.add('active');
+  refreshArrows(); render();
+}
+function sortBy(f) {
+  if (sF === f) sA = !sA; else { sF = f; sA = true; }
+  curPage = 0;
+  refreshArrows(); render();
+}
+function refreshArrows() {
+  ['sr','product','company','pack','pts','inBoxes','shipperQty'].forEach(f => {
+    const el = document.getElementById('arr-' + f);
+    if (!el) return;
+    el.parentElement.classList && el.parentElement.classList.toggle('sorted', f === sF);
+    el.textContent = f === sF ? (sA ? '↑' : '↓') : '';
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   COPY + TOAST
+══════════════════════════════════════════════════════ */
+function copyIt(type) {
+  if (!curP) return;
+  const t = type === 'comp' ? curP.composition : curP.product;
+  navigator.clipboard.writeText(t).then(() =>
+    toast(type === 'comp' ? '✓ Composition copied' : '✓ Product name copied')
+  );
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('on');
+  setTimeout(() => el.classList.remove('on'), 2500);
+}
+</script>
+</body>
+</html>
