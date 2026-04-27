@@ -517,14 +517,176 @@ tbody tr:hover .photo-dot { opacity:1; }
 ::-webkit-scrollbar-track { background:var(--bg); }
 ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
 
+/* ═══════════════════════════════════════════════════════
+   MOBILE — Tablet/phone breakpoint
+═══════════════════════════════════════════════════════ */
 @media (max-width:768px) {
-  .header-inner,.tab-bar,.toolbar,.pills-row { padding-left:14px; padding-right:14px; }
-  .summary,.tbl-wrap { margin-left:14px; margin-right:14px; }
-  .m-kv { grid-template-columns:1fr 1fr; }
-  .logo-title { font-size:16px; }
-  .header-right .h-pill:last-child { display:none; }
-  .m-photo-panel { height:200px; }
-  .modal { max-width:100%; border-radius:16px; }
+  html { font-size:13.5px; }
+  body { overflow-x:hidden; }
+
+  /* ───── Header — compact, no overflow ───── */
+  header { box-shadow:0 2px 10px rgba(0,0,0,.2); }
+  .header-inner { padding:0 12px; height:56px; gap:10px; overflow:hidden; }
+  .logo-img-ring {
+    width:38px; height:38px; border-width:2px;
+    box-shadow:0 0 0 2px rgba(200,154,110,.12),0 2px 8px rgba(0,0,0,.3);
+  }
+  .logo-title { font-size:14.5px; }
+  .logo-divider { width:18px; margin:3px 0 2px; }
+  .logo-sub { font-size:8.5px; letter-spacing:1.2px; }
+  .header-right { display:none; }  /* hide ALL header pills — count is in tabs + summary */
+
+  /* ───── Tabs — compact ───── */
+  .tab-bar { padding:0 10px; }
+  .tab { padding:9px 13px; font-size:12px; gap:6px; }
+  .tab-ct { padding:1px 6px; font-size:10px; }
+
+  /* ───── Toolbar — search full width, hide print ───── */
+  .toolbar { padding:12px 12px 0; gap:8px; }
+  .search-wrap { flex:1 1 100%; min-width:0; }
+  .search-wrap input { padding:10px 40px 10px 36px; font-size:14px; }
+  .tbtn { padding:9px 13px; font-size:12px; }
+  .tbtn:not(.reset) { display:none; }  /* hide Print button on mobile */
+
+  /* ───── Pills row ───── */
+  .pills-row { padding:10px 12px 0; gap:6px; }
+  .p-lbl { display:none; }
+  .pill { padding:4px 11px; font-size:12px; }
+
+  /* ───── Summary strip — simplified ───── */
+  .summary {
+    margin:10px 12px 0; padding:8px 14px;
+    min-height:auto; justify-content:center;
+  }
+  .summary .sco, .summary .s-sep { display:none; }  /* hide per-company chips */
+  .s-right {
+    margin:0; text-align:center; width:100%;
+    font-size:12.5px; color:var(--text-2);
+  }
+
+  /* ═══════════════════════════════════════════
+     TABLE → CARDS (CSS GRID, consistent layout)
+  ═══════════════════════════════════════════ */
+  .tbl-wrap {
+    margin:10px 10px 40px;
+    background:transparent; border:none; box-shadow:none; border-radius:0;
+    overflow:visible;
+  }
+  table { display:block; width:100%; }
+  thead { display:none; }
+  tbody, tbody tr { display:block; width:100%; }
+
+  tbody tr {
+    display:grid;
+    grid-template-columns: 22px auto auto 1fr auto;
+    /* cols:  sr   co    pack  flex  pts */
+    grid-template-rows: auto auto auto;
+    column-gap:6px;
+    row-gap:6px;
+    align-items:center;
+
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    box-shadow:var(--sh1);
+    cursor:pointer;
+  }
+  tbody tr:hover { background:var(--surface); }  /* disable hover tint on touch */
+  tbody tr:active { background:var(--terra-xlt); transform:scale(.995); transition:all .08s; }
+  td { padding:0; border:none; vertical-align:baseline; }
+
+  /* ROW 1 — Serial number + Product name */
+  td.c-sr {
+    grid-column:1; grid-row:1;
+    align-self:start; padding-top:3px;
+    font-size:9.5px; color:var(--text-4);
+  }
+  td.c-sr::before { content:"#"; }
+
+  td.c-prod {
+    grid-column:2 / -1; grid-row:1;
+    font-size:14px; font-weight:600; line-height:1.35;
+    color:var(--text);
+    max-width:none; min-width:0;
+  }
+
+  /* ROW 2 — Company badge | Pack | (flex spacer) | ₹ PTS */
+  td.c-co   { grid-column:2; grid-row:2; justify-self:start; }
+  td.c-pack { grid-column:3; grid-row:2; justify-self:start; }
+  td.c-pts  {
+    grid-column:5; grid-row:2;
+    justify-self:end; text-align:right; padding:0;
+    font-size:15px; color:#1a7a4a; white-space:nowrap;
+  }
+  td.c-pts::before {
+    content:"₹ ";
+    font-size:11px; color:var(--text-4); font-weight:500;
+  }
+  .co-badge { font-size:11px; padding:2px 8px; }
+  .pack-tag { font-size:11px; padding:2px 7px; }
+
+  /* Hide In Boxes + Shipper Qty on mobile (available in modal) */
+  td.c-num { display:none; }
+
+  /* ROW 3 — Composition, full width */
+  td.c-salt {
+    grid-column:1 / -1; grid-row:3;
+    padding-top:8px; margin-top:2px;
+    border-top:1px dashed var(--border);
+    max-width:none; min-width:0;
+  }
+  .salts { gap:3px; }
+  .salt-chip { font-size:10.5px; padding:1px 6px; }
+
+  /* ───── Pagination ───── */
+  .pg-bar {
+    padding:12px; gap:10px;
+    background:var(--surface); border:1.5px solid var(--border);
+    border-radius:12px; margin-top:4px;
+  }
+  .pg-btn { padding:7px 14px; font-size:12px; }
+  .pg-info { font-size:11.5px; min-width:90px; }
+
+  /* ───── Modal — bottom sheet style ───── */
+  .overlay { padding:0; align-items:flex-end; }
+  .modal {
+    max-width:100%; max-height:92vh;
+    border-radius:18px 18px 0 0;
+    animation:mSlide .22s cubic-bezier(.34,1.4,.64,1);
+  }
+  @keyframes mSlide { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .m-head-inner { padding:16px 18px 18px; }
+  .m-prod { font-size:16.5px; padding-right:32px; }
+  .m-close { top:12px; right:14px; width:28px; height:28px; }
+  .m-body { padding:16px 18px 20px; }
+  .m-photo-panel { height:200px; margin-bottom:14px; }
+  .m-kv { grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .kv .v.price { font-size:20px; }
+  .kv .v { font-size:13px; }
+  .m-salt-box { padding:12px 13px; margin-bottom:12px; }
+  .m-actions { gap:6px; }
+  .mact { font-size:12px; padding:9px 10px; min-width:0; }
+
+  /* ───── Toast + Empty state ───── */
+  .toast { bottom:16px; font-size:12.5px; padding:9px 18px; }
+  .empty { padding:60px 24px; }
+  .empty-ico { font-size:40px; }
+  .empty h3 { font-size:16px; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE — Narrow phones (iPhone SE, <380px)
+═══════════════════════════════════════════════════════ */
+@media (max-width:380px) {
+  .logo-sub { display:none; }
+  .logo-title { font-size:13px; }
+  .tab { padding:8px 10px; font-size:11.5px; }
+  .pill { font-size:11px; padding:3px 9px; }
+  .m-kv { grid-template-columns:1fr; }
+  tbody tr { padding:11px 12px; }
+  td.c-prod { font-size:13.5px; }
 }
 </style>
 </head>
