@@ -18,8 +18,8 @@
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; }
   .logo-title, .m-prod, .p-head h2 { font-family: Georgia, 'Times New Roman', serif; }
-  .h-pill strong, td.c-pts, td.c-num, td.c-sr, .kv .v.price, .kv .v.mono,
-  .tab-ct, .sco-num, .pack-tag, kbd { font-family: 'Courier New', monospace; }
+  .h-pill strong, td.c-pts, td.c-mrp, td.c-num, td.c-sr, .kv .v.price, .kv .v.mono,
+  .tab-ct, .sco-num, .pack-tag, kbd, .cart-count, .cart-line-qty input { font-family: 'Courier New', monospace; }
 </style>
 <style>
 /* ═══════════════════════════════════════════════════════
@@ -51,6 +51,10 @@
   --salt-bg:     #fff8ee;
   --salt-border: #e8b87a;
   --salt-text:   #7a4200;
+
+  /* WhatsApp brand */
+  --wa-green:     #25D366;
+  --wa-green-dk:  #128C7E;
 
   --sh1: 0 1px 3px rgba(47,45,40,.07),  0 1px 2px rgba(47,45,40,.04);
   --sh2: 0 4px 14px rgba(47,45,40,.09), 0 1px 4px rgba(47,45,40,.05);
@@ -116,6 +120,38 @@ header {
 kbd { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:4px;
   padding:1px 6px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:rgba(247,243,237,.7); }
 
+/* Cart button in header */
+.h-cart {
+  display:inline-flex; align-items:center; gap:6px;
+  background:linear-gradient(135deg, var(--terra-1), var(--terra-2));
+  border:1px solid rgba(255,255,255,.2); border-radius:8px;
+  padding:6px 12px; cursor:pointer; transition:all .15s;
+  font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600;
+  color:#fff; position:relative;
+}
+.h-cart:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(196,98,42,.4); }
+.h-cart:disabled, .h-cart.empty {
+  background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.15);
+  color:rgba(247,243,237,.55); cursor:default;
+}
+.h-cart.empty:hover { transform:none; box-shadow:none; }
+.h-cart svg { width:14px; height:14px; flex-shrink:0; }
+.cart-count {
+  background:rgba(255,255,255,.25); padding:1px 7px; border-radius:10px;
+  font-size:11px; font-weight:700; min-width:20px; text-align:center;
+}
+.h-cart.empty .cart-count { background:rgba(255,255,255,.12); }
+
+/* Settings gear */
+.h-gear {
+  width:32px; height:32px; border-radius:8px;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+  color:rgba(247,243,237,.75); cursor:pointer;
+  display:grid; place-items:center; transition:all .12s;
+}
+.h-gear:hover { background:rgba(255,255,255,.15); color:#fff; }
+.h-gear svg { width:15px; height:15px; }
+
 /* ═══════════════════════════════════════════════════════
    TABS
 ═══════════════════════════════════════════════════════ */
@@ -178,7 +214,7 @@ kbd { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); bo
 .tbtn svg { width:14px; height:14px; }
 
 /* ═══════════════════════════════════════════════════════
-   QUICK PILLS
+   QUICK PILLS (form filters)
 ═══════════════════════════════════════════════════════ */
 .pills-row { display:flex; align-items:center; gap:7px; padding:12px 28px 0; flex-wrap:wrap; }
 .p-lbl { font-size:10.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
@@ -191,6 +227,7 @@ kbd { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); bo
 }
 .pill:hover { border-color:var(--terra-2); color:var(--terra-1); background:var(--terra-xlt); }
 .pill.on { background:var(--terra-1); border-color:var(--terra-1); color:#fff; font-weight:600; }
+.pill-sep { width:1px; height:18px; background:var(--border); margin:0 4px; }
 
 /* ═══════════════════════════════════════════════════════
    SUMMARY STRIP
@@ -204,7 +241,7 @@ kbd { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); bo
 .sco { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:7px; font-size:12.5px; }
 .sco-num { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13.5px; }
 .s-sep { width:1px; height:18px; background:var(--border); }
-.s-right { margin-left:auto; font-size:12.5px; color:var(--text-3); }
+.s-right { margin-left:auto; font-size:12.5px; color:var(--text-3); display:flex; align-items:center; gap:14px; }
 .s-right b { font-family:'JetBrains Mono',monospace; color:var(--terra-1); font-size:13px; }
 
 /* ═══════════════════════════════════════════════════════
@@ -227,20 +264,26 @@ th {
 }
 th:hover { color:var(--terra-3); }
 th.sorted { color:var(--terra-3); }
+th.col-add { cursor:default; }
+th.col-add:hover { color:rgba(247,243,237,.55); }
 .sarr { margin-left:3px; font-size:10px; }
 th .num-head { text-align:right; display:block; }
 
 tbody tr { border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; }
 tbody tr:last-child { border-bottom:none; }
 tbody tr:hover { background:var(--terra-xlt); }
+tbody tr.in-cart { background:linear-gradient(90deg, rgba(37,211,102,.07), transparent 30%); }
+tbody tr.in-cart:hover { background:linear-gradient(90deg, rgba(37,211,102,.13), var(--terra-xlt) 50%); }
 td { padding:10px 14px; vertical-align:middle; font-size:13px; color:var(--text-2); }
 td.c-sr  { font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text-4); width:48px; }
 td.c-prod { color:var(--text); font-weight:600; font-size:13.5px; max-width:250px; line-height:1.4; }
 td.c-co  { white-space:nowrap; }
 td.c-pack { white-space:nowrap; width:70px; max-width:80px; }
-td.c-pts  { text-align:right; padding-right:16px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; color:#1a7a4a; }
+td.c-pts  { text-align:right; padding-right:14px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13.5px; color:#1a7a4a; }
+td.c-mrp  { text-align:right; padding-right:14px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13.5px; color:var(--text); }
 td.c-num  { text-align:right; padding-right:20px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-3); }
-td.c-salt { max-width:520px; min-width:300px; }
+td.c-salt { max-width:520px; min-width:280px; }
+td.c-add  { width:80px; text-align:center; padding:8px 6px; }
 
 /* Company badge — base only; colors injected dynamically */
 .co-badge {
@@ -272,6 +315,25 @@ mark { background:#fef3c7; color:#92400e; border-radius:2px; padding:0 1px; }
   opacity:.5; vertical-align:middle; pointer-events:none; transition:opacity .1s;
 }
 tbody tr:hover .photo-dot { opacity:1; }
+
+/* Add-to-cart inline cell */
+.add-cell { display:inline-flex; align-items:center; gap:4px; }
+.add-btn {
+  width:28px; height:28px; border-radius:8px;
+  background:var(--surface); border:1.5px solid var(--border);
+  color:var(--terra-1); cursor:pointer; transition:all .12s;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:16px; font-weight:700; line-height:1;
+}
+.add-btn:hover { background:var(--terra-1); border-color:var(--terra-1); color:#fff; transform:scale(1.05); }
+.add-btn.in-cart {
+  background:var(--wa-green); border-color:var(--wa-green); color:#fff;
+}
+.add-btn.in-cart:hover { background:var(--wa-green-dk); }
+.add-qty {
+  font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px;
+  color:var(--text); min-width:18px; text-align:center;
+}
 
 /* ═══════════════════════════════════════════════════════
    EMPTY STATE
@@ -376,14 +438,29 @@ tbody tr:hover .photo-dot { opacity:1; }
 }
 .m-photo-panel.has-photo .ph-zoom-badge { display:flex; }
 
-/* ──────── KV Grid ──────── */
-.m-kv { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+/* ──────── Price Hero ──────── */
+.price-hero {
+  display:grid; grid-template-columns:1fr 1fr; gap:0;
+  background:linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%);
+  border:1.5px solid var(--border); border-radius:var(--r);
+  overflow:hidden; margin-bottom:16px;
+}
+.ph-cell { padding:14px 16px; position:relative; }
+.ph-cell + .ph-cell { border-left:1px solid var(--border); }
+.ph-cell label {
+  font-size:9.5px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase;
+  color:var(--text-4); display:block; margin-bottom:4px;
+}
+.ph-pts { font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:#1a7a4a; line-height:1.1; }
+.ph-mrp { font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--text); line-height:1.1; }
+
+/* ──────── KV Grid (now smaller, secondary info) ──────── */
+.m-kv { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
 .kv label {
-  font-size:10px; font-weight:700; letter-spacing:1px;
+  font-size:9.5px; font-weight:700; letter-spacing:1px;
   text-transform:uppercase; color:var(--text-4); display:block; margin-bottom:4px;
 }
-.kv .v { font-size:14px; color:var(--text); font-weight:500; }
-.kv .v.price { font-family:'JetBrains Mono',monospace; font-size:24px; font-weight:700; color:#1a7a4a; }
+.kv .v { font-size:13.5px; color:var(--text); font-weight:500; }
 .kv .v.mono  { font-family:'JetBrains Mono',monospace; }
 
 /* Composition */
@@ -401,10 +478,22 @@ tbody tr:hover .photo-dot { opacity:1; }
   padding:5px 12px; font-size:13px; font-weight:500; color:var(--salt-text); line-height:1.4;
 }
 
+/* Remark callout */
+.m-remark-box {
+  display:none; background:#fff8e6; border:1.5px solid #f0d68a;
+  border-radius:var(--r); padding:10px 14px; margin-bottom:16px;
+  font-size:12.5px; color:#7a5800; line-height:1.5;
+}
+.m-remark-box.show { display:block; }
+.m-remark-box strong {
+  display:block; font-size:9.5px; font-weight:700; letter-spacing:1.2px;
+  text-transform:uppercase; color:#946800; margin-bottom:3px;
+}
+
 /* Actions */
 .m-actions { display:flex; gap:8px; flex-wrap:wrap; }
 .mact {
-  flex:1; min-width:110px; padding:9px 14px; border-radius:8px;
+  flex:1; min-width:110px; padding:10px 14px; border-radius:8px;
   font-family:'Inter',sans-serif; font-size:13px; font-weight:500; cursor:pointer;
   border:1.5px solid var(--border); background:var(--surface2); color:var(--text-2);
   transition:all .12s; text-align:center;
@@ -412,7 +501,17 @@ tbody tr:hover .photo-dot { opacity:1; }
 }
 .mact:hover { border-color:var(--terra-2); color:var(--terra-1); background:var(--terra-xlt); }
 .mact.primary { background:var(--charcoal); border-color:var(--charcoal); color:#f7f3ed; }
-.mact.primary:hover { background:var(--charcoal-2); }
+.mact.primary:hover { background:var(--charcoal-2); color:#f7f3ed; }
+.mact.wa { background:var(--wa-green); border-color:var(--wa-green); color:#fff; }
+.mact.wa:hover { background:var(--wa-green-dk); border-color:var(--wa-green-dk); color:#fff; }
+.mact.wa svg { color:#fff; }
+.mact.add-cart {
+  background:var(--terra-xlt); border-color:var(--terra-2); color:var(--terra-1);
+}
+.mact.add-cart:hover { background:var(--terra-1); border-color:var(--terra-1); color:#fff; }
+.mact.add-cart.in-cart {
+  background:var(--wa-green); border-color:var(--wa-green); color:#fff;
+}
 
 /* ═══════════════════════════════════════════════════════
    PAGINATION
@@ -482,6 +581,209 @@ tbody tr:hover .photo-dot { opacity:1; }
 .lb-copy-btn svg { flex-shrink:0; }
 
 /* ═══════════════════════════════════════════════════════
+   CART DRAWER  (slides in from right on desktop, full-screen on mobile)
+═══════════════════════════════════════════════════════ */
+.cart-overlay {
+  display:none; position:fixed; inset:0; z-index:600;
+  background:rgba(47,45,40,.55); backdrop-filter:blur(4px);
+}
+.cart-overlay.open { display:block; animation:lbFade .15s ease; }
+.cart-drawer {
+  position:fixed; top:0; right:0; bottom:0;
+  width:min(480px, 100vw); background:var(--surface);
+  box-shadow:-12px 0 40px rgba(0,0,0,.18);
+  z-index:610; transform:translateX(100%);
+  transition:transform .25s cubic-bezier(.34,1.4,.64,1);
+  display:flex; flex-direction:column;
+}
+.cart-drawer.open { transform:translateX(0); }
+
+.cart-head {
+  background:var(--charcoal); padding:18px 22px; position:relative;
+  border-bottom:4px solid transparent;
+  background-clip:padding-box;
+}
+.cart-head::after {
+  content:""; position:absolute; left:0; right:0; bottom:-4px; height:4px;
+  background:linear-gradient(90deg,var(--terra-1) 0%, var(--terra-2) 50%, var(--terra-3) 100%);
+}
+.cart-title {
+  font-family:'Playfair Display',serif; font-weight:700; font-size:20px;
+  color:#f7f3ed; margin-bottom:3px;
+}
+.cart-sub {
+  font-size:11.5px; color:rgba(247,243,237,.55);
+  letter-spacing:.3px;
+}
+.cart-close {
+  position:absolute; top:16px; right:18px;
+  width:30px; height:30px; border-radius:8px;
+  background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+  color:rgba(247,243,237,.8); font-size:15px;
+  cursor:pointer; display:grid; place-items:center;
+}
+.cart-close:hover { background:rgba(181,74,30,.6); }
+
+.cart-body {
+  flex:1; overflow-y:auto; padding:12px 18px 12px;
+}
+.cart-empty {
+  text-align:center; padding:60px 30px; color:var(--text-3);
+}
+.cart-empty .empty-ico { font-size:42px; margin-bottom:12px; opacity:.55; }
+.cart-empty h3 { font-size:16px; font-weight:600; color:var(--text-2); margin-bottom:6px; }
+.cart-empty p { font-size:12.5px; line-height:1.6; }
+
+.cart-line {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r); padding:11px 13px; margin-bottom:8px;
+  display:flex; flex-direction:column; gap:6px;
+  transition:border-color .12s;
+}
+.cart-line:hover { border-color:var(--border2); }
+.cart-line-top { display:flex; align-items:flex-start; gap:8px; }
+.cart-line-name {
+  flex:1; font-size:13px; font-weight:600; color:var(--text); line-height:1.3;
+}
+.cart-line-co {
+  display:inline-block; font-size:10.5px; font-weight:500;
+  color:var(--text-3); margin-top:2px;
+}
+.cart-line-rm {
+  width:22px; height:22px; border-radius:6px;
+  background:none; border:1px solid var(--border); color:var(--text-4);
+  cursor:pointer; font-size:13px; display:grid; place-items:center;
+  flex-shrink:0; transition:all .12s;
+}
+.cart-line-rm:hover { background:#fee; border-color:#fca5a5; color:#b91c1c; }
+.cart-line-bot { display:flex; align-items:center; gap:10px; font-size:11.5px; color:var(--text-3); }
+.cart-line-pack {
+  background:var(--surface3); border:1px solid var(--border); border-radius:5px;
+  padding:1px 6px; font-family:'JetBrains Mono',monospace; font-size:11px;
+}
+.cart-line-qty {
+  display:inline-flex; align-items:center; gap:4px;
+  background:var(--surface2); border:1.5px solid var(--border); border-radius:7px;
+  padding:2px 3px;
+}
+.cart-line-qty button {
+  width:22px; height:22px; border-radius:5px; border:none;
+  background:none; cursor:pointer; font-weight:700; color:var(--terra-1);
+  font-size:14px; display:grid; place-items:center; line-height:1;
+}
+.cart-line-qty button:hover { background:var(--terra-xlt); }
+.cart-line-qty input {
+  width:34px; text-align:center; border:none; background:none;
+  font-weight:700; font-size:12.5px; color:var(--text); outline:none;
+}
+/* Hide spinner buttons */
+.cart-line-qty input::-webkit-outer-spin-button,
+.cart-line-qty input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.cart-line-qty input[type=number] { -moz-appearance:textfield; }
+
+.cart-line-sub {
+  margin-left:auto; font-family:'JetBrains Mono',monospace;
+  font-weight:700; font-size:12.5px; color:var(--text);
+}
+.cart-line-na {
+  margin-left:auto; font-size:10.5px; color:var(--text-4); font-style:italic;
+}
+
+.cart-foot {
+  background:var(--surface2); border-top:1.5px solid var(--border);
+  padding:14px 18px 16px;
+}
+.cart-totals {
+  display:flex; align-items:baseline; justify-content:space-between;
+  margin-bottom:6px; font-size:12.5px; color:var(--text-3);
+}
+.cart-totals .lbl { font-size:11px; text-transform:uppercase; letter-spacing:1.2px; font-weight:700; }
+.cart-totals .val {
+  font-family:'JetBrains Mono',monospace; font-weight:600;
+}
+.cart-grand {
+  font-size:14px; color:var(--text);
+}
+.cart-grand .val {
+  font-family:'JetBrains Mono',monospace; font-weight:800; font-size:20px;
+  color:var(--terra-1);
+}
+.cart-note {
+  font-size:10.5px; color:var(--text-4); line-height:1.4;
+  margin:6px 0 12px; text-align:center; font-style:italic;
+}
+.cart-actions { display:flex; gap:8px; }
+.cart-actions button {
+  flex:1; padding:11px; border-radius:10px;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .12s; border:1.5px solid;
+  display:flex; align-items:center; justify-content:center; gap:7px;
+}
+.cart-btn-wa {
+  background:var(--wa-green); border-color:var(--wa-green); color:#fff;
+}
+.cart-btn-wa:hover { background:var(--wa-green-dk); border-color:var(--wa-green-dk); }
+.cart-btn-wa svg { flex-shrink:0; }
+.cart-btn-copy {
+  background:var(--surface); border-color:var(--border); color:var(--text-2);
+}
+.cart-btn-copy:hover { border-color:var(--border2); background:var(--surface3); }
+.cart-btn-clear {
+  flex:0 0 auto; padding:11px 14px;
+  background:var(--surface); border-color:var(--border); color:var(--text-3);
+}
+.cart-btn-clear:hover { border-color:#fca5a5; background:#fff8f8; color:#b91c1c; }
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS MODAL
+═══════════════════════════════════════════════════════ */
+.set-modal {
+  background:var(--surface); border-radius:16px;
+  max-width:440px; width:100%;
+  box-shadow:var(--sh4); overflow:hidden;
+  animation:mPop .22s cubic-bezier(.34,1.4,.64,1);
+  border:1.5px solid var(--border);
+}
+.set-head {
+  background:var(--charcoal); padding:18px 22px; position:relative;
+  color:#f7f3ed;
+}
+.set-head h3 {
+  font-family:'Playfair Display',serif; font-weight:700; font-size:18px;
+}
+.set-head .sub { font-size:11.5px; color:rgba(247,243,237,.55); margin-top:3px; }
+.set-body { padding:20px 22px 22px; }
+.set-field { margin-bottom:16px; }
+.set-field label {
+  font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
+  color:var(--text-3); display:block; margin-bottom:6px;
+}
+.set-field input {
+  width:100%; background:var(--surface2); border:1.5px solid var(--border);
+  border-radius:var(--r); padding:10px 14px; font-size:14px;
+  font-family:'JetBrains Mono',monospace; color:var(--text); outline:none;
+  transition:border-color .12s;
+}
+.set-field input:focus { border-color:var(--terra-2); }
+.set-help {
+  font-size:11px; color:var(--text-4); line-height:1.5; margin-top:5px;
+}
+.set-actions { display:flex; gap:8px; margin-top:18px; }
+.set-actions button {
+  flex:1; padding:10px; border-radius:8px;
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .12s; border:1.5px solid;
+}
+.set-save {
+  background:var(--charcoal); border-color:var(--charcoal); color:#f7f3ed;
+}
+.set-save:hover { background:var(--charcoal-2); }
+.set-cancel {
+  background:var(--surface); border-color:var(--border); color:var(--text-2);
+}
+.set-cancel:hover { border-color:var(--border2); }
+
+/* ═══════════════════════════════════════════════════════
    TOAST
 ═══════════════════════════════════════════════════════ */
 .toast {
@@ -492,6 +794,7 @@ tbody tr:hover .photo-dot { opacity:1; }
   box-shadow:var(--sh3); z-index:950; opacity:0;
   transition:all .25s cubic-bezier(.34,1.4,.64,1); pointer-events:none;
   border-left:3px solid var(--terra-2); white-space:nowrap;
+  max-width:90vw;
 }
 .toast.on { transform:translateX(-50%) translateY(0); opacity:1; }
 
@@ -499,14 +802,24 @@ tbody tr:hover .photo-dot { opacity:1; }
    PRINT
 ═══════════════════════════════════════════════════════ */
 @media print {
-  header,.tab-bar,.toolbar,.pills-row,.summary,.overlay,.lightbox,.toast { display:none !important; }
+  @page { size:A4 landscape; margin:10mm; }
+  header,.tab-bar,.toolbar,.pills-row,.summary,.overlay,.lightbox,.toast,
+  .cart-overlay,.cart-drawer,.pg-bar,td.c-add,th.col-add { display:none !important; }
   .tbl-wrap { margin:0; border:none; box-shadow:none; }
-  body { background:white; font-size:11px; }
-  .p-head { display:block !important; text-align:center; padding:12px 0; border-bottom:2px solid #333; margin-bottom:10px; }
-  .p-head h2 { font-family:'Playfair Display',serif; font-size:18px; }
-  .p-head p { font-size:10px; color:#666; margin-top:3px; }
+  body { background:white; font-size:10px; }
+  .p-head { display:block !important; text-align:center; padding:8px 0; border-bottom:2px solid #333; margin-bottom:8px; }
+  .p-head h2 { font-family:'Playfair Display',serif; font-size:16px; }
+  .p-head p { font-size:9px; color:#666; margin-top:3px; }
+  tbody tr { page-break-inside:avoid; }
   tbody tr:hover { background:transparent !important; }
+  tbody tr.in-cart { background:transparent !important; }
   thead { background:#333 !important; }
+  th { padding:6px 8px; font-size:9px; }
+  td { padding:5px 8px; font-size:10px; }
+  td.c-prod { font-size:10.5px; }
+  td.c-pts, td.c-mrp { font-size:10.5px; }
+  .salt-chip { font-size:9.5px; padding:1px 4px; }
+  .photo-dot { display:none !important; }
 }
 .p-head { display:none; }
 
@@ -517,176 +830,33 @@ tbody tr:hover .photo-dot { opacity:1; }
 ::-webkit-scrollbar-track { background:var(--bg); }
 ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
 
-/* ═══════════════════════════════════════════════════════
-   MOBILE — Tablet/phone breakpoint
-═══════════════════════════════════════════════════════ */
-@media (max-width:768px) {
-  html { font-size:13.5px; }
-  body { overflow-x:hidden; }
-
-  /* ───── Header — compact, no overflow ───── */
-  header { box-shadow:0 2px 10px rgba(0,0,0,.2); }
-  .header-inner { padding:0 12px; height:56px; gap:10px; overflow:hidden; }
-  .logo-img-ring {
-    width:38px; height:38px; border-width:2px;
-    box-shadow:0 0 0 2px rgba(200,154,110,.12),0 2px 8px rgba(0,0,0,.3);
-  }
-  .logo-title { font-size:14.5px; }
-  .logo-divider { width:18px; margin:3px 0 2px; }
-  .logo-sub { font-size:8.5px; letter-spacing:1.2px; }
-  .header-right { display:none; }  /* hide ALL header pills — count is in tabs + summary */
-
-  /* ───── Tabs — compact ───── */
-  .tab-bar { padding:0 10px; }
-  .tab { padding:9px 13px; font-size:12px; gap:6px; }
-  .tab-ct { padding:1px 6px; font-size:10px; }
-
-  /* ───── Toolbar — search full width, hide print ───── */
-  .toolbar { padding:12px 12px 0; gap:8px; }
-  .search-wrap { flex:1 1 100%; min-width:0; }
-  .search-wrap input { padding:10px 40px 10px 36px; font-size:14px; }
-  .tbtn { padding:9px 13px; font-size:12px; }
-  .tbtn:not(.reset) { display:none; }  /* hide Print button on mobile */
-
-  /* ───── Pills row ───── */
-  .pills-row { padding:10px 12px 0; gap:6px; }
-  .p-lbl { display:none; }
-  .pill { padding:4px 11px; font-size:12px; }
-
-  /* ───── Summary strip — simplified ───── */
-  .summary {
-    margin:10px 12px 0; padding:8px 14px;
-    min-height:auto; justify-content:center;
-  }
-  .summary .sco, .summary .s-sep { display:none; }  /* hide per-company chips */
-  .s-right {
-    margin:0; text-align:center; width:100%;
-    font-size:12.5px; color:var(--text-2);
-  }
-
-  /* ═══════════════════════════════════════════
-     TABLE → CARDS (CSS GRID, consistent layout)
-  ═══════════════════════════════════════════ */
-  .tbl-wrap {
-    margin:10px 10px 40px;
-    background:transparent; border:none; box-shadow:none; border-radius:0;
-    overflow:visible;
-  }
-  table { display:block; width:100%; }
-  thead { display:none; }
-  tbody, tbody tr { display:block; width:100%; }
-
-  tbody tr {
-    display:grid;
-    grid-template-columns: 22px auto auto 1fr auto;
-    /* cols:  sr   co    pack  flex  pts */
-    grid-template-rows: auto auto auto;
-    column-gap:6px;
-    row-gap:6px;
-    align-items:center;
-
-    background:var(--surface);
-    border:1.5px solid var(--border);
-    border-radius:12px;
-    padding:12px 14px;
-    margin-bottom:10px;
-    box-shadow:var(--sh1);
-    cursor:pointer;
-  }
-  tbody tr:hover { background:var(--surface); }  /* disable hover tint on touch */
-  tbody tr:active { background:var(--terra-xlt); transform:scale(.995); transition:all .08s; }
-  td { padding:0; border:none; vertical-align:baseline; }
-
-  /* ROW 1 — Serial number + Product name */
-  td.c-sr {
-    grid-column:1; grid-row:1;
-    align-self:start; padding-top:3px;
-    font-size:9.5px; color:var(--text-4);
-  }
-  td.c-sr::before { content:"#"; }
-
-  td.c-prod {
-    grid-column:2 / -1; grid-row:1;
-    font-size:14px; font-weight:600; line-height:1.35;
-    color:var(--text);
-    max-width:none; min-width:0;
-  }
-
-  /* ROW 2 — Company badge | Pack | (flex spacer) | ₹ PTS */
-  td.c-co   { grid-column:2; grid-row:2; justify-self:start; }
-  td.c-pack { grid-column:3; grid-row:2; justify-self:start; }
-  td.c-pts  {
-    grid-column:5; grid-row:2;
-    justify-self:end; text-align:right; padding:0;
-    font-size:15px; color:#1a7a4a; white-space:nowrap;
-  }
-  td.c-pts::before {
-    content:"₹ ";
-    font-size:11px; color:var(--text-4); font-weight:500;
-  }
-  .co-badge { font-size:11px; padding:2px 8px; }
-  .pack-tag { font-size:11px; padding:2px 7px; }
-
-  /* Hide In Boxes + Shipper Qty on mobile (available in modal) */
-  td.c-num { display:none; }
-
-  /* ROW 3 — Composition, full width */
-  td.c-salt {
-    grid-column:1 / -1; grid-row:3;
-    padding-top:8px; margin-top:2px;
-    border-top:1px dashed var(--border);
-    max-width:none; min-width:0;
-  }
-  .salts { gap:3px; }
-  .salt-chip { font-size:10.5px; padding:1px 6px; }
-
-  /* ───── Pagination ───── */
-  .pg-bar {
-    padding:12px; gap:10px;
-    background:var(--surface); border:1.5px solid var(--border);
-    border-radius:12px; margin-top:4px;
-  }
-  .pg-btn { padding:7px 14px; font-size:12px; }
-  .pg-info { font-size:11.5px; min-width:90px; }
-
-  /* ───── Modal — bottom sheet style ───── */
-  .overlay { padding:0; align-items:flex-end; }
-  .modal {
-    max-width:100%; max-height:92vh;
-    border-radius:18px 18px 0 0;
-    animation:mSlide .22s cubic-bezier(.34,1.4,.64,1);
-  }
-  @keyframes mSlide { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
-  .m-head-inner { padding:16px 18px 18px; }
-  .m-prod { font-size:16.5px; padding-right:32px; }
-  .m-close { top:12px; right:14px; width:28px; height:28px; }
-  .m-body { padding:16px 18px 20px; }
-  .m-photo-panel { height:200px; margin-bottom:14px; }
-  .m-kv { grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
-  .kv .v.price { font-size:20px; }
-  .kv .v { font-size:13px; }
-  .m-salt-box { padding:12px 13px; margin-bottom:12px; }
-  .m-actions { gap:6px; }
-  .mact { font-size:12px; padding:9px 10px; min-width:0; }
-
-  /* ───── Toast + Empty state ───── */
-  .toast { bottom:16px; font-size:12.5px; padding:9px 18px; }
-  .empty { padding:60px 24px; }
-  .empty-ico { font-size:40px; }
-  .empty h3 { font-size:16px; }
+/* Smaller screens — progressive column hiding */
+@media (max-width:1180px) {
+  td.c-salt, th.col-salt { display:none; }
 }
-
-/* ═══════════════════════════════════════════════════════
-   MOBILE — Narrow phones (iPhone SE, <380px)
-═══════════════════════════════════════════════════════ */
-@media (max-width:380px) {
-  .logo-sub { display:none; }
-  .logo-title { font-size:13px; }
-  .tab { padding:8px 10px; font-size:11.5px; }
-  .pill { font-size:11px; padding:3px 9px; }
-  .m-kv { grid-template-columns:1fr; }
-  tbody tr { padding:11px 12px; }
-  td.c-prod { font-size:13.5px; }
+@media (max-width:980px) {
+  td.c-num.col-inbox, th.col-inbox,
+  td.c-num.col-ship,  th.col-ship  { display:none; }
+}
+@media (max-width:768px) {
+  .header-inner,.tab-bar,.toolbar,.pills-row { padding-left:14px; padding-right:14px; }
+  .summary,.tbl-wrap { margin-left:14px; margin-right:14px; }
+  .m-kv { grid-template-columns:1fr 1fr; }
+  .logo-title { font-size:16px; }
+  .header-right .h-pill { display:none; }
+  .header-right .h-pill.h-pill-cart-or-show { display:inline-flex; }
+  .m-photo-panel { height:200px; }
+  .modal { max-width:100%; border-radius:16px; }
+  th, td { padding:8px 10px; }
+  td.c-prod { font-size:13px; }
+  /* Hide pack tag and use just text on very small screens */
+}
+@media (max-width:560px) {
+  td.c-co, th.col-co { display:none; }
+  td.c-pack, th.col-pack { display:none; }
+}
+@media (max-width:420px) {
+  td.c-mrp, th.col-mrp { display:none; }
 }
 </style>
 </head>
@@ -716,6 +886,21 @@ tbody tr:hover .photo-dot { opacity:1; }
       <div class="h-pill" style="display:flex;gap:4px;align-items:center">
         <kbd>Ctrl</kbd><kbd>K</kbd>&nbsp;search
       </div>
+      <button class="h-cart empty" id="hCart" onclick="openCart()" title="Order Cart">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        Order
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+      <button class="h-gear" id="hGear" onclick="openSettings()" title="Your details">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </button>
     </div>
   </div>
 </header>
@@ -754,7 +939,7 @@ tbody tr:hover .photo-dot { opacity:1; }
 
 <!-- ═══════ PILLS ═══════ -->
 <div class="pills-row">
-  <span class="p-lbl">Quick:</span>
+  <span class="p-lbl">Form:</span>
   <span class="pill" onclick="togglePill(this,'tablet')">💊 Tablets</span>
   <span class="pill" onclick="togglePill(this,'syrup')">🍶 Syrups</span>
   <span class="pill" onclick="togglePill(this,'capsule')">🔴 Capsules</span>
@@ -779,12 +964,14 @@ tbody tr:hover .photo-dot { opacity:1; }
       <tr>
         <th onclick="sortBy('sr')">#<span class="sarr" id="arr-sr">↑</span></th>
         <th onclick="sortBy('product')" style="min-width:200px">Product Name<span class="sarr" id="arr-product"></span></th>
-        <th onclick="sortBy('company')">Company<span class="sarr" id="arr-company"></span></th>
-        <th onclick="sortBy('pack')" style="width:76px">Pack<span class="sarr" id="arr-pack"></span></th>
+        <th class="col-co" onclick="sortBy('company')">Company<span class="sarr" id="arr-company"></span></th>
+        <th class="col-pack" onclick="sortBy('pack')" style="width:76px">Pack<span class="sarr" id="arr-pack"></span></th>
         <th onclick="sortBy('pts')"><span class="num-head">PTS ₹<span class="sarr" id="arr-pts"></span></span></th>
-        <th onclick="sortBy('inBoxes')"><span class="num-head">In Boxes<span class="sarr" id="arr-inBoxes"></span></span></th>
-        <th onclick="sortBy('shipperQty')"><span class="num-head">Shipper Qty<span class="sarr" id="arr-shipperQty"></span></span></th>
-        <th>Composition / Salt</th>
+        <th class="col-mrp" onclick="sortBy('mrp')"><span class="num-head">MRP ₹<span class="sarr" id="arr-mrp"></span></span></th>
+        <th class="col-inbox" onclick="sortBy('inBoxes')"><span class="num-head">In Box<span class="sarr" id="arr-inBoxes"></span></span></th>
+        <th class="col-ship" onclick="sortBy('shipperQty')"><span class="num-head">Shipper<span class="sarr" id="arr-shipperQty"></span></span></th>
+        <th class="col-salt">Composition / Salt</th>
+        <th class="col-add" style="text-align:center;cursor:default">Add</th>
       </tr>
     </thead>
     <tbody id="tBody"></tbody>
@@ -802,7 +989,7 @@ tbody tr:hover .photo-dot { opacity:1; }
   </div>
 </div>
 
-<!-- ═══════ MODAL ═══════ -->
+<!-- ═══════ PRODUCT MODAL ═══════ -->
 <div class="overlay" id="overlay" onclick="overlayClick(event)">
   <div class="modal">
     <div class="m-head">
@@ -845,14 +1032,30 @@ tbody tr:hover .photo-dot { opacity:1; }
         </div>
       </div>
 
-      <!-- ── Key-Value Grid ── -->
+      <!-- ── Price Hero ── -->
+      <div class="price-hero">
+        <div class="ph-cell">
+          <label>PTS (Your Cost)</label>
+          <div class="ph-pts" id="mPTS">—</div>
+        </div>
+        <div class="ph-cell">
+          <label>MRP</label>
+          <div class="ph-mrp" id="mMRP">—</div>
+        </div>
+      </div>
+
+      <!-- ── Remark callout (only shown if remark present) ── -->
+      <div class="m-remark-box" id="mRemarkBox">
+        <strong>📝 Remark</strong>
+        <span id="mRemarkTxt"></span>
+      </div>
+
+      <!-- ── KV Grid (secondary info) ── -->
       <div class="m-kv">
-        <div class="kv"><label>PTS Price</label><div class="v price" id="mPTS"></div></div>
-        <div class="kv"><label>In Boxes</label><div class="v mono"  id="mBoxes"></div></div>
-        <div class="kv"><label>Shipper Qty</label><div class="v mono" id="mShipper"></div></div>
-        <div class="kv"><label>Company</label><div class="v" id="mCo2"></div></div>
-        <div class="kv"><label>Pack</label><div class="v" id="mPack"></div></div>
-        <div class="kv"><label>Remark</label><div class="v" id="mRemark" style="font-size:12.5px;color:var(--text-3)"></div></div>
+        <div class="kv"><label>In Box</label><div class="v mono" id="mBoxes">—</div></div>
+        <div class="kv"><label>Shipper</label><div class="v mono" id="mShipper">—</div></div>
+        <div class="kv"><label>Pack</label><div class="v" id="mPack">—</div></div>
+        <div class="kv"><label>Company</label><div class="v" id="mCo2">—</div></div>
       </div>
 
       <!-- ── Composition ── -->
@@ -863,11 +1066,24 @@ tbody tr:hover .photo-dot { opacity:1; }
 
       <!-- ── Actions ── -->
       <div class="m-actions">
+        <button class="mact add-cart" id="mAddCartBtn" onclick="toggleCartFromModal()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <span id="mAddCartLbl">Add to Order</span>
+        </button>
+        <button class="mact wa" onclick="shareProductWA()">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413"/>
+          </svg>
+          WhatsApp
+        </button>
         <button class="mact" onclick="copyIt('comp')">
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <rect x="9" y="9" width="13" height="13" rx="2"/>
             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-          </svg>Copy Composition
+          </svg>Copy Salt
         </button>
         <button class="mact" onclick="copyIt('name')">
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -875,12 +1091,61 @@ tbody tr:hover .photo-dot { opacity:1; }
             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
           </svg>Copy Name
         </button>
-        <button class="mact primary" onclick="closeModal()">Close</button>
       </div>
 
     </div><!-- /.m-body -->
   </div><!-- /.modal -->
 </div><!-- /.overlay -->
+
+<!-- ═══════ SETTINGS OVERLAY ═══════ -->
+<div class="overlay" id="setOverlay" onclick="setOverlayClick(event)">
+  <div class="set-modal">
+    <div class="set-head">
+      <h3>⚙ Your Details</h3>
+      <div class="sub">Saved on this device only — orders are sent to SNT (+91 7004622232)</div>
+    </div>
+    <div class="set-body">
+      <div class="set-field">
+        <label>Your Name / Shop Name</label>
+        <input id="setSender" type="text" placeholder="e.g. Sharma Medical Store, Bhavnagar" />
+        <div class="set-help">
+          This is added at the bottom of every order so SNT knows who placed it.
+        </div>
+      </div>
+      <div class="set-actions">
+        <button class="set-cancel" onclick="closeSettings()">Cancel</button>
+        <button class="set-save" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ CART DRAWER ═══════ -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+  <div class="cart-head">
+    <div class="cart-title">🛒 Order Cart</div>
+    <div class="cart-sub" id="cartSub">No items yet</div>
+    <button class="cart-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cartBody"></div>
+  <div class="cart-foot" id="cartFoot" style="display:none">
+    <div class="cart-totals"><span class="lbl">Items</span><span class="val" id="cartItems">0</span></div>
+    <div class="cart-totals"><span class="lbl">Total Boxes</span><span class="val" id="cartBoxes">0</span></div>
+    <div class="cart-totals cart-grand"><span class="lbl">Subtotal @ PTS</span><span class="val" id="cartTotal">₹0</span></div>
+    <div class="cart-note">Approx. value at PTS prices. Excludes GST, schemes, discounts.</div>
+    <div class="cart-actions">
+      <button class="cart-btn-clear" onclick="clearCart()" title="Clear cart">🗑</button>
+      <button class="cart-btn-copy" onclick="copyCartText()">📋 Copy</button>
+      <button class="cart-btn-wa" onclick="sendCartWA()">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413"/>
+        </svg>
+        Send to WhatsApp
+      </button>
+    </div>
+  </div>
+</aside>
 
 <!-- ═══════ LIGHTBOX ═══════ -->
 <div class="lightbox" id="lightbox" onclick="lbBackdropClick(event)">
@@ -910,8 +1175,17 @@ let curP = null;
 let lbSrc = '';
 
 /* ── Pagination ── */
-const PAGE_SIZE = 100;   // rows visible per page
-let curPage = 0;         // 0-based
+const PAGE_SIZE = 100;
+let curPage = 0;
+
+/* ── Cart state ─ persisted to localStorage as Map<sr, qty> ── */
+let CART = {};
+const CART_KEY = 'snt_cart_v1';
+
+/* ── Settings state ── */
+const SNT_WA = '917004622232';            // +91 7004622232 — SNT order line (hardcoded, not editable)
+let SETTINGS = { sender: '' };            // Only the stockist's name is configurable
+const SET_KEY = 'snt_settings_v1';
 
 /* ── Debounce helper ── */
 function debounce(fn, ms) {
@@ -921,11 +1195,6 @@ function debounce(fn, ms) {
 
 /* ══════════════════════════════════════════════════════
    DYNAMIC COMPANY COLOR SYSTEM
-   12 carefully chosen color pairs. Companies are
-   assigned in the order they appear in
-   CATALOGUE_META.companies (set by convert.py).
-   Add a new company to Excel, run convert.py,
-   and it appears automatically with its own color.
 ══════════════════════════════════════════════════════ */
 const CO_PALETTE = [
   { bg:'#dce8ff', text:'#1a4db5' },  // indigo
@@ -942,7 +1211,6 @@ const CO_PALETTE = [
   { bg:'#f7fee7', text:'#3f6212' },  // lime
 ];
 
-/* Built dynamically in initCompanies() */
 let CO_CLASS  = {};
 let CO_SHORT  = {};
 let CO_COLORS = {};
@@ -964,15 +1232,19 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   DATA = CATALOGUE_DATA;
+
   document.getElementById('updAt').textContent = CATALOGUE_META.updatedAt;
   document.getElementById('hdTot').textContent = DATA.length.toLocaleString('en-IN');
   document.getElementById('pMeta').textContent =
     `Printed ${new Date().toLocaleDateString('en-IN')} · ${DATA.length} products · Updated ${CATALOGUE_META.updatedAt}`;
 
+  loadCart();
+  loadSettings();
   initCompanies();
   buildTabs();
   refreshArrows();
   render();
+  refreshCartUI();
 
   const si = document.getElementById('searchInput');
   const debouncedSearch = debounce(val => { qT = val; clearPills(); curPage = 0; render(); }, 220);
@@ -980,12 +1252,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey||e.metaKey) && e.key === 'k') { e.preventDefault(); si.focus(); si.select(); }
-    if (e.key === 'Escape') { closeLightbox(); closeModal(); }
+    if (e.key === 'Escape') {
+      if (document.getElementById('cartDrawer').classList.contains('open')) { closeCart(); return; }
+      if (document.getElementById('setOverlay').classList.contains('open')) { closeSettings(); return; }
+      closeLightbox(); closeModal();
+    }
   });
 });
 
 /* ══════════════════════════════════════════════════════
-   COMPANY INIT — fully dynamic, zero hardcoding
+   COMPANY INIT
 ══════════════════════════════════════════════════════ */
 function initCompanies() {
   const styleEl = document.createElement('style');
@@ -1000,14 +1276,6 @@ function initCompanies() {
   document.head.appendChild(styleEl);
 }
 
-/*
-  Smart short-name rules (in order):
-  1. Has " - " → take everything after the last " - "
-     "Alkem - Novo" → "Novo"
-  2. Already short (≤ 12 chars) → use as-is
-  3. Has multiple words → use first non-trivial word, title-cased
-  4. Long single word → first 12 chars + "…"
-*/
 function makeShortName(co) {
   const dashIdx = co.lastIndexOf(' - ');
   if (dashIdx > -1) {
@@ -1041,20 +1309,14 @@ function buildTabs() {
 
 /* ══════════════════════════════════════════════════════
    PHOTO HELPERS
-   sanitizePhotoName() MUST produce identical output
-   to sanitize_photo_name() in convert.py — both strip
-   the same illegal filename characters and lowercase.
 ══════════════════════════════════════════════════════ */
 function sanitizePhotoName(name) {
-  // Strip chars illegal in Windows/Linux filenames, then trim + lowercase
   return (name || '').replace(/[/\\:*?"<>|]/g, '').trim().toLowerCase();
 }
-
 function getPhotoFile(productName) {
   if (typeof PHOTO_MAP === 'undefined') return null;
   return PHOTO_MAP[sanitizePhotoName(productName)] || null;
 }
-
 function hasPhoto(productName) {
   return getPhotoFile(productName) !== null;
 }
@@ -1075,8 +1337,12 @@ function applyFilters() {
     );
   });
   filtered.sort((a, b) => {
-    let va = a[sF] ?? '', vb = b[sF] ?? '';
-    if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+    let va = a[sF], vb = b[sF];
+    // Nulls always sort to the bottom regardless of direction
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (typeof va === 'string') { va = va.toLowerCase(); vb = (vb||'').toString().toLowerCase(); }
     return va < vb ? (sA?-1:1) : va > vb ? (sA?1:-1) : 0;
   });
 }
@@ -1102,8 +1368,7 @@ function saltRow(comp, q) {
 }
 
 /* ══════════════════════════════════════════════════════
-   RENDER — only paints PAGE_SIZE rows at a time.
-   Rebuilding 100 rows instead of 1276 is ~12× faster.
+   RENDER
 ══════════════════════════════════════════════════════ */
 function render() {
   applyFilters();
@@ -1122,7 +1387,6 @@ function render() {
   }
   empty.style.display = 'none';
 
-  // Clamp page
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   if (curPage >= totalPages) curPage = totalPages - 1;
   if (curPage < 0) curPage = 0;
@@ -1130,25 +1394,36 @@ function render() {
   const start = curPage * PAGE_SIZE;
   const slice = filtered.slice(start, start + PAGE_SIZE);
 
-  // Build HTML for this page only
   const frag = document.createDocumentFragment();
   const tmp  = document.createElement('tbody');
   tmp.innerHTML = slice.map(p => {
     const cls  = CO_CLASS[p.company]  || 'co-dyn-0';
     const sh   = CO_SHORT[p.company]  || p.company;
     const pts  = p.pts        != null ? fmtN(p.pts)        : '—';
+    const mrp  = p.mrp        != null ? fmtN(p.mrp)        : '—';
     const box  = p.inBoxes    != null ? fmtN(p.inBoxes)    : '—';
     const ship = p.shipperQty != null ? fmtN(p.shipperQty) : '—';
     const cam  = hasPhoto(p.product)  ? `<span class="photo-dot" title="Photo available">📷</span>` : '';
-    return `<tr onclick="openModal(${p.sr})">
+    const qty  = CART[p.sr] || 0;
+    const inCartCls = qty > 0 ? ' in-cart' : '';
+    const addCell = qty > 0
+      ? `<div class="add-cell">
+           <button class="add-btn" onclick="event.stopPropagation();bumpCart(${p.sr},-1)" title="Remove one">−</button>
+           <span class="add-qty">${qty}</span>
+           <button class="add-btn in-cart" onclick="event.stopPropagation();bumpCart(${p.sr},1)" title="Add one">+</button>
+         </div>`
+      : `<button class="add-btn" onclick="event.stopPropagation();bumpCart(${p.sr},1)" title="Add to order">+</button>`;
+    return `<tr class="${inCartCls.trim()}" onclick="openModal(${p.sr})">
       <td class="c-sr">${p.sr}</td>
       <td class="c-prod">${q ? hi(p.product,q) : esc(p.product)}${cam}</td>
-      <td class="c-co"><span class="co-badge ${cls}">${esc(sh)}</span></td>
-      <td class="c-pack"><span class="pack-tag">${q ? hi(p.pack,q) : esc(p.pack)}</span></td>
+      <td class="c-co col-co"><span class="co-badge ${cls}">${esc(sh)}</span></td>
+      <td class="c-pack col-pack"><span class="pack-tag">${q ? hi(p.pack,q) : esc(p.pack)}</span></td>
       <td class="c-pts">${pts}</td>
-      <td class="c-num">${box}</td>
-      <td class="c-num">${ship}</td>
-      <td class="c-salt">${saltRow(p.composition, q)}</td>
+      <td class="c-mrp col-mrp">${mrp}</td>
+      <td class="c-num col-inbox">${box}</td>
+      <td class="c-num col-ship">${ship}</td>
+      <td class="c-salt col-salt">${saltRow(p.composition, q)}</td>
+      <td class="c-add">${addCell}</td>
     </tr>`;
   }).join('');
   while (tmp.firstChild) frag.appendChild(tmp.firstChild);
@@ -1156,7 +1431,6 @@ function render() {
   tbody.innerHTML = '';
   tbody.appendChild(frag);
 
-  // Pagination controls
   if (totalPages <= 1) {
     pgBar.style.display = 'none';
   } else {
@@ -1184,11 +1458,12 @@ function updateSummary() {
       <span style="color:${col.text};font-size:12px">${esc(sh)}</span>
     </div>`;
   });
+
   const q = qT.trim();
-  h += `<div class="s-right">${q||qC
+  h += `<div class="s-right"><span>${q||qC
     ? `Showing <b>${all.toLocaleString('en-IN')}</b> of ${DATA.length.toLocaleString('en-IN')}`
     : `All <b>${all.toLocaleString('en-IN')}</b> products`
-  }</div>`;
+  }</span></div>`;
   document.getElementById('summary').innerHTML = h;
 }
 
@@ -1207,17 +1482,34 @@ function openModal(sr) {
   document.getElementById('mSR').textContent       = `#${p.sr}`;
   document.getElementById('mProd').textContent     = p.product;
   document.getElementById('mPackHint').textContent = `Pack: ${p.pack||'—'}`;
-  document.getElementById('mPTS').textContent      = p.pts        != null ? `₹ ${fmtN(p.pts)}`     : '—';
+
+  // Pricing hero
+  document.getElementById('mPTS').textContent = p.pts != null ? `₹${fmtN(p.pts)}` : '—';
+  document.getElementById('mMRP').textContent = p.mrp != null ? `₹${fmtN(p.mrp)}` : '—';
+
+  // Secondary info
   document.getElementById('mBoxes').textContent    = p.inBoxes    != null ? fmtN(p.inBoxes)         : '—';
   document.getElementById('mShipper').textContent  = p.shipperQty != null ? fmtN(p.shipperQty)      : '—';
   document.getElementById('mCo2').innerHTML        = `<span class="co-badge ${cls}">${esc(sh)}</span>`;
   document.getElementById('mPack').textContent     = p.pack   || '—';
-  document.getElementById('mRemark').textContent   = p.remark || '—';
 
+  // Remark callout (only if present)
+  const rmBox = document.getElementById('mRemarkBox');
+  if (p.remark && p.remark.trim()) {
+    rmBox.classList.add('show');
+    document.getElementById('mRemarkTxt').textContent = p.remark;
+  } else {
+    rmBox.classList.remove('show');
+  }
+
+  // Composition
   const salts = parseSalts(p.composition);
   document.getElementById('mSalts').innerHTML = salts.length
     ? salts.map(s => `<span class="m-salt-item">${esc(s)}</span>`).join('')
     : '<span style="color:var(--text-4)">No composition data</span>';
+
+  // Add-to-cart label
+  refreshModalCartBtn();
 
   loadModalPhoto(p.product);
 
@@ -1225,15 +1517,38 @@ function openModal(sr) {
   document.body.style.overflow = 'hidden';
 }
 
+function refreshModalCartBtn() {
+  if (!curP) return;
+  const qty = CART[curP.sr] || 0;
+  const btn = document.getElementById('mAddCartBtn');
+  const lbl = document.getElementById('mAddCartLbl');
+  if (qty > 0) {
+    btn.classList.add('in-cart');
+    lbl.textContent = `In Cart (${qty}) — Tap to remove`;
+  } else {
+    btn.classList.remove('in-cart');
+    lbl.textContent = 'Add to Order';
+  }
+}
+
+function toggleCartFromModal() {
+  if (!curP) return;
+  const qty = CART[curP.sr] || 0;
+  if (qty > 0) {
+    delete CART[curP.sr];
+    toast(`✗ Removed from cart`);
+  } else {
+    CART[curP.sr] = 1;
+    toast(`✓ Added to cart`);
+  }
+  saveCart();
+  refreshCartUI();
+  refreshModalCartBtn();
+  render();   // refresh row indicator
+}
+
 /* ══════════════════════════════════════════════════════
    MODAL — photo loader
-
-   Strategy:
-   1. PHOTO_MAP (built by convert.py scanning Photos/)
-      gives the exact filename → fastest, no guessing.
-   2. If PHOTO_MAP not present OR product added after
-      last convert.py run → try common extensions.
-   Either way: graceful placeholder if nothing loads.
 ══════════════════════════════════════════════════════ */
 function loadModalPhoto(productName) {
   const panel       = document.getElementById('mPhotoPanel');
@@ -1241,25 +1556,21 @@ function loadModalPhoto(productName) {
   const placeholder = document.getElementById('mPhotoPlaceholder');
   const hint        = document.getElementById('mPhotoHint');
 
-  // Reset
   img.style.display = 'none';
   img.src = '';
   placeholder.style.display = 'flex';
   panel.classList.remove('has-photo');
   lbSrc = '';
 
-  // Show the suggested save-as filename in placeholder
   const safeName = productName.replace(/[/\\:*?"<>|]/g, '').trim();
   hint.textContent = `${safeName}.jpg`;
 
-  // Try PHOTO_MAP first (exact match, case-insensitive via convert.py key)
   const knownFile = getPhotoFile(productName);
   if (knownFile) {
     applyPhoto(`Photos/${knownFile}`, productName);
     return;
   }
 
-  // Fallback: probe extensions (useful if photo added after last convert.py run)
   const exts = ['jpg', 'jpeg', 'png', 'webp'];
   let i = 0;
   function next() {
@@ -1312,55 +1623,40 @@ function openLightbox() {
 }
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
-  // Reset copy button
   const btn = document.getElementById('lbCopyBtn');
   btn.classList.remove('copied');
   document.getElementById('lbCopyLabel').textContent = 'Copy Image';
 }
 function lbBackdropClick(e) {
-  // Close only if clicking the dark backdrop, not the image or buttons
   if (e.target === document.getElementById('lightbox')) closeLightbox();
 }
 
 /* ══════════════════════════════════════════════════════
    COPY IMAGE TO CLIPBOARD
-   Works in Chrome/Edge (most common on Android too).
-   Draws the image onto a hidden canvas → exports as PNG
-   blob → writes to clipboard. User can then paste
-   directly into WhatsApp, email, etc.
 ══════════════════════════════════════════════════════ */
 async function copyLightboxImage(e) {
-  e.stopPropagation(); // don't close lightbox
+  e.stopPropagation();
   const btn   = document.getElementById('lbCopyBtn');
   const label = document.getElementById('lbCopyLabel');
   const img   = document.getElementById('lbImg');
 
   if (!img.src || btn.classList.contains('copied')) return;
-
   label.textContent = 'Copying…';
 
   try {
-    // Draw to canvas so we always produce a PNG blob
-    // (clipboard only accepts image/png in most browsers)
     const canvas = document.createElement('canvas');
     canvas.width  = img.naturalWidth;
     canvas.height = img.naturalHeight;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
-
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
 
-    await navigator.clipboard.write([
-      new ClipboardItem({ 'image/png': blob })
-    ]);
-
-    // Success state
     btn.classList.add('copied');
     btn.querySelector('svg').innerHTML =
       '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
     label.textContent = 'Copied!';
 
-    // Reset after 3 seconds
     setTimeout(() => {
       btn.classList.remove('copied');
       btn.querySelector('svg').innerHTML =
@@ -1369,7 +1665,6 @@ async function copyLightboxImage(e) {
     }, 3000);
 
   } catch (err) {
-    // Clipboard API blocked (Firefox, some browsers, non-HTTPS)
     label.textContent = 'Copy Image';
     toast('⚠ Browser blocked clipboard access.\nTry right-click → Copy Image.');
     console.warn('Clipboard write failed:', err);
@@ -1382,7 +1677,6 @@ async function copyLightboxImage(e) {
 function goPage(delta) {
   curPage += delta;
   render();
-  // Scroll back to top of table smoothly
   document.querySelector('.tbl-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 function esc(s) {
@@ -1405,7 +1699,7 @@ function fmtN(n) {
 }
 
 /* ══════════════════════════════════════════════════════
-   ACTIONS
+   ACTIONS — Tabs, Pills, Search, Sort
 ══════════════════════════════════════════════════════ */
 function setTab(btn, co) {
   qC = co; curPage = 0;
@@ -1425,8 +1719,15 @@ function togglePill(el, kw) {
   }
   render();
 }
-function clearPills() { document.querySelectorAll('.pill').forEach(p => p.classList.remove('on')); }
-function clearSearch() { document.getElementById('searchInput').value = ''; qT = ''; curPage = 0; clearPills(); render(); }
+function clearPills() {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('on'));
+}
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  qT = ''; curPage = 0;
+  clearPills();
+  render();
+}
 function resetAll() {
   qT=''; qC=''; sF='sr'; sA=true; curPage=0;
   document.getElementById('searchInput').value = '';
@@ -1441,7 +1742,7 @@ function sortBy(f) {
   refreshArrows(); render();
 }
 function refreshArrows() {
-  ['sr','product','company','pack','pts','inBoxes','shipperQty'].forEach(f => {
+  ['sr','product','company','pack','pts','mrp','inBoxes','shipperQty'].forEach(f => {
     const el = document.getElementById('arr-' + f);
     if (!el) return;
     el.parentElement.classList && el.parentElement.classList.toggle('sorted', f === sF);
@@ -1463,6 +1764,301 @@ function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg; el.classList.add('on');
   setTimeout(() => el.classList.remove('on'), 2500);
+}
+
+/* ══════════════════════════════════════════════════════
+   CART — state + persistence
+══════════════════════════════════════════════════════ */
+function loadCart() {
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    if (raw) CART = JSON.parse(raw) || {};
+  } catch(e) { CART = {}; }
+}
+function saveCart() {
+  try { localStorage.setItem(CART_KEY, JSON.stringify(CART)); } catch(e) {}
+}
+function cartCount() {
+  return Object.keys(CART).length;
+}
+function cartTotalBoxes() {
+  return Object.values(CART).reduce((a,b) => a + (b||0), 0);
+}
+function cartSubtotal() {
+  let total = 0;
+  for (const sr in CART) {
+    const p = DATA.find(x => x.sr === Number(sr));
+    if (p && p.pts != null && p.inBoxes != null) {
+      const boxQty = parseFloat(p.inBoxes);
+      if (!isNaN(boxQty)) total += p.pts * boxQty * CART[sr];
+    }
+  }
+  return total;
+}
+
+function bumpCart(sr, delta) {
+  const cur = CART[sr] || 0;
+  const next = Math.max(0, cur + delta);
+  if (next === 0) delete CART[sr];
+  else CART[sr] = next;
+  saveCart();
+  refreshCartUI();
+  // If row visible, just re-render that area lightly. Easiest: full render.
+  render();
+  if (curP && curP.sr === sr) refreshModalCartBtn();
+}
+
+function refreshCartUI() {
+  const count = cartCount();
+  const btn = document.getElementById('hCart');
+  document.getElementById('cartCount').textContent = count;
+  if (count === 0) btn.classList.add('empty');
+  else btn.classList.remove('empty');
+
+  // If cart drawer is open, refresh contents
+  if (document.getElementById('cartDrawer').classList.contains('open')) {
+    renderCartBody();
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   CART DRAWER
+══════════════════════════════════════════════════════ */
+function openCart() {
+  renderCartBody();
+  document.getElementById('cartOverlay').classList.add('open');
+  document.getElementById('cartDrawer').classList.add('open');
+  document.getElementById('cartDrawer').setAttribute('aria-hidden', 'false');
+}
+function closeCart() {
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.getElementById('cartDrawer').classList.remove('open');
+  document.getElementById('cartDrawer').setAttribute('aria-hidden', 'true');
+}
+
+function renderCartBody() {
+  const body = document.getElementById('cartBody');
+  const foot = document.getElementById('cartFoot');
+  const sub  = document.getElementById('cartSub');
+
+  const srs = Object.keys(CART).sort((a,b) => Number(a) - Number(b));
+
+  if (!srs.length) {
+    body.innerHTML = `<div class="cart-empty">
+      <div class="empty-ico">🛒</div>
+      <h3>Your order cart is empty</h3>
+      <p>Tap the <b>+</b> button on any product row to start building an order.</p>
+    </div>`;
+    foot.style.display = 'none';
+    sub.textContent = 'No items yet';
+    return;
+  }
+
+  let html = '';
+  srs.forEach(sr => {
+    const p = DATA.find(x => x.sr === Number(sr));
+    if (!p) return;
+    const qty = CART[sr];
+    const cls = CO_CLASS[p.company] || 'co-dyn-0';
+    const sh  = CO_SHORT[p.company] || p.company;
+    const boxQty = parseFloat(p.inBoxes);
+    let subtotalCell;
+    if (!isNaN(boxQty) && p.pts != null) {
+      const subtotal = p.pts * boxQty * qty;
+      subtotalCell = `<span class="cart-line-sub">₹${fmtN(subtotal)}</span>`;
+    } else {
+      subtotalCell = `<span class="cart-line-na">—</span>`;
+    }
+    html += `<div class="cart-line">
+      <div class="cart-line-top">
+        <div>
+          <div class="cart-line-name">${esc(p.product)}</div>
+          <span class="co-badge ${cls}" style="font-size:10px;padding:1px 7px;margin-top:3px;display:inline-block">${esc(sh)}</span>
+        </div>
+        <button class="cart-line-rm" onclick="bumpCart(${p.sr},-${qty})" title="Remove from cart">×</button>
+      </div>
+      <div class="cart-line-bot">
+        <span class="cart-line-pack">${esc(p.pack||'—')}</span>
+        <span class="cart-line-qty">
+          <button onclick="bumpCart(${p.sr},-1)">−</button>
+          <input type="number" min="0" value="${qty}" onchange="setCartQty(${p.sr}, this.value)" />
+          <button onclick="bumpCart(${p.sr},1)">+</button>
+        </span>
+        <span style="font-size:11px;color:var(--text-4)">boxes</span>
+        ${subtotalCell}
+      </div>
+    </div>`;
+  });
+  body.innerHTML = html;
+  foot.style.display = 'block';
+
+  const items  = srs.length;
+  const boxes  = cartTotalBoxes();
+  const total  = cartSubtotal();
+  sub.textContent = `${items} product${items===1?'':'s'} · ${boxes} box${boxes===1?'':'es'}`;
+  document.getElementById('cartItems').textContent = items;
+  document.getElementById('cartBoxes').textContent = boxes;
+  document.getElementById('cartTotal').textContent = '₹' + fmtN(total);
+}
+
+function setCartQty(sr, val) {
+  const n = parseInt(val, 10);
+  if (isNaN(n) || n <= 0) { delete CART[sr]; }
+  else CART[sr] = n;
+  saveCart();
+  refreshCartUI();
+  render();
+}
+
+function clearCart() {
+  if (!cartCount()) return;
+  if (!confirm('Clear the entire cart?')) return;
+  CART = {};
+  saveCart();
+  refreshCartUI();
+  render();
+  if (curP) refreshModalCartBtn();
+}
+
+/* ══════════════════════════════════════════════════════
+   ORDER MESSAGE BUILDER  (cart → text)
+══════════════════════════════════════════════════════ */
+function buildOrderText() {
+  const srs = Object.keys(CART).sort((a,b) => Number(a) - Number(b));
+  if (!srs.length) return '';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+
+  let lines = [];
+  lines.push(`*SNT ORDER — ${dateStr}, ${timeStr}*`);
+  lines.push('');
+
+  // Group by company
+  const byCo = {};
+  srs.forEach(sr => {
+    const p = DATA.find(x => x.sr === Number(sr));
+    if (!p) return;
+    if (!byCo[p.company]) byCo[p.company] = [];
+    byCo[p.company].push({ p, qty: CART[sr] });
+  });
+
+  let lineNo = 0;
+  Object.keys(byCo).sort().forEach(co => {
+    lines.push(`*${co}*`);
+    byCo[co].forEach(({p, qty}) => {
+      lineNo++;
+      const boxQty = parseFloat(p.inBoxes);
+      let sub = '';
+      if (!isNaN(boxQty) && p.pts != null) {
+        const t = p.pts * boxQty * qty;
+        sub = `  ₹${fmtN(t)}`;
+      }
+      lines.push(`${lineNo}. ${p.product} (${p.pack||'—'})`);
+      lines.push(`   Qty: ${qty} box${qty===1?'':'es'}${sub}`);
+    });
+    lines.push('');
+  });
+
+  const items = srs.length;
+  const boxes = cartTotalBoxes();
+  const total = cartSubtotal();
+  lines.push('─────────────────');
+  lines.push(`Items: ${items}  |  Boxes: ${boxes}`);
+  if (total > 0) lines.push(`*Total @ PTS: ₹${fmtN(total)}*`);
+  lines.push(`_Approx. before GST / schemes / discounts_`);
+
+  if (SETTINGS.sender && SETTINGS.sender.trim()) {
+    lines.push('');
+    lines.push(`— ${SETTINGS.sender}`);
+  }
+  return lines.join('\n');
+}
+
+function copyCartText() {
+  const txt = buildOrderText();
+  if (!txt) { toast('Cart is empty'); return; }
+  navigator.clipboard.writeText(txt).then(() => toast('✓ Order copied to clipboard'));
+}
+
+function sendCartWA() {
+  const txt = buildOrderText();
+  if (!txt) { toast('Cart is empty'); return; }
+  const url = `https://wa.me/${SNT_WA}?text=${encodeURIComponent(txt)}`;
+  window.open(url, '_blank');
+}
+
+/* ══════════════════════════════════════════════════════
+   SHARE SINGLE PRODUCT TO WHATSAPP
+══════════════════════════════════════════════════════ */
+function shareProductWA() {
+  if (!curP) return;
+  const p = curP;
+  let lines = [];
+  lines.push(`*${p.product}*`);
+  lines.push(`_${p.company}_`);
+  lines.push('');
+  if (p.composition) lines.push(`💊 ${p.composition}`);
+
+  const facts = [];
+  if (p.pack)       facts.push(`Pack: ${p.pack}`);
+  if (p.inBoxes)    facts.push(`Per Box: ${p.inBoxes}`);
+  if (p.shipperQty) facts.push(`Shipper: ${p.shipperQty}`);
+  if (facts.length) {
+    lines.push('');
+    lines.push(`📦 ${facts.join('  |  ')}`);
+  }
+
+  lines.push('');
+  if (p.mrp != null) lines.push(`💰 MRP: ₹${fmtN(p.mrp)}`);
+  if (p.pts != null) lines.push(`🏷 PTS: ₹${fmtN(p.pts)}`);
+
+  if (p.remark && p.remark.trim()) {
+    lines.push('');
+    lines.push(`📝 ${p.remark}`);
+  }
+
+  lines.push('');
+  lines.push(`— Shree Narayani Traders`);
+
+  const text = lines.join('\n');
+  // No fixed receiver — let user pick a contact via WhatsApp
+  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(url, '_blank');
+}
+
+/* ══════════════════════════════════════════════════════
+   SETTINGS
+══════════════════════════════════════════════════════ */
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SET_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      SETTINGS = { sender: parsed.sender || '' };
+    }
+  } catch(e) { SETTINGS = { sender: '' }; }
+}
+function openSettings() {
+  document.getElementById('setSender').value = SETTINGS.sender || '';
+  document.getElementById('setOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('setSender').focus(), 100);
+}
+function closeSettings() {
+  document.getElementById('setOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function setOverlayClick(e) {
+  if (e.target === document.getElementById('setOverlay')) closeSettings();
+}
+function saveSettings() {
+  const sender = document.getElementById('setSender').value.trim();
+  SETTINGS = { sender };
+  try { localStorage.setItem(SET_KEY, JSON.stringify(SETTINGS)); } catch(e) {}
+  closeSettings();
+  toast(sender ? '✓ Saved as ' + sender : '✓ Saved');
 }
 </script>
 </body>
