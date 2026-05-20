@@ -113,6 +113,7 @@ header {
   border-radius:8px; padding:5px 12px;
   font-size:12px; color:rgba(247,243,237,.75); white-space:nowrap;
 }
+.h-pill-kbd { gap:4px; }
 .h-pill strong { color:var(--terra-3); font-family:'JetBrains Mono',monospace; font-size:12.5px; }
 .h-dot { width:7px; height:7px; border-radius:50%; background:#4ade80; flex-shrink:0;
   box-shadow:0 0 0 2px rgba(74,222,128,.25); animation:hpulse 2.5s ease-in-out infinite; }
@@ -839,24 +840,61 @@ tbody tr:hover .photo-dot { opacity:1; }
   td.c-num.col-ship,  th.col-ship  { display:none; }
 }
 @media (max-width:768px) {
-  .header-inner,.tab-bar,.toolbar,.pills-row { padding-left:14px; padding-right:14px; }
-  .summary,.tbl-wrap { margin-left:14px; margin-right:14px; }
+  .header-inner { padding:0 14px; height:62px; gap:12px; }
+  .tab-bar,.toolbar,.pills-row { padding-left:14px; padding-right:14px; }
+  .summary { margin-left:14px; margin-right:14px; }
+  .tbl-wrap { margin:14px 8px 48px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .m-kv { grid-template-columns:1fr 1fr; }
+  .logo-img-ring { width:44px; height:44px; border-width:2px; }
+  .logo-wrap { gap:10px; }
   .logo-title { font-size:16px; }
+  .logo-divider { width:18px; margin:3px 0 2px; }
+  .logo-sub { font-size:8.5px; letter-spacing:1.4px; }
   .header-right .h-pill { display:none; }
-  .header-right .h-pill.h-pill-cart-or-show { display:inline-flex; }
+  .header-right { gap:6px; }
+  .h-cart { padding:6px 10px; font-size:12px; }
+  .h-gear { width:34px; height:34px; }
   .m-photo-panel { height:200px; }
   .modal { max-width:100%; border-radius:16px; }
-  th, td { padding:8px 10px; }
+  th, td { padding:7px 8px; }
   td.c-prod { font-size:13px; }
-  /* Hide pack tag and use just text on very small screens */
+  td.c-sr { padding:7px 4px 7px 8px; }
+  td.c-pts { padding-right:8px; font-size:12.5px; }
+  /* Sticky Add column — always reachable on phones */
+  th.col-add, td.c-add {
+    position:sticky; right:0; z-index:5;
+    background:var(--surface);
+    width:56px; min-width:56px; padding:6px 4px;
+    box-shadow:-6px 0 8px -4px rgba(0,0,0,.08);
+  }
+  th.col-add { background:var(--charcoal); }
+  tbody tr.in-cart td.c-add { background:var(--terra-xlt); }
+  tbody tr:hover td.c-add { background:var(--surface2); }
+  .add-btn { width:26px; height:26px; font-size:14px; }
+  .add-cell { gap:2px; }
+  .add-qty { min-width:14px; font-size:12px; }
 }
 @media (max-width:560px) {
+  .logo-sub { display:none; }                     /* drop subtitle on small phones */
   td.c-co, th.col-co { display:none; }
   td.c-pack, th.col-pack { display:none; }
+  td.c-mrp, th.col-mrp { display:none; }          /* hide MRP on phones — shows on tablets+ */
+  .tbl-wrap { margin-left:4px; margin-right:4px; }
+  th, td { padding:6px 6px; }
+  td.c-sr { padding:6px 2px 6px 6px; font-size:11.5px; }
+  td.c-prod { padding-left:6px; }
+  td.c-pts { padding-right:6px; font-size:12px; }
+  th.col-add, td.c-add { width:50px; min-width:50px; padding:5px 3px; }
 }
 @media (max-width:420px) {
-  td.c-mrp, th.col-mrp { display:none; }
+  .header-inner { padding:0 10px; gap:8px; height:58px; }
+  .logo-wrap { gap:8px; }
+  .logo-img-ring { width:38px; height:38px; }
+  .logo-title { font-size:14px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .logo-divider { display:none; }
+  .h-cart { padding:5px 8px; font-size:11.5px; gap:4px; }
+  .h-cart svg { width:14px; height:14px; }
+  .h-gear { width:30px; height:30px; }
 }
 </style>
 </head>
@@ -883,7 +921,7 @@ tbody tr:hover .photo-dot { opacity:1; }
     <div class="header-right">
       <div class="h-pill"><span class="h-dot"></span>Updated:&nbsp;<strong id="updAt">—</strong></div>
       <div class="h-pill"><strong id="hdTot">—</strong>&nbsp;products</div>
-      <div class="h-pill" style="display:flex;gap:4px;align-items:center">
+      <div class="h-pill h-pill-kbd">
         <kbd>Ctrl</kbd><kbd>K</kbd>&nbsp;search
       </div>
       <button class="h-cart empty" id="hCart" onclick="openCart()" title="Order Cart">
