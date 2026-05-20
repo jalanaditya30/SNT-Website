@@ -215,22 +215,6 @@ kbd { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); bo
 .tbtn svg { width:14px; height:14px; }
 
 /* ═══════════════════════════════════════════════════════
-   QUICK PILLS (form filters)
-═══════════════════════════════════════════════════════ */
-.pills-row { display:flex; align-items:center; gap:7px; padding:12px 28px 0; flex-wrap:wrap; }
-.p-lbl { font-size:10.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
-  color:var(--text-4); margin-right:2px; white-space:nowrap; }
-.pill {
-  padding:4px 13px; border-radius:20px; font-size:12.5px; font-weight:500;
-  color:var(--text-2); background:var(--surface); border:1.5px solid var(--border);
-  cursor:pointer; transition:all .12s; white-space:nowrap;
-  display:inline-flex; align-items:center; gap:5px;
-}
-.pill:hover { border-color:var(--terra-2); color:var(--terra-1); background:var(--terra-xlt); }
-.pill.on { background:var(--terra-1); border-color:var(--terra-1); color:#fff; font-weight:600; }
-.pill-sep { width:1px; height:18px; background:var(--border); margin:0 4px; }
-
-/* ═══════════════════════════════════════════════════════
    SUMMARY STRIP
 ═══════════════════════════════════════════════════════ */
 .summary {
@@ -281,7 +265,7 @@ td.c-prod { color:var(--text); font-weight:600; font-size:13.5px; max-width:250p
 td.c-co  { white-space:nowrap; }
 td.c-pack { white-space:nowrap; width:70px; max-width:80px; }
 td.c-pts  { text-align:right; padding-right:14px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13.5px; color:#1a7a4a; }
-td.c-mrp  { text-align:right; padding-right:14px; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13.5px; color:var(--text); }
+td.c-mrp  { text-align:right; padding-right:14px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-3); }
 td.c-num  { text-align:right; padding-right:20px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-3); }
 td.c-salt { max-width:520px; min-width:280px; }
 td.c-add  { width:80px; text-align:center; padding:8px 6px; }
@@ -821,7 +805,7 @@ tbody tr:hover .photo-dot { opacity:1; }
 ═══════════════════════════════════════════════════════ */
 @media print {
   @page { size:A4 landscape; margin:10mm; }
-  header,.tab-bar,.toolbar,.pills-row,.summary,.overlay,.lightbox,.toast,
+  header,.tab-bar,.toolbar,.summary,.overlay,.lightbox,.toast,
   .cart-overlay,.cart-drawer,.pg-bar,td.c-add,th.col-add { display:none !important; }
   .tbl-wrap { margin:0; border:none; box-shadow:none; }
   body { background:white; font-size:10px; }
@@ -858,7 +842,7 @@ tbody tr:hover .photo-dot { opacity:1; }
 }
 @media (max-width:768px) {
   .header-inner { padding:0 14px; height:62px; gap:12px; }
-  .tab-bar,.toolbar,.pills-row { padding-left:14px; padding-right:14px; }
+  .tab-bar,.toolbar { padding-left:14px; padding-right:14px; }
   .summary { margin-left:14px; margin-right:14px; }
   .tbl-wrap { margin:14px 8px 48px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .m-kv { grid-template-columns:1fr 1fr; }
@@ -892,10 +876,7 @@ tbody tr:hover .photo-dot { opacity:1; }
   .add-btn { width:26px; height:26px; font-size:14px; }
   .add-cell { gap:2px; }
   .add-qty { min-width:14px; font-size:12px; }
-  /* Tighten pills/toolbar/tabs */
-  .pills-row { padding-top:10px; gap:6px; }
-  .pill { padding:5px 11px; font-size:11.5px; }
-  .p-lbl { font-size:10px; }
+  /* Tighten toolbar/tabs */
   .toolbar { padding-top:14px; gap:8px; }
   .tbtn { padding:8px 12px; font-size:12px; }
 }
@@ -1010,23 +991,6 @@ tbody tr:hover .photo-dot { opacity:1; }
         d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
     </svg>Print
   </button>
-</div>
-
-<!-- ═══════ PILLS ═══════ -->
-<div class="pills-row">
-  <span class="p-lbl">Form:</span>
-  <span class="pill" onclick="togglePill(this,'tablet')">💊 Tablets</span>
-  <span class="pill" onclick="togglePill(this,'syrup')">🍶 Syrups</span>
-  <span class="pill" onclick="togglePill(this,'capsule')">🔴 Capsules</span>
-  <span class="pill" onclick="togglePill(this,'injection')">💉 Injections</span>
-  <span class="pill" onclick="togglePill(this,'infusion')">🧪 Infusions</span>
-  <span class="pill" onclick="togglePill(this,'suspension')">🧴 Suspensions</span>
-  <span class="pill" onclick="togglePill(this,'cream')">🫙 Creams</span>
-  <span class="pill" onclick="togglePill(this,'gel')">💧 Gels</span>
-  <span class="pill" onclick="togglePill(this,'drops')">💦 Drops</span>
-  <span class="pill" onclick="togglePill(this,'soap')">🧼 Soaps</span>
-  <span class="pill" onclick="togglePill(this,'spray')">🌫 Sprays</span>
-  <span class="pill" onclick="togglePill(this,'sachet')">📦 Sachets</span>
 </div>
 
 <!-- ═══════ SUMMARY ═══════ -->
@@ -1788,18 +1752,6 @@ function setTab(btn, co) {
   qC = co; curPage = 0;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  render();
-}
-function togglePill(el, kw) {
-  const was = el.classList.contains('on');
-  clearPills();
-  curPage = 0;
-  if (!was) {
-    el.classList.add('on');
-    document.getElementById('searchInput').value = kw; qT = kw;
-  } else {
-    document.getElementById('searchInput').value = ''; qT = '';
-  }
   render();
 }
 function clearPills() {
