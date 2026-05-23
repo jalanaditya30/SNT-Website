@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Shree Narayani Traders — Pharmaceutical product catalogues for Alkem, Lupin, Sun-Ranbaxy, Torque divisions. View or download company-wise product lists.">
+<title>Product Catalogues · Shree Narayani Traders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style"
+  href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+  onload="this.onload=null;this.rel='stylesheet'">
+<noscript>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</noscript>
+<style>body{font-family:system-ui,-apple-system,sans-serif}.logo-title,.hero-title,.cat-name,.about-title{font-family:Georgia,'Times New Roman',serif}</style>
+<style>
+:root{
+  --cream:#f7f3ed;--charcoal:#2f2d28;--charcoal-2:#4a4640;
+  --terra-1:#b54a1e;--terra-2:#c4622a;--terra-3:#c89a6e;
+  --terra-lt:#f5e8dc;--terra-xlt:#faf3ec;
+  --bg:#f0ece4;--surface:#ffffff;--surface2:#faf8f5;--surface3:#f2ede5;
+  --border:#e0d8cc;--border2:#cec4b4;
+  --text:#2f2d28;--text-2:#4a4640;--text-3:#7a7268;--text-4:#a89e94;
+  --wa-green:#25D366;--wa-green-dk:#128C7E;
+  --sh1:0 1px 3px rgba(47,45,40,.07),0 1px 2px rgba(47,45,40,.04);
+  --sh2:0 4px 14px rgba(47,45,40,.09),0 1px 4px rgba(47,45,40,.05);
+  --sh3:0 8px 28px rgba(47,45,40,.13),0 2px 6px rgba(47,45,40,.06);
+  --r:10px;--r2:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:var(--terra-lt);color:var(--terra-1)}
+a{color:inherit}
+
+/* ════════ HEADER ════════ */
+header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0 2px 20px rgba(0,0,0,.25)}
+.header-inner{display:flex;align-items:center;padding:0 28px;height:74px;gap:16px;max-width:1200px;margin:0 auto}
+.logo-wrap{display:flex;align-items:center;gap:14px;flex-shrink:0;text-decoration:none}
+.logo-img-ring{width:50px;height:50px;border-radius:50%;border:2.5px solid rgba(200,154,110,.4);overflow:hidden;flex-shrink:0;box-shadow:0 0 0 4px rgba(200,154,110,.12),0 3px 14px rgba(0,0,0,.35);background:#f7f3ed;display:grid;place-items:center}
+.logo-img-ring img{width:100%;height:100%;object-fit:cover;display:block}
+.logo-text-block{line-height:1}
+.logo-title{font-weight:800;font-size:18px;color:#f7f3ed;letter-spacing:-.2px;line-height:1.2}
+.logo-divider{display:inline-block;width:22px;height:2px;background:linear-gradient(90deg,var(--terra-1),var(--terra-3));border-radius:2px;margin:5px 0 4px}
+.logo-sub{font-size:10px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--terra-3)}
+.header-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.back-link{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;color:rgba(247,243,237,.85);text-decoration:none;transition:all .15s;white-space:nowrap}
+.back-link:hover{background:rgba(200,154,110,.18);border-color:rgba(200,154,110,.45);color:var(--terra-3)}
+.back-link svg{width:14px;height:14px}
+
+/* ════════ HERO ════════ */
+.hero{background:var(--surface);border-bottom:1.5px solid var(--border);box-shadow:var(--sh1)}
+.hero-inner{max-width:1200px;margin:0 auto;padding:36px 28px 28px}
+.hero-trust{display:inline-flex;align-items:center;gap:8px;background:var(--terra-xlt);border:1.5px solid var(--terra-lt);border-radius:20px;padding:5px 14px;margin-bottom:14px;font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--terra-1);text-transform:uppercase}
+.hero-trust .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2);flex-shrink:0}
+.hero-grid{display:grid;grid-template-columns:1fr auto;gap:28px;align-items:end}
+.hero-title{font-weight:800;font-size:32px;color:var(--charcoal);line-height:1.15;letter-spacing:-.5px}
+.hero-sub{margin-top:8px;font-size:14px;color:var(--text-3);line-height:1.6;max-width:560px}
+.hero-stat{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r2);padding:18px 26px;text-align:center;min-width:140px}
+.hero-stat .num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:32px;color:var(--terra-1);line-height:1}
+.hero-stat .lbl{font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-3);margin-top:6px}
+
+/* ════════ CONTACT STRIP ════════ */
+.contact-strip{max-width:1200px;margin:18px auto 0;padding:0 28px;display:flex;gap:10px;flex-wrap:wrap}
+.cstrip-btn{flex:1;min-width:170px;display:inline-flex;align-items:center;gap:11px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 16px;text-decoration:none;color:var(--text);transition:all .15s;box-shadow:var(--sh1)}
+.cstrip-btn:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--sh2)}
+.cstrip-icon{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;flex-shrink:0}
+.cstrip-icon.call{background:var(--terra-xlt);color:var(--terra-1)}
+.cstrip-icon.wa  {background:#e8f8f0;color:var(--wa-green-dk)}
+.cstrip-icon.loc {background:#fff3e0;color:#b75d1a}
+.cstrip-icon svg{width:18px;height:18px}
+.cstrip-meta{line-height:1.3;min-width:0}
+.cstrip-lbl{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-4);margin-bottom:2px}
+.cstrip-val{font-size:13.5px;font-weight:600;color:var(--charcoal);font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cstrip-val.txt{font-family:'Inter',sans-serif;font-weight:600}
+
+/* ════════ SEARCH ════════ */
+.filter-bar{max-width:1200px;margin:24px auto 0;padding:0 28px;display:flex;gap:10px}
+.search-wrap{flex:1;position:relative}
+.search-wrap svg.si{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-4);pointer-events:none}
+.search-wrap input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);font-family:'Inter',sans-serif;font-size:14.5px;color:var(--text);padding:12px 16px 12px 42px;outline:none;transition:border-color .15s,box-shadow .15s;box-shadow:var(--sh1)}
+.search-wrap input:focus{border-color:var(--terra-2);box-shadow:0 0 0 3px rgba(196,98,42,.12)}
+.search-wrap input::placeholder{color:var(--text-4)}
+
+/* ════════ GRID ════════ */
+.section-head{max-width:1200px;margin:32px auto 14px;padding:0 28px;display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+.section-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-3)}
+.section-count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-4)}
+.grid-wrap{max-width:1200px;margin:0 auto;padding:0 28px 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+
+/* brand bars */
+.c-alkem-hc  {background:linear-gradient(90deg,#15803d,#4ade80)}
+.c-alkem-mx  {background:linear-gradient(90deg,#b54a1e,#c89a6e)}
+.c-alkem-nk  {background:linear-gradient(90deg,#0e7490,#22d3ee)}
+.c-torque    {background:linear-gradient(90deg,#991b1b,#ef4444)}
+.c-torque-lf {background:linear-gradient(90deg,#7c3aed,#c084fc)}
+.c-lupin     {background:linear-gradient(90deg,#1e40af,#60a5fa)}
+.c-sun       {background:linear-gradient(90deg,#d97706,#fbbf24)}
+
+/* brand icon backgrounds */
+.ic-alkem-hc  {background:#dcfce7;color:#15803d}
+.ic-alkem-mx  {background:var(--terra-xlt);color:var(--terra-1)}
+.ic-alkem-nk  {background:#cffafe;color:#0e7490}
+.ic-torque    {background:#fee2e2;color:#991b1b}
+.ic-torque-lf {background:#ede9fe;color:#7c3aed}
+.ic-lupin     {background:#dbeafe;color:#1e40af}
+.ic-sun       {background:#fef3c7;color:#92400e}
+
+/* ════════ CARD ════════ */
+.cat-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r2);box-shadow:var(--sh1);overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .18s,transform .18s,border-color .18s;position:relative}
+.cat-card:hover{box-shadow:var(--sh3);transform:translateY(-3px);border-color:var(--border2)}
+.cat-bar{height:5px}
+.cat-body{padding:18px 18px 14px;flex:1}
+.cat-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.cat-icon{width:46px;height:46px;border-radius:11px;display:grid;place-items:center;flex-shrink:0}
+.cat-icon svg{width:22px;height:22px}
+.cat-titleblock{flex:1;min-width:0}
+.cat-parent{font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--text-4);margin-bottom:3px}
+.cat-name{font-weight:700;font-size:18px;color:var(--charcoal);line-height:1.25}
+.cat-desc{font-size:13px;color:var(--text-3);line-height:1.55;margin-bottom:12px}
+.cat-meta{display:flex;gap:6px;flex-wrap:wrap}
+.cat-tag{font-size:10.5px;font-weight:500;color:var(--text-3);background:var(--surface3);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;letter-spacing:.2px}
+.cat-tag.fresh{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+
+/* card footer */
+.cat-foot{padding:0 14px 14px;display:flex;gap:8px}
+.btn-view{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:linear-gradient(135deg,var(--terra-1),var(--terra-2));color:#fff;border:none;border-radius:9px;padding:10px 14px;cursor:pointer;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;text-decoration:none;transition:all .15s;letter-spacing:.2px}
+.btn-view:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 5px 16px rgba(181,74,30,.4)}
+.btn-view svg{width:14px;height:14px}
+.btn-icon{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:9px;cursor:pointer;text-decoration:none;transition:all .12s;flex-shrink:0}
+.btn-dl{background:var(--surface3);border:1.5px solid var(--border);color:var(--text-3)}
+.btn-dl:hover{background:var(--terra-xlt);border-color:var(--terra-lt);color:var(--terra-1)}
+.btn-dl svg{width:16px;height:16px}
+.btn-wa{background:#e8f8f0;border:1.5px solid #a7e0c4;color:var(--wa-green-dk)}
+.btn-wa:hover{background:var(--wa-green);border-color:var(--wa-green);color:#fff}
+.btn-wa svg{width:17px;height:17px}
+
+/* empty */
+.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-4)}
+.empty-state svg{width:42px;height:42px;margin-bottom:12px;opacity:.4}
+.empty-state p{font-size:14px}
+
+/* ════════ ABOUT / FOOTER ════════ */
+.about{max-width:1200px;margin:48px auto 0;padding:0 28px}
+.about-card{background:var(--charcoal);color:var(--cream);border-radius:var(--r2);padding:36px 32px;box-shadow:var(--sh3);position:relative;overflow:hidden}
+.about-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--terra-1),var(--terra-3))}
+.about-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--terra-3);margin-bottom:10px}
+.about-title{font-weight:800;font-size:24px;line-height:1.25;margin-bottom:10px;color:#f7f3ed}
+.about-text{font-size:13.5px;line-height:1.7;color:rgba(247,243,237,.78);max-width:680px;margin-bottom:22px}
+.about-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;border-top:1px solid rgba(247,243,237,.12);padding-top:22px}
+.about-cell{display:flex;align-items:flex-start;gap:12px}
+.about-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;background:rgba(200,154,110,.16);color:var(--terra-3)}
+.about-icon svg{width:17px;height:17px}
+.about-cell .lbl{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:rgba(200,154,110,.7);margin-bottom:3px}
+.about-cell .val{font-size:13px;font-weight:500;color:#f7f3ed;line-height:1.45}
+.about-cell .val a{text-decoration:none;color:#f7f3ed}
+.about-cell .val a:hover{color:var(--terra-3)}
+
+.page-foot{text-align:center;padding:24px 28px 36px;font-size:11.5px;color:var(--text-4);line-height:1.7}
+.page-foot .sep{display:inline-block;margin:0 6px;opacity:.5}
+.page-foot a{color:var(--terra-1);text-decoration:none}
+.page-foot a:hover{text-decoration:underline}
+
+/* toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--charcoal);color:var(--cream);border-radius:10px;padding:11px 22px;font-size:13px;font-weight:500;box-shadow:var(--sh3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:999;white-space:nowrap}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ════════ MOBILE ════════ */
+@media(max-width:768px){
+  .header-inner{padding:0 16px;height:64px;gap:12px}
+  .logo-img-ring{width:42px;height:42px}
+  .logo-title{font-size:16px}
+  .logo-sub{font-size:9px;letter-spacing:1.4px}
+  .back-link{padding:6px 10px;font-size:11.5px}
+  .back-link span{display:none}
+  .hero-inner{padding:24px 16px 20px}
+  .hero-trust{font-size:10px;padding:4px 12px}
+  .hero-grid{grid-template-columns:1fr;gap:18px;align-items:flex-start}
+  .hero-title{font-size:24px}
+  .hero-sub{font-size:13.5px}
+  .hero-stat{padding:14px 22px;align-self:flex-start}
+  .hero-stat .num{font-size:26px}
+  .contact-strip{padding:0 16px;gap:8px}
+  .cstrip-btn{min-width:0;padding:10px 12px;flex:1 1 calc(50% - 4px)}
+  .cstrip-icon{width:34px;height:34px}
+  .cstrip-val{font-size:12.5px}
+  .filter-bar{padding:0 16px;margin-top:18px}
+  .section-head{padding:0 16px;margin:24px auto 12px}
+  .grid-wrap{padding:0 16px 16px}
+  .grid{grid-template-columns:1fr;gap:14px}
+  .cat-body{padding:16px 16px 12px}
+  .cat-name{font-size:17px}
+  .about{padding:0 16px;margin-top:36px}
+  .about-card{padding:26px 22px}
+  .about-title{font-size:20px}
+  .about-text{font-size:13px}
+}
+@media(max-width:420px){
+  .header-inner{padding:0 12px;height:58px;gap:10px}
+  .logo-img-ring{width:38px;height:38px}
+  .logo-title{font-size:14.5px}
+  .logo-divider{display:none}
+  .logo-sub{display:none}
+  .hero-title{font-size:21px}
+  .cstrip-btn{flex:1 1 100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════ HEADER ════════ -->
+<header>
+  <div class="header-inner">
+    <a class="logo-wrap" href="index.html">
+      <div class="logo-img-ring">
+        <img src="logo.png" alt="SNT Logo" onerror="this.style.display='none'" />
+      </div>
+      <div class="logo-text-block">
+        <div class="logo-title">Shree Narayani Traders</div>
+        <div class="logo-divider"></div>
+        <div class="logo-sub">Pharmaceutical Distributors</div>
+      </div>
+    </a>
+    <div class="header-right">
+      <a class="back-link" href="index.html">
+        <svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ════════ HERO ════════ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-trust">
+      <span class="dot"></span>
+      Authorised Pharmaceutical Distributor · Ahmedabad
+    </div>
+    <div class="hero-grid">
+      <div>
+        <h1 class="hero-title">Product Catalogues</h1>
+        <div class="hero-sub">
+          Official company-wise product lists for all divisions distributed by Shree Narayani Traders. Tap any catalogue to view the full PDF or download it for your records.
+        </div>
+      </div>
+      <div class="hero-stat">
+        <div class="num" id="visibleCount">7</div>
+        <div class="lbl">Catalogues</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ CONTACT STRIP ════════ -->
+<div class="contact-strip">
+  <a class="cstrip-btn" href="index.html">
+    <div class="cstrip-icon loc">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div class="cstrip-meta">
+      <div class="cstrip-lbl">Home</div>
+      <div class="cstrip-val txt">SNT Home Page →</div>
+    </div>
+  </a>
+  <a class="cstrip-btn" href="search.html">
+    <div class="cstrip-icon loc">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    <div class="cstrip-meta">
+      <div class="cstrip-lbl">Search Tool</div>
+      <div class="cstrip-val txt">Browse 1400+ Products →</div>
+    </div>
+  </a>
+</div>
+
+<!-- ════════ SEARCH ════════ -->
+<div class="filter-bar">
+  <div class="search-wrap">
+    <svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="search" id="searchInput" placeholder="Search company or division — e.g. Alkem, Lupin, Sun…" oninput="filterCards()" autocomplete="off" />
+  </div>
+</div>
+
+<!-- ════════ SECTION HEADING ════════ -->
+<div class="section-head">
+  <div class="section-title">Available Catalogues</div>
+  <div class="section-count">Updated FY 2025–26</div>
+</div>
+
+<!-- ════════ GRID ════════ -->
+<div class="grid-wrap">
+<div class="grid" id="catGrid">
+
+<!-- ─── 1. Alkem Healthcare ─── -->
+<div class="cat-card" data-name="alkem healthcare nutraceutical" data-key="alkem-healthcare">
+  <div class="cat-bar c-alkem-hc"></div>
+  <div class="cat-body">
+    <div class="cat-head">
+      <div class="cat-icon ic-alkem-hc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </div>
+      <div class="cat-titleblock">
+        <div class="cat-parent">Alkem Laboratories</div>
+        <div class="cat-name">Healthcare Division</div>
+      </div>
+    </div>
+    <div class="cat-desc">Nutraceuticals, vitamins, mineral supplements & OTC wellness products for daily health needs.</div>
+    <div class="cat-meta">
+      <span class="cat-tag">PDF</span>
+      <span class="cat-tag fresh">Updated</span>
+    </div>
+  </div>
+  <div class="cat-foot">
+    <a class="btn-view" href="pdfs/alkem-healthcare.pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      View PDF
+    </a>
+    <a class="btn-icon btn-dl" href="pdfs/alkem-healthcare.pdf" download title="Download PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ─── 2. Alkem Maxxio ─── -->
+<div class="cat-card" data-name="alkem maxxio cardiac diabetic chronic" data-key="alkem-maxxio">
+  <div class="cat-bar c-alkem-mx"></div>
+  <div class="cat-body">
+    <div class="cat-head">
+      <div class="cat-icon ic-alkem-mx">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div class="cat-titleblock">
+        <div class="cat-parent">Alkem Laboratories</div>
+        <div class="cat-name">Maxxio Division</div>
+      </div>
+    </div>
+    <div class="cat-desc">Chronic-care portfolio covering cardiac, anti-diabetic, CNS and lifestyle-disease therapy products.</div>
+    <div class="cat-meta">
+      <span class="cat-tag">PDF</span>
+      <span class="cat-tag fresh">Updated</span>
+    </div>
+  </div>
+  <div class="cat-foot">
+    <a class="btn-view" href="pdfs/alkem-maxxio.pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      View PDF
+    </a>
+    <a class="btn-icon btn-dl" href="pdfs/alkem-maxxio.pdf" download title="Download PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ─── 3. Alkem Novokem ─── -->
+<div class="cat-card" data-name="alkem novokem novo antiinfective acute" data-key="alkem-novokem">
+  <div class="cat-bar c-alkem-nk"></div>
+  <div class="cat-body">
+    <div class="cat-head">
+      <div class="cat-icon ic-alkem-nk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M10.5 20.5a4.5 4.5 0 01-6.36-6.36l8.49-8.49a4.5 4.5 0 016.36 6.36l-8.49 8.49z"/><line x1="7.5" y1="14.5" x2="14.5" y2="7.5"/></svg>
+      </div>
+      <div class="cat-titleblock">
+        <div class="cat-parent">Alkem Laboratories</div>
+        <div class="cat-name">Novokem Division</div>
+      </div>
+    </div>
+    <div class="cat-desc">Acute-care segment — anti-infectives, gastro-intestinal and general medicine for primary practice.</div>
+    <div class="cat-meta">
+      <span class="cat-tag">PDF</span>
+      <span class="cat-tag fresh">Updated</span>
+    </div>
+  </div>
+  <div class="cat-foot">
+    <a class="btn-view" href="pdfs/alkem-novokem.pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      View PDF
+    </a>
+    <a class="btn-icon btn-dl" href="pdfs/alkem-novokem.pdf" download title="Download PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ─── 4. Torque ─── -->
+<div class="cat-card" data-name="torque pharma specialty critical" data-key="torque">
+  <div class="cat-bar c-torque"></div>
+  <div class="cat-body">
+    <div class="cat-head">
+      <div class="cat-icon ic-torque">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></svg>
+      </div>
+      <div class="cat-titleblock">
+        <div class="cat-parent">Torque Pharmaceuticals</div>
+        <div class="cat-name">Torque Division</div>
+      </div>
+    </div>
+    <div class="cat-desc">Specialty and critical-care formulations including hospital and institutional range products.</div>
+    <div class="cat-meta">
+      <span class="cat-tag">PDF</span>
+      <span class="cat-tag fresh">Updated</span>
+    </div>
+  </div>
+  <div class="cat-foot">
+    <a class="btn-view" href="pdfs/torque.pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      View PDF
+    </a>
+    <a class="btn-icon btn-dl" href="pdfs/torque.pdf" download title="Download PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ─── 5. Torque Life ─── -->
+<div class="cat-card" data-name="torque life sciences nutraceutical wellness" data-key="torque-life">
+  <div class="cat-bar c-torque-lf"></div>
+  <div class="cat-body">
+    <div class="cat-head">
+      <div class="cat-icon ic-torque-lf">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="cat-titleblock">
+        <div class="cat-parent">Torque Pharmaceuticals</div>
+        <div class="cat-name">Torque Life</div>
+      </div>
+    </div>
+    <div class="cat-desc">Life-sciences range — nutraceuticals, immunity boosters and preventive healthcare products.</div>
+    <div class="cat-meta">
+      <span class="cat-tag">PDF</span>
+      <span class="cat-tag fresh">Updated</span>
+    </div>
+  </div>
+  <div class="cat-foot">
+    <a class="btn-view" href="pdfs/torque-life.pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      View PDF
+    </a>
+    <a class="btn-icon btn-dl" href="pdfs/torque-life.pdf" download title="Download PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ─── 6. Lupin Life Sciences ─── -->
+<div class="cat-card" data-name="lupin life sciences respiratory" data-key="lupin-life">
+  <div class="cat-bar c-lupin"></div>
+  <div class="cat-body">
+    <div class="cat-head">
+      <div class="cat-icon ic-lupin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 2a5 5 0 015 5c0 3-2 5.5-5 8-3-2.5-5-5-5-8a5 5 0 015-5z"/><line x1="12" y1="15" x2="12" y2="22"/></svg>
+      </div>
+      <div class="cat-titleblock">
+        <div class="cat-parent">Lupin Limited</div>
+        <div class="cat-name">Lupin Life Sciences</div>
+      </div>
+    </div>
+    <div class="cat-desc">Branded generics covering respiratory, women's health, gastro-intestinal and cardio-vascular therapy.</div>
+    <div class="cat-meta">
+      <span class="cat-tag">PDF</span>
+      <span class="cat-tag fresh">Updated</span>
+    </div>
+  </div>
+  <div class="cat-foot">
+    <a class="btn-view" href="pdfs/lupin-life.pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      View PDF
+    </a>
+    <a class="btn-icon btn-dl" href="pdfs/lupin-life.pdf" download title="Download PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ─── 7. Sun - Ranbaxy ─── -->
+<div class="cat-card" data-name="sun ranbaxy pharma branded generics" data-key="sun-ranbaxy">
+  <div class="cat-bar c-sun"></div>
+  <div class="cat-body">
+    <div class="cat-head">
+      <div class="cat-icon ic-sun">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M4 12H1M23 12h-3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+      </div>
+      <div class="cat-titleblock">
+        <div class="cat-parent">Sun Pharmaceutical</div>
+        <div class="cat-name">Sun — Ranbaxy</div>
+      </div>
+    </div>
+    <div class="cat-desc">Comprehensive branded-generic portfolio across therapeutic segments under the Ranbaxy legacy range.</div>
+    <div class="cat-meta">
+      <span class="cat-tag">PDF</span>
+      <span class="cat-tag fresh">Updated</span>
+    </div>
+  </div>
+  <div class="cat-foot">
+    <a class="btn-view" href="pdfs/sun-ranbaxy.pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      View PDF
+    </a>
+    <a class="btn-icon btn-dl" href="pdfs/sun-ranbaxy.pdf" download title="Download PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- empty state -->
+<div class="empty-state" id="emptyState" style="display:none">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+  <p>No catalogues match your search.</p>
+</div>
+
+</div><!-- /grid -->
+</div><!-- /grid-wrap -->
+
+<!-- ════════ ABOUT / CONTACT ════════ -->
+<div class="about">
+  <div class="about-card">
+    <div class="about-eyebrow">About Us</div>
+    <h2 class="about-title">Shree Narayani Traders</h2>
+    <p class="about-text">
+      Pharmaceutical distribution and C&amp;F operations based in Ahmedabad, Gujarat — serving stockists and retail chemists across the state with authentic, fully-traceable products from India's leading pharma manufacturers.
+    </p>
+    <div class="about-grid">
+      <div class="about-cell">
+        <div class="about-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.845L.057 23.571a.75.75 0 00.92.92l5.733-1.478A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.7 9.7 0 01-4.95-1.354l-.355-.21-3.668.944.966-3.58-.23-.368A9.75 9.75 0 1112 21.75z"/></svg>
+        </div>
+        <div>
+          <div class="lbl">Orders</div>
+          <div class="val"><a href="https://wa.me/917004622232" target="_blank" rel="noopener">Message on WhatsApp →</a></div>
+        </div>
+      </div>
+      <div class="about-cell">
+        <div class="about-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div>
+          <div class="lbl">Based In</div>
+          <div class="val">Ahmedabad, Gujarat</div>
+        </div>
+      </div>
+      <div class="about-cell">
+        <div class="about-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        </div>
+        <div>
+          <div class="lbl">Coverage</div>
+          <div class="val">Pan-Gujarat Distribution</div>
+        </div>
+      </div>
+      <div class="about-cell">
+        <div class="about-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div>
+          <div class="lbl">Business Hours</div>
+          <div class="val">Mon – Sat · 10 AM – 8 PM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-foot">
+  © <span id="yr"></span> Shree Narayani Traders, Ahmedabad
+  <span class="sep">·</span>
+  <a href="index.html">Home</a>
+  <span class="sep">·</span>
+  <a href="search.html">Search Tool</a>
+</div>
+
+<div id="toast"></div>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+/* ═══════════════════════════════════════════════════
+   ╔═════════════════════════════════════════════════╗
+   ║  GOOGLE DRIVE FILE IDS                          ║
+   ║  Paste each catalogue's Drive file ID below.    ║
+   ║  Leave empty ('') to fall back to /pdfs/*.pdf   ║
+   ║                                                 ║
+   ║  How to get the file ID:                        ║
+   ║  1. Right-click PDF in Drive → Share → Anyone   ║
+   ║     with the link → Viewer                      ║
+   ║  2. Copy link, e.g.:                            ║
+   ║     drive.google.com/file/d/1aB2cD3eF/view      ║
+   ║  3. The ID is the part between /d/ and /view    ║
+   ║     → '1aB2cD3eF'                               ║
+   ╚═════════════════════════════════════════════════╝
+═══════════════════════════════════════════════════ */
+const DRIVE_FILES = {
+  'alkem-healthcare': '1uSW9-f2uHMNf8RXzJc2qQFhSN9b3DY2M',   // paste Drive file ID here
+  'alkem-maxxio':     '1WQMI74gxuBXGCvFb3IknygBdTl8C5zMf',
+  'alkem-novokem':    '1BiZz5PH_V65d53VGQbqCZggg4sN6JwQC',
+  'torque':           '1YXQOfW5ihzdUt3kAJINzztmKRT4mi0e5',
+  'torque-life':      '17uOM732VsWRTWPkG6BpHkO675JG6uX7A',
+  'lupin-life':       '1cSG_HdAcdUVGnSPQidLeIZO2cGXISIZ7',
+  'sun-ranbaxy':      '1v3F2CgVxjCG8uH4eoPyP7flv4glXjUw5',
+};
+
+/* ── Auto-wire Drive URLs on page load ─────────── */
+(function wireDriveURLs() {
+  document.querySelectorAll('.cat-card[data-key]').forEach(card => {
+    const key = card.dataset.key;
+    const id  = (DRIVE_FILES[key] || '').trim();
+    if (!id) return;                            // empty → keep local pdfs/* fallback
+    const view = `https://drive.google.com/file/d/${id}/view`;
+    const dl   = `https://drive.google.com/uc?export=download&id=${id}`;
+    const btnV = card.querySelector('.btn-view');
+    const btnD = card.querySelector('.btn-dl');
+    if (btnV) { btnV.href = view; btnV.target = '_blank'; btnV.rel = 'noopener'; btnV.removeAttribute('download'); }
+    if (btnD) { btnD.href = dl;   btnD.removeAttribute('download'); /* Drive sets headers */ }
+  });
+})();
+
+function filterCards() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const cards = document.querySelectorAll('.cat-card');
+  let n = 0;
+  cards.forEach(c => {
+    const show = !q || c.dataset.name.toLowerCase().includes(q);
+    c.style.display = show ? '' : 'none';
+    if (show) n++;
+  });
+  document.getElementById('visibleCount').textContent = n;
+  document.getElementById('emptyState').style.display = n ? 'none' : 'block';
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('on');
+  setTimeout(() => el.classList.remove('on'), 2500);
+}
+</script>
+</body>
+</html>
