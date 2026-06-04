@@ -93,6 +93,8 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
 /* brand bars */
 .c-alkem-hc  {background:linear-gradient(90deg,#15803d,#4ade80)}
 .c-alkem-mx  {background:linear-gradient(90deg,#b54a1e,#c89a6e)}
+.c-alkem-fu  {background:linear-gradient(90deg,#4338ca,#818cf8)}
+.c-alkem-fx  {background:linear-gradient(90deg,#5b21b6,#a78bfa)}
 .c-alkem-nk  {background:linear-gradient(90deg,#0e7490,#22d3ee)}
 .c-torque    {background:linear-gradient(90deg,#991b1b,#ef4444)}
 .c-torque-lf {background:linear-gradient(90deg,#7c3aed,#c084fc)}
@@ -102,6 +104,8 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
 /* brand icon backgrounds */
 .ic-alkem-hc  {background:#dcfce7;color:#15803d}
 .ic-alkem-mx  {background:var(--terra-xlt);color:var(--terra-1)}
+.ic-alkem-fu  {background:#e0e7ff;color:#4338ca}
+.ic-alkem-fx  {background:#ede9fe;color:#5b21b6}
 .ic-alkem-nk  {background:#cffafe;color:#0e7490}
 .ic-torque    {background:#fee2e2;color:#991b1b}
 .ic-torque-lf {background:#ede9fe;color:#7c3aed}
@@ -247,7 +251,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
         </div>
       </div>
       <div class="hero-stat">
-        <div class="num" id="visibleCount">7</div>
+        <div class="num" id="visibleCount">9</div>
         <div class="lbl">Catalogues</div>
       </div>
     </div>
@@ -309,7 +313,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
         <div class="cat-name">Healthcare Division</div>
       </div>
     </div>
-    <div class="cat-desc">Nutraceuticals, vitamins, mineral supplements & OTC wellness products for daily health needs.</div>
+    <div class="cat-desc">Alkem Healthcare division — catalogue available as PDF for view or download.</div>
     <div class="cat-meta">
       <span class="cat-tag">PDF</span>
       <span class="cat-tag fresh">Updated</span>
@@ -342,7 +346,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
         <div class="cat-name">Maxxio Division</div>
       </div>
     </div>
-    <div class="cat-desc">Chronic-care portfolio covering cardiac, anti-diabetic, CNS and lifestyle-disease therapy products.</div>
+    <div class="cat-desc">Alkem Maxxio division — catalogue available as PDF for view or download.</div>
     <div class="cat-meta">
       <span class="cat-tag">PDF</span>
       <span class="cat-tag fresh">Updated</span>
@@ -375,7 +379,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
         <div class="cat-name">Novokem Division</div>
       </div>
     </div>
-    <div class="cat-desc">Acute-care segment — anti-infectives, gastro-intestinal and general medicine for primary practice.</div>
+    <div class="cat-desc">Alkem Novokem division — catalogue available as PDF for view or download.</div>
     <div class="cat-meta">
       <span class="cat-tag">PDF</span>
       <span class="cat-tag fresh">Updated</span>
@@ -395,7 +399,74 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
   </div>
 </div>
 
-<!-- ─── 4. Torque ─── -->
+
+<!-- ─── 4. Futura Division ─── -->
+<div class="cat-card" data-name="alkem futura division" data-key="alkem-futura">
+  <div class="cat-bar c-alkem-fu"></div>
+  <div class="cat-body">
+    <div class="cat-head">
+      <div class="cat-icon ic-alkem-fu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div class="cat-titleblock">
+        <div class="cat-parent">Alkem Laboratories</div>
+        <div class="cat-name">Futura Division</div>
+      </div>
+    </div>
+    <div class="cat-desc">Alkem Futura specialty division — catalogue available as PDF for view or download.</div>
+    <div class="cat-meta">
+      <span class="cat-tag">PDF</span>
+      <span class="cat-tag fresh">Updated</span>
+    </div>
+  </div>
+  <div class="cat-foot">
+    <a class="btn-view" href="pdfs/alkem-futura.pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      View PDF
+    </a>
+    <a class="btn-icon btn-wa" href="#" target="_blank" rel="noopener" title="Share on WhatsApp">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.845L.057 23.571a.75.75 0 00.92.92l5.733-1.478A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.7 9.7 0 01-4.95-1.354l-.355-.21-3.668.944.966-3.58-.23-.368A9.75 9.75 0 1112 21.75z"/></svg>
+    </a>
+    <a class="btn-icon btn-dl" href="pdfs/alkem-futura.pdf" download title="Download PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ─── 5. Futura NEXX Division ─── -->
+<div class="cat-card" data-name="alkem futura nexx division" data-key="alkem-futura-nexx">
+  <div class="cat-bar c-alkem-fx"></div>
+  <div class="cat-body">
+    <div class="cat-head">
+      <div class="cat-icon ic-alkem-fx">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div class="cat-titleblock">
+        <div class="cat-parent">Alkem Laboratories</div>
+        <div class="cat-name">Futura NEXX Division</div>
+      </div>
+    </div>
+    <div class="cat-desc">Alkem Futura NEXX division — catalogue available as PDF for view or download.</div>
+    <div class="cat-meta">
+      <span class="cat-tag">PDF</span>
+      <span class="cat-tag fresh">Updated</span>
+    </div>
+  </div>
+  <div class="cat-foot">
+    <a class="btn-view" href="pdfs/alkem-futura-nexx.pdf" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      View PDF
+    </a>
+    <a class="btn-icon btn-wa" href="#" target="_blank" rel="noopener" title="Share on WhatsApp">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.116 1.535 5.845L.057 23.571a.75.75 0 00.92.92l5.733-1.478A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.7 9.7 0 01-4.95-1.354l-.355-.21-3.668.944.966-3.58-.23-.368A9.75 9.75 0 1112 21.75z"/></svg>
+    </a>
+    <a class="btn-icon btn-dl" href="pdfs/alkem-futura-nexx.pdf" download title="Download PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ─── 6. Torque ─── -->
 <div class="cat-card" data-name="torque pharma specialty critical" data-key="torque">
   <div class="cat-bar c-torque"></div>
   <div class="cat-body">
@@ -408,7 +479,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
         <div class="cat-name">Torque Division</div>
       </div>
     </div>
-    <div class="cat-desc">Specialty and critical-care formulations including hospital and institutional range products.</div>
+    <div class="cat-desc">Torque division — catalogue available as PDF for view or download.</div>
     <div class="cat-meta">
       <span class="cat-tag">PDF</span>
       <span class="cat-tag fresh">Updated</span>
@@ -428,7 +499,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
   </div>
 </div>
 
-<!-- ─── 5. Torque Life ─── -->
+<!-- ─── 7. Torque Life ─── -->
 <div class="cat-card" data-name="torque life sciences nutraceutical wellness" data-key="torque-life">
   <div class="cat-bar c-torque-lf"></div>
   <div class="cat-body">
@@ -441,7 +512,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
         <div class="cat-name">Torque Life</div>
       </div>
     </div>
-    <div class="cat-desc">Life-sciences range — nutraceuticals, immunity boosters and preventive healthcare products.</div>
+    <div class="cat-desc">Torque Life division — catalogue available as PDF for view or download.</div>
     <div class="cat-meta">
       <span class="cat-tag">PDF</span>
       <span class="cat-tag fresh">Updated</span>
@@ -461,7 +532,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
   </div>
 </div>
 
-<!-- ─── 6. Lupin Life Sciences ─── -->
+<!-- ─── 8. Lupin Life Sciences ─── -->
 <div class="cat-card" data-name="lupin life sciences respiratory" data-key="lupin-life">
   <div class="cat-bar c-lupin"></div>
   <div class="cat-body">
@@ -474,7 +545,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
         <div class="cat-name">Lupin Life Sciences</div>
       </div>
     </div>
-    <div class="cat-desc">Branded generics covering respiratory, women's health, gastro-intestinal and cardio-vascular therapy.</div>
+    <div class="cat-desc">Lupin Life Sciences — catalogue available as PDF for view or download.</div>
     <div class="cat-meta">
       <span class="cat-tag">PDF</span>
       <span class="cat-tag fresh">Updated</span>
@@ -494,7 +565,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
   </div>
 </div>
 
-<!-- ─── 7. Sun - Ranbaxy ─── -->
+<!-- ─── 9. Sun - Ranbaxy ─── -->
 <div class="cat-card" data-name="sun ranbaxy pharma branded generics" data-key="sun-ranbaxy">
   <div class="cat-bar c-sun"></div>
   <div class="cat-body">
@@ -507,7 +578,7 @@ header{background:var(--charcoal);position:sticky;top:0;z-index:200;box-shadow:0
         <div class="cat-name">Sun — Ranbaxy</div>
       </div>
     </div>
-    <div class="cat-desc">Comprehensive branded-generic portfolio across therapeutic segments under the Ranbaxy legacy range.</div>
+    <div class="cat-desc">Sun — Ranbaxy division — catalogue available as PDF for view or download.</div>
     <div class="cat-meta">
       <span class="cat-tag">PDF</span>
       <span class="cat-tag fresh">Updated</span>
@@ -619,6 +690,8 @@ const DRIVE_FILES = {
   'alkem-healthcare': '1uSW9-f2uHMNf8RXzJc2qQFhSN9b3DY2M',   // paste Drive file ID here
   'alkem-maxxio':     '1WQMI74gxuBXGCvFb3IknygBdTl8C5zMf',
   'alkem-novokem':    '1BiZz5PH_V65d53VGQbqCZggg4sN6JwQC',
+  'alkem-futura':     '1-rs4suHgqjzueJe_QiaFhEHII9_lpz6_',
+  'alkem-futura-nexx':'112tB2pCV-FkvYBLHhq6PwhW3WR9R0Cjb',
   'torque':           '1YXQOfW5ihzdUt3kAJINzztmKRT4mi0e5',
   'torque-life':      '17uOM732VsWRTWPkG6BpHkO675JG6uX7A',
   'lupin-life':       '1cSG_HdAcdUVGnSPQidLeIZO2cGXISIZ7',
@@ -630,6 +703,8 @@ const CAT_NAMES = {
   'alkem-healthcare': { name: 'Healthcare Division',   company: 'Alkem Laboratories' },
   'alkem-maxxio':     { name: 'Maxxio Division',       company: 'Alkem Laboratories' },
   'alkem-novokem':    { name: 'Novokem Division',      company: 'Alkem Laboratories' },
+  'alkem-futura':     { name: 'Futura Division',       company: 'Alkem Laboratories' },
+  'alkem-futura-nexx':{ name: 'Futura NEXX Division',  company: 'Alkem Laboratories' },
   'torque':           { name: 'Torque Division',        company: 'Torque Pharmaceuticals' },
   'torque-life':      { name: 'Torque Life',            company: 'Torque Pharmaceuticals' },
   'lupin-life':       { name: 'Lupin Life Sciences',   company: 'Lupin Limited' },
