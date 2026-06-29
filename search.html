@@ -2034,7 +2034,8 @@ function buildOrderText() {
   const timeStr = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
 
   let lines = [];
-  lines.push(`*SNT ORDER — ${dateStr}, ${timeStr}*`);
+  lines.push(`*SNT ORDER*`);
+  lines.push(`${dateStr}, ${timeStr}`);
   lines.push('');
 
   // Group by company
@@ -2046,30 +2047,29 @@ function buildOrderText() {
     byCo[p.company].push({ p, qty: CART[sr] });
   });
 
+  // Strip non-alphanumerics for a loose "does the name already contain the pack" check
+  const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
   let lineNo = 0;
   Object.keys(byCo).sort().forEach(co => {
     lines.push(`*${co}*`);
+    lines.push('');
     byCo[co].forEach(({p, qty}) => {
       lineNo++;
-      const boxQty = parseFloat(p.inBoxes);
-      let sub = '';
-      if (ptsUnlocked && !isNaN(boxQty) && p.pts != null) {
-        const t = p.pts * boxQty * qty;
-        sub = `  ₹${fmtN(t)}`;
-      }
-      lines.push(`${lineNo}. ${p.product} (${p.pack||'—'})`);
-      lines.push(`   Qty: ${qty} box${qty===1?'':'es'}${sub}`);
+      const pack = (p.pack || '').trim();
+      // Avoid duplicates like "ALCAL-D SYRUP (200 ML) (200 ml)"
+      const showPack = pack && !norm(p.product).includes(norm(pack));
+      const name = showPack ? `${p.product} _(${pack})_` : p.product;
+      lines.push(`${lineNo}.  ${name}`);
+      lines.push(`      Qty: *${qty} box${qty===1?'':'es'}*`);
+      lines.push('');
     });
-    lines.push('');
   });
 
   const items = srs.length;
   const boxes = cartTotalBoxes();
-  const total = cartSubtotal();
-  lines.push('─────────────────');
-  lines.push(`Items: ${items}  |  Boxes: ${boxes}`);
-  if (ptsUnlocked && total > 0) lines.push(`*Total @ PTS: ₹${fmtN(total)}*`);
-  lines.push(`_Approx. before GST / schemes / discounts_`);
+  lines.push('━━━━━━━━━━━━━━━');
+  lines.push(`Items: *${items}*   •   Boxes: *${boxes}*`);
 
   if (SETTINGS.sender && SETTINGS.sender.trim()) {
     lines.push('');
