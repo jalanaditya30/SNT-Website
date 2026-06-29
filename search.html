@@ -456,6 +456,38 @@ tbody tr:hover .photo-dot { opacity:1; }
 .ph-pts { font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:#1a7a4a; line-height:1.1; }
 .ph-mrp { font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--text); line-height:1.1; }
 
+/* ──────── PTS Lock ──────── */
+.pts-lock-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.5);
+  display:flex; align-items:center; justify-content:center;
+  z-index:9999; opacity:0; pointer-events:none; transition:opacity .18s;
+}
+.pts-lock-overlay.open { opacity:1; pointer-events:all; }
+.pts-lock-modal {
+  background:#fff; border-radius:14px; padding:28px 24px 22px;
+  width:min(320px,90vw); box-shadow:var(--sh4); text-align:center;
+}
+.pts-lock-modal h3 { margin:0 0 6px; font-size:18px; color:var(--charcoal); }
+.pts-lock-modal p  { font-size:13px; color:var(--text-4); margin:0 0 18px; }
+.pts-lock-input {
+  width:100%; padding:10px 14px; border:1.5px solid var(--border2);
+  border-radius:8px; font-size:15px; outline:none; margin-bottom:10px;
+  text-align:center; letter-spacing:3px; font-family:'JetBrains Mono',monospace;
+}
+.pts-lock-input:focus { border-color:var(--terra-2); }
+.pts-lock-error { color:#c0392b; font-size:12px; min-height:16px; margin-bottom:8px; }
+.pts-lock-btn {
+  width:100%; padding:10px; background:var(--terra-2); color:#fff;
+  border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;
+}
+.pts-lock-btn:hover { background:var(--terra-1); }
+.pts-lock-cancel { display:block; margin-top:10px; font-size:12px; color:var(--text-4); cursor:pointer; }
+.pts-lock-cancel:hover { color:var(--text-2); text-decoration:underline; }
+td.c-pts.pts-locked { cursor:pointer; color:var(--text-4); font-size:16px; text-align:center; }
+td.c-pts.pts-locked:hover { background:var(--terra-xlt); color:var(--terra-2); }
+.ph-pts.locked { cursor:pointer; font-size:15px; color:var(--text-3); font-weight:500; font-family:'Inter',sans-serif; }
+.ph-pts.locked:hover { color:var(--terra-2); }
+
 /* ──────── KV Grid (now smaller, secondary info) ──────── */
 .m-kv { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
 .kv label {
@@ -1009,7 +1041,7 @@ tbody tr:hover .photo-dot { opacity:1; }
         <th onclick="sortBy('product')" style="min-width:200px">Product Name<span class="sarr" id="arr-product"></span></th>
         <th class="col-co" onclick="sortBy('company')">Company<span class="sarr" id="arr-company"></span></th>
         <th class="col-pack" onclick="sortBy('pack')" style="width:76px">Pack<span class="sarr" id="arr-pack"></span></th>
-        <th onclick="sortBy('pts')"><span class="num-head">PTS ₹<span class="sarr" id="arr-pts"></span></span></th>
+        <th onclick="sortBy('pts')"><span class="num-head">PTS <span id="pts-lock-ind">🔒</span><span class="sarr" id="arr-pts"></span></span></th>
         <th class="col-mrp" onclick="sortBy('mrp')"><span class="num-head">MRP ₹<span class="sarr" id="arr-mrp"></span></span></th>
         <th class="col-inbox" onclick="sortBy('inBoxes')"><span class="num-head">In Box<span class="sarr" id="arr-inBoxes"></span></span></th>
         <th class="col-ship" onclick="sortBy('shipperQty')"><span class="num-head">Shipper<span class="sarr" id="arr-shipperQty"></span></span></th>
@@ -1206,6 +1238,19 @@ tbody tr:hover .photo-dot { opacity:1; }
 
 <div class="toast" id="toast"></div>
 
+<!-- ═══════ PTS LOCK OVERLAY ═══════ -->
+<div class="pts-lock-overlay" id="ptsLockOverlay" onclick="ptsLockBackdropClick(event)">
+  <div class="pts-lock-modal">
+    <h3>🔒 PTS Price</h3>
+    <p>Enter the password to view PTS prices.</p>
+    <input class="pts-lock-input" id="ptsLockInput" type="password" placeholder="••••••"
+           onkeydown="if(event.key==='Enter')submitPtsPassword()" autocomplete="off" />
+    <div class="pts-lock-error" id="ptsLockError"></div>
+    <button class="pts-lock-btn" onclick="submitPtsPassword()">Unlock</button>
+    <span class="pts-lock-cancel" onclick="closePtsLock()">Cancel</span>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════════════════════════
      SCRIPT
 ═══════════════════════════════════════════════════════ -->
@@ -1229,6 +1274,10 @@ const CART_KEY = 'snt_cart_v1';
 const SNT_WA = '917004622232';            // +91 7004622232 — SNT order line (hardcoded, not editable)
 let SETTINGS = { sender: '' };            // Only the stockist's name is configurable
 const SET_KEY = 'snt_settings_v1';
+
+/* ── PTS lock state ── */
+let ptsUnlocked = false;
+const PTS_KEY = 'snt_pts_unlocked_v1';
 
 /* ── Debounce helper ── */
 function debounce(fn, ms) {
@@ -1283,6 +1332,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   loadCart();
   loadSettings();
+  loadPtsUnlock();
   initCompanies();
   buildTabs();
   refreshArrows();
@@ -1296,6 +1346,7 @@ window.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey||e.metaKey) && e.key === 'k') { e.preventDefault(); si.focus(); si.select(); }
     if (e.key === 'Escape') {
+      if (document.getElementById('ptsLockOverlay').classList.contains('open')) { closePtsLock(); return; }
       if (document.getElementById('cartDrawer').classList.contains('open')) { closeCart(); return; }
       if (document.getElementById('setOverlay').classList.contains('open')) { closeSettings(); return; }
       closeLightbox(); closeModal();
@@ -1442,7 +1493,7 @@ function render() {
   tmp.innerHTML = slice.map(p => {
     const cls  = CO_CLASS[p.company]  || 'co-dyn-0';
     const sh   = CO_SHORT[p.company]  || p.company;
-    const pts  = p.pts        != null ? fmtN(p.pts)        : '—';
+    const pts  = ptsUnlocked ? (p.pts != null ? fmtN(p.pts) : '—') : '🔒';
     const mrp  = p.mrp        != null ? fmtN(p.mrp)        : '—';
     const box  = p.inBoxes    != null ? fmtN(p.inBoxes)    : '—';
     const ship = p.shipperQty != null ? fmtN(p.shipperQty) : '—';
@@ -1469,7 +1520,7 @@ function render() {
       <td class="c-prod"><div class="prod-main">${q ? hi(p.product,q) : esc(p.product)}${cam}</div>${meta}</td>
       <td class="c-co col-co"><span class="co-badge ${cls}">${esc(sh)}</span></td>
       <td class="c-pack col-pack"><span class="pack-tag">${q ? hi(p.pack,q) : esc(p.pack)}</span></td>
-      <td class="c-pts">${pts}</td>
+      <td class="c-pts${ptsUnlocked ? '' : ' pts-locked'}" ${ptsUnlocked ? '' : 'onclick="event.stopPropagation();openPtsLock()"'}>${pts}</td>
       <td class="c-mrp col-mrp">${mrp}</td>
       <td class="c-num col-inbox">${box}</td>
       <td class="c-num col-ship">${ship}</td>
@@ -1535,7 +1586,16 @@ function openModal(sr) {
   document.getElementById('mPackHint').textContent = `Pack: ${p.pack||'—'}`;
 
   // Pricing hero
-  document.getElementById('mPTS').textContent = p.pts != null ? `₹${fmtN(p.pts)}` : '—';
+  const mPtsEl = document.getElementById('mPTS');
+  if (ptsUnlocked) {
+    mPtsEl.textContent = p.pts != null ? `₹${fmtN(p.pts)}` : '—';
+    mPtsEl.classList.remove('locked');
+    mPtsEl.onclick = null;
+  } else {
+    mPtsEl.innerHTML = '🔒 <small style="font-size:13px;font-weight:400;letter-spacing:0;font-family:Inter,sans-serif">tap to unlock</small>';
+    mPtsEl.classList.add('locked');
+    mPtsEl.onclick = openPtsLock;
+  }
   document.getElementById('mMRP').textContent = p.mrp != null ? `₹${fmtN(p.mrp)}` : '—';
 
   // Secondary info
@@ -1776,6 +1836,7 @@ function resetAll() {
   refreshArrows(); render();
 }
 function sortBy(f) {
+  if (f === 'pts' && !ptsUnlocked) { openPtsLock(); return; }
   if (sF === f) sA = !sA; else { sF = f; sA = true; }
   curPage = 0;
   refreshArrows(); render();
@@ -1902,9 +1963,11 @@ function renderCartBody() {
     const sh  = CO_SHORT[p.company] || p.company;
     const boxQty = parseFloat(p.inBoxes);
     let subtotalCell;
-    if (!isNaN(boxQty) && p.pts != null) {
+    if (!isNaN(boxQty) && p.pts != null && ptsUnlocked) {
       const subtotal = p.pts * boxQty * qty;
       subtotalCell = `<span class="cart-line-sub">₹${fmtN(subtotal)}</span>`;
+    } else if (!ptsUnlocked) {
+      subtotalCell = `<span class="cart-line-na" style="cursor:pointer" onclick="openPtsLock()" title="Unlock to see PTS">🔒</span>`;
     } else {
       subtotalCell = `<span class="cart-line-na">—</span>`;
     }
@@ -1937,7 +2000,7 @@ function renderCartBody() {
   sub.textContent = `${items} product${items===1?'':'s'} · ${boxes} box${boxes===1?'':'es'}`;
   document.getElementById('cartItems').textContent = items;
   document.getElementById('cartBoxes').textContent = boxes;
-  document.getElementById('cartTotal').textContent = '₹' + fmtN(total);
+  document.getElementById('cartTotal').textContent = ptsUnlocked ? '₹' + fmtN(total) : '🔒 Unlock PTS';
 }
 
 function setCartQty(sr, val) {
@@ -1990,7 +2053,7 @@ function buildOrderText() {
       lineNo++;
       const boxQty = parseFloat(p.inBoxes);
       let sub = '';
-      if (!isNaN(boxQty) && p.pts != null) {
+      if (ptsUnlocked && !isNaN(boxQty) && p.pts != null) {
         const t = p.pts * boxQty * qty;
         sub = `  ₹${fmtN(t)}`;
       }
@@ -2005,7 +2068,7 @@ function buildOrderText() {
   const total = cartSubtotal();
   lines.push('─────────────────');
   lines.push(`Items: ${items}  |  Boxes: ${boxes}`);
-  if (total > 0) lines.push(`*Total @ PTS: ₹${fmtN(total)}*`);
+  if (ptsUnlocked && total > 0) lines.push(`*Total @ PTS: ₹${fmtN(total)}*`);
   lines.push(`_Approx. before GST / schemes / discounts_`);
 
   if (SETTINGS.sender && SETTINGS.sender.trim()) {
@@ -2051,7 +2114,7 @@ function shareProductWA() {
 
   lines.push('');
   if (p.mrp != null) lines.push(`💰 MRP: ₹${fmtN(p.mrp)}`);
-  if (p.pts != null) lines.push(`🏷 PTS: ₹${fmtN(p.pts)}`);
+  if (ptsUnlocked && p.pts != null) lines.push(`🏷 PTS: ₹${fmtN(p.pts)}`);
 
   if (p.remark && p.remark.trim()) {
     lines.push('');
@@ -2065,6 +2128,51 @@ function shareProductWA() {
   // No fixed receiver — let user pick a contact via WhatsApp
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
   window.open(url, '_blank');
+}
+
+/* ══════════════════════════════════════════════════════
+   PTS LOCK
+══════════════════════════════════════════════════════ */
+function loadPtsUnlock() {
+  try { ptsUnlocked = localStorage.getItem(PTS_KEY) === '1'; } catch(e) {}
+  updatePtsHeader();
+}
+function updatePtsHeader() {
+  const el = document.getElementById('pts-lock-ind');
+  if (el) el.textContent = ptsUnlocked ? '₹' : '🔒';
+}
+function openPtsLock() {
+  document.getElementById('ptsLockInput').value = '';
+  document.getElementById('ptsLockError').textContent = '';
+  document.getElementById('ptsLockOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('ptsLockInput').focus(), 80);
+}
+function closePtsLock() {
+  document.getElementById('ptsLockOverlay').classList.remove('open');
+}
+function ptsLockBackdropClick(e) {
+  if (e.target === document.getElementById('ptsLockOverlay')) closePtsLock();
+}
+function submitPtsPassword() {
+  if (document.getElementById('ptsLockInput').value === 'price') {
+    ptsUnlocked = true;
+    try { localStorage.setItem(PTS_KEY, '1'); } catch(e) {}
+    closePtsLock();
+    updatePtsHeader();
+    render();
+    if (curP) {
+      const mPtsEl = document.getElementById('mPTS');
+      mPtsEl.textContent = curP.pts != null ? `₹${fmtN(curP.pts)}` : '—';
+      mPtsEl.classList.remove('locked');
+      mPtsEl.onclick = null;
+    }
+    if (document.getElementById('cartDrawer').classList.contains('open')) renderCartBody();
+    toast('✓ PTS prices unlocked');
+  } else {
+    document.getElementById('ptsLockError').textContent = 'Incorrect password. Try again.';
+    document.getElementById('ptsLockInput').value = '';
+    document.getElementById('ptsLockInput').focus();
+  }
 }
 
 /* ══════════════════════════════════════════════════════
