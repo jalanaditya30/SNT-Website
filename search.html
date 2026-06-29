@@ -2051,25 +2051,16 @@ function buildOrderText() {
     lines.push(`*${co}*`);
     byCo[co].forEach(({p, qty}) => {
       lineNo++;
-      const boxQty = parseFloat(p.inBoxes);
-      let sub = '';
-      if (ptsUnlocked && !isNaN(boxQty) && p.pts != null) {
-        const t = p.pts * boxQty * qty;
-        sub = `  ₹${fmtN(t)}`;
-      }
       lines.push(`${lineNo}. ${p.product} (${p.pack||'—'})`);
-      lines.push(`   Qty: ${qty} box${qty===1?'':'es'}${sub}`);
+      lines.push(`   Qty: ${qty} box${qty===1?'':'es'}`);
     });
     lines.push('');
   });
 
   const items = srs.length;
   const boxes = cartTotalBoxes();
-  const total = cartSubtotal();
   lines.push('─────────────────');
   lines.push(`Items: ${items}  |  Boxes: ${boxes}`);
-  if (ptsUnlocked && total > 0) lines.push(`*Total @ PTS: ₹${fmtN(total)}*`);
-  lines.push(`_Approx. before GST / schemes / discounts_`);
 
   if (SETTINGS.sender && SETTINGS.sender.trim()) {
     lines.push('');
