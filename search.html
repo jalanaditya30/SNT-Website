@@ -2154,7 +2154,7 @@ function ptsLockBackdropClick(e) {
   if (e.target === document.getElementById('ptsLockOverlay')) closePtsLock();
 }
 function submitPtsPassword() {
-  if (document.getElementById('ptsLockInput').value === 'price') {
+  if (document.getElementById('ptsLockInput').value === 'PRICE') {
     ptsUnlocked = true;
     try { localStorage.setItem(PTS_KEY, '1'); } catch(e) {}
     closePtsLock();
