@@ -243,10 +243,11 @@
     const path = `${state.user.id}/${crypto.randomUUID()}.${extension || "jpg"}`;
     const { error: uploadError } = await client.storage.from(config.photoBucket).upload(path, file, { contentType: file.type || "image/jpeg", upsert: false });
     if (uploadError) throw uploadError;
-    const { error: updateError } = await client.from("near_expiry_items").update({ photo_path: path, updated_by: state.user.id }).eq("id", product.id);
-    if (updateError) {
+    const { data: attached, error: updateError } = await client.from("near_expiry_items").update({ photo_path: path, updated_by: state.user.id }).eq("id", product.id).select("id");
+    if (updateError || !attached?.length) {
+      /* The row never took the path, so the file just uploaded belongs to nothing. */
       await client.storage.from(config.photoBucket).remove([path]);
-      throw updateError;
+      throw updateError || refused(NO_UPDATE_POLICY);
     }
     if (product.photo_path) await client.storage.from(config.photoBucket).remove([product.photo_path]);
     return path;
@@ -290,12 +291,32 @@
   async function toggleStatus(product) {
     if (!product) return;
     const status = product.status === "available" ? "sold" : "available";
-    const { error } = await client.from("near_expiry_items").update({ status, updated_by: state.user.id }).eq("id", product.id);
+    const { data: changed, error } = await client.from("near_expiry_items").update({ status, updated_by: state.user.id }).eq("id", product.id).select("id");
     if (error) return toast(error.message, "error");
+    if (!changed?.length) return toast(NO_UPDATE_POLICY, "error");
     product.status = status; renderInventory(); toast(`Marked ${status}.`);
   }
 
+  /* A row-level security policy that declines a delete or an update is not an error in
+     PostgREST: the statement matches no rows and comes back 204 with nothing to complain
+     about. Every write here therefore asks for the affected ids back, because "no rows came
+     back" is the only signal that the database quietly kept the row - otherwise a blocked
+     delete is indistinguishable from a successful one until the next refresh. */
+  function refused(message) {
+    const error = new Error(message);
+    error.refused = true;
+    return error;
+  }
+
+  const NO_DELETE_POLICY = "The database would not delete this — nothing was removed. "
+    + "near_expiry_items has no row-level security policy allowing deletes for signed-in users. "
+    + "An SNT admin needs to add one in Supabase; the README has the SQL.";
+  const NO_UPDATE_POLICY = "The database would not save this — nothing changed. "
+    + "near_expiry_items has no row-level security policy allowing updates for signed-in users. "
+    + "An SNT admin needs to add one in Supabase; the README has the SQL.";
+
   function permissionMessage(error) {
+    if (error?.refused) return error.message;
     return /permission|denied|row-level|policy|42501/i.test(`${error?.code || ""} ${error?.message || ""}`)
       ? "Your account is not allowed to delete products. Ask an SNT admin to grant it in Supabase."
       : error?.message || "Product could not be deleted.";
@@ -313,8 +334,9 @@
     state.products.splice(position, 1);
     renderInventory();
     try {
-      const { error } = await client.from("near_expiry_items").delete().eq("id", product.id);
+      const { data: removed, error } = await client.from("near_expiry_items").delete().eq("id", product.id).select("id");
       if (error) throw error;
+      if (!removed?.length) throw refused(NO_DELETE_POLICY);
       /* The row is gone, so the product is deleted whatever happens next. A photo left behind
          in storage is worth a warning, not a failure the operator has to act on. */
       if (product.photo_path) {
@@ -355,11 +377,20 @@
     const photos = doomed.map((item) => item.photo_path).filter(Boolean);
     setLoading(true, `Deleting ${formatNumber(ids.length)} products…`);
     try {
+      let removed = 0;
       for (let start = 0; start < ids.length; start += CHUNK) {
         const chunk = ids.slice(start, start + CHUNK);
-        const { error } = await client.from("near_expiry_items").delete().in("id", chunk);
+        const { data, error } = await client.from("near_expiry_items").delete().in("id", chunk).select("id");
         if (error) throw error;
-        setLoading(true, `Deleted ${formatNumber(start + chunk.length)} of ${formatNumber(ids.length)}…`);
+        removed += data?.length || 0;
+        setLoading(true, `Deleted ${formatNumber(removed)} of ${formatNumber(ids.length)}…`);
+      }
+      /* Nothing removed at all is the policy refusing outright; a shortfall means some rows
+         were kept, and saying so beats a success message the inventory contradicts. */
+      if (!removed) throw refused(NO_DELETE_POLICY);
+      if (removed < ids.length) {
+        await loadProducts();
+        return toast(`${formatNumber(removed)} deleted — the database kept the other ${formatNumber(ids.length - removed)}.`, "warning");
       }
       let photosRemoved = true;
       for (let start = 0; start < photos.length; start += CHUNK) {

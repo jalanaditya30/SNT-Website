@@ -60,6 +60,56 @@ database refusal cannot destroy a photo under a product that is still listed.
 
 Nothing here can be undone, so be deliberate with it.
 
+### If Delete does nothing
+
+A row-level security policy that declines a delete is **not** an error in PostgREST: the
+statement matches no rows and the request comes back `204 No Content` with nothing to
+complain about. So a delete the database refuses looks exactly like one it performed, unless
+the page asks for the deleted rows back and checks that any arrived — which every write here
+now does. If nothing came back, the page says so and puts the row back rather than showing a
+table that disagrees with the database.
+
+Seeing that message means `near_expiry_items` has no policy letting signed-in users delete.
+Check what it does have:
+
+```sql
+select policyname, cmd, roles, qual
+from pg_policies
+where schemaname = 'public' and tablename = 'near_expiry_items';
+```
+
+A table with RLS enabled and no `DELETE` policy refuses every delete, silently. Add one:
+
+```sql
+grant delete on public.near_expiry_items to authenticated;
+
+create policy "Signed-in staff can delete"
+  on public.near_expiry_items
+  for delete
+  to authenticated
+  using (true);
+```
+
+Editing needs the matching `UPDATE` policy, and the status toggle and photo upload report the
+same way if it is missing:
+
+```sql
+grant update on public.near_expiry_items to authenticated;
+
+create policy "Signed-in staff can update"
+  on public.near_expiry_items
+  for update
+  to authenticated
+  using (true) with check (true);
+```
+
+`using (true)` lets any signed-in account delete. To restrict it to certain staff, put the
+condition there instead — for example `using (exists (select 1 from public.profiles p where
+p.id = auth.uid() and p.role = 'admin'))`.
+
+Missing the table `grant` rather than the policy is the other half of this: that one Postgres
+*does* raise, as `42501`, and the page reports it as an account permission problem.
+
 **Delete all** clears exactly what the table is showing — not the whole catalogue sitting
 behind a filter. Filter to *Sold only* and it deletes the sold stock; clear the filters and
 it deletes everything. The button counts what it would take ("Delete all 47 shown"), and the
