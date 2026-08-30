@@ -457,14 +457,22 @@ td small{display:block;margin-top:.1rem;max-width:44ch;overflow:hidden;text-over
 .match-table strong{display:block;font-size:.78rem;line-height:1.3}
 .match-cell-photo{width:56px}
 .match-cell-salt{width:32%;color:var(--ink-soft);font-size:.7rem;line-height:1.35}
-.match-select{width:100%;margin-top:.35rem;padding:.3rem .4rem;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--paper);font-size:.72rem}
+.match-input{width:100%;margin-top:.35rem;padding:.34rem .45rem;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--paper);font-size:.72rem}
+.match-input:focus{outline:2px solid var(--gold);outline-offset:-1px}
+.match-row--check .match-input{border-color:rgba(154,100,12,.5)}
+/* Runners-up, one click each — the field above searches the whole catalogue. */
+.match-chips{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.35rem}
+.match-chip{padding:.2rem .45rem;border:1px solid var(--line-strong);border-radius:999px;background:var(--paper);color:var(--ink-soft);font-size:.64rem;font-weight:600;line-height:1.4}
+.match-chip:hover{border-color:var(--ink-soft);background:var(--canvas)}
+.match-chip--clear{color:var(--muted);border-style:dashed}
+.match-warn{display:block;margin-top:.3rem;color:var(--red);font-size:.66rem;line-height:1.4}
 /* Rows still needing a decision are tinted, so a long list can be scanned rather than read. */
 .match-row--check{background:#fdf7ec}
 .match-row--none{background:var(--canvas)}
 .match-row--check .match-select{border-color:rgba(176,110,20,.5)}
 .match-state{display:inline-block;margin:.2rem 0 0;font-size:.58rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .match-state.ok{color:var(--green)}
-.match-state.picked{color:var(--ink-soft)}
+.match-state.manual{color:var(--ink-soft)}
 .match-state.check{color:#8a5a10}
 .match-state.none{color:var(--faint)}
 .match-note{margin:.7rem 0 0;color:var(--muted);font-size:.72rem;line-height:1.5}

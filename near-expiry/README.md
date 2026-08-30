@@ -51,13 +51,18 @@ that weighting `ALKEM COLD + SUS` matches `ALKEM COLD ACTIVE TAB` on the strengt
 ALKEM rather than `NEW ALKEM COLD + SUSPENSION`. Dose and pack figures are decisive — ALCOXIB
 120 is never ALCOXIB 90.
 
-The best suggestion is filled in wherever there is one, so it can be read without opening a
-dropdown and a long sheet does not need fifty clicks. Confidence is carried by the badge
-instead: anything under 72% is tinted, marked **Suggested — check it**, sorted to the top of
-the list and counted on the button beside Import. **Accept every suggestion** and **Keep all
-sheet names** settle the whole sheet at once. A product the catalogue does not have imports
-under the sheet's own name with no salt and no photo, which is what the old behaviour did for
-everything.
+The best suggestion is filled in wherever there is one, so it can be read at a glance and a
+long sheet does not need fifty clicks. Confidence is carried by the badge instead: anything
+under 72% is tinted, marked **Suggested — check it**, sorted to the top of the list and
+counted on the button beside Import.
+
+A suggestion is never a dead end. Each row's field searches the whole master — all 1554
+products — so any product can be typed in whether or not it scored; the runners-up sit under
+it as one-click chips, and **Keep the sheet name** rejects the lot. A name that is not a real
+catalogue product is refused out loud rather than silently kept, and the row falls back to the
+sheet's own name. **Accept every suggestion** and **Keep all sheet names** settle the whole
+sheet at once. A product the catalogue does not have imports under the sheet's own name with
+no salt and no photo, which is what the old behaviour did for everything.
 
 Nothing is decided permanently: reopen the dialog from the button next to Import, change any
 row, and the preview follows.

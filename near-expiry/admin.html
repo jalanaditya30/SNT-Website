@@ -9,13 +9,13 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://sfrfjznzlrkofjddfzfh.supabase.co; connect-src 'self' https://sfrfjznzlrkofjddfzfh.supabase.co; base-uri 'self'; form-action 'self'">
   <title>SNT Near Expiry Admin</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=4ceba8b7">
+  <link rel="stylesheet" href="styles.css?v=7a4d8518">
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/fflate@0.8.3/umd/index.js"></script>
   <script defer src="config.js?v=0d42f382"></script>
   <script defer src="shared.js?v=26855fca"></script>
-  <script defer src="admin.js?v=62694ad8"></script>
+  <script defer src="admin.js?v=716a3563"></script>
 </head>
 <body class="admin-body">
   <header class="site-header admin-topbar">
@@ -160,7 +160,7 @@
     <form id="productForm">
       <div class="modal-header"><h2 id="productFormTitle">Add product</h2><button class="icon-button" type="button" data-close-product aria-label="Close">×</button></div>
       <div class="modal-body form-grid">
-        <div class="field field--wide"><label for="productName">Product name</label><input id="productName" list="productMasterNames" required autocomplete="off"><datalist id="productMasterNames"></datalist></div>
+        <div class="field field--wide"><label for="productName">Product name</label><input id="productName" list="productMasterNames" required autocomplete="off"></div>
         <div class="field field--wide"><label for="saltName">Salt / composition</label><input id="saltName" autocomplete="off"></div>
         <div class="field field--wide" data-company-column><label for="productCompany">Company</label><input id="productCompany" list="companyNames" autocomplete="off" placeholder="Filled in automatically for a known product"><datalist id="companyNames"></datalist></div>
         <div class="field"><label for="expiryMonth">Expiry</label><input id="expiryMonth" type="month" required></div>
@@ -208,6 +208,8 @@
   </dialog>
 
   <datalist id="inventoryProductNames"></datalist>
+  <!-- Every catalogue product, so both the product form and the match dialog can search it. -->
+  <datalist id="productMasterNames"></datalist>
   <div id="loadingOverlay" class="loading-overlay"><span>Connecting to SNT…</span></div>
 </body>
 </html>
