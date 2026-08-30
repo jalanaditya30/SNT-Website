@@ -10,7 +10,7 @@ as before. The admin page is protected by Supabase Auth, as it always was.
 
 ## Pages
 
-- `index.html` — public search tool: token search across product, salt and batch, shelf-life
+- `index.html` — public search tool: token search across product, company, salt and batch, shelf-life
   filtering, sorting, grid/list layouts, favourites and one-tap WhatsApp sharing.
 - `admin.html` — Supabase-authenticated inventory, Excel/CSV import with a pre-flight
   validation preview, bulk photo/WhatsApp ZIP inbox and CRUD. Reached from the
@@ -19,8 +19,8 @@ as before. The admin page is protected by Supabase Auth, as it always was.
 
 ## Using the catalogue
 
-- Search matches every word in any order — `pan tablets`, `paracetamol dolo` and a batch
-  number all work. Press `/` to jump to the search box.
+- Search matches every word in any order — `pan tablets`, `paracetamol dolo`, a company name
+  and a batch number all work. Press `/` to jump to the search box.
 - Each product shows its remaining shelf life, colour-coded: red under 3 months, amber under
   6, green beyond.
 - **Saved** keeps a shortlist in the browser; **Share** sends the product details, and the
@@ -81,6 +81,41 @@ rows can be found and marked sold.
 Photos are matched to products by filename in the photo inbox; confirm or correct each name
 (or click a suggestion), then upload. Names typed by hand are preserved when more photos are
 added.
+
+## Company
+
+Each product carries the company it comes from — shown above the product name on the public
+catalogue, in its own column in the admin inventory, in the WhatsApp share text, and matched
+by search, so `lupin` finds the Lupin stock.
+
+Like price, the column is not created by anything in this repository. Add it once in
+Supabase:
+
+```sql
+alter table public.near_expiry_items
+  add column if not exists company text;
+```
+
+Both pages probe for it on load. Until it exists they run exactly as before, with the
+company field, column and Excel mapping hidden and a notice on the admin page; companies
+appear everywhere the moment the migration is run, with no further change. If the project
+uses column-level grants rather than table-level ones, grant `select` on the new column to
+`anon` and `authenticated` as well.
+
+Mostly it fills itself in. `product-master.json` already records the company for all 1554
+catalogue products, so:
+
+- typing a recognised product name in the admin form fills the company in, alongside the
+  salt it already filled;
+- an import looks the company up per row, so a sheet with no company column still lands with
+  companies attached.
+
+The importer also reads a company column named Company, Manufacturer, Mfr, Brand, Division
+or Supplier when the sheet has one, and that takes precedence over the master. A re-import
+from a sheet without the column never blanks a company already on a record.
+
+The admin field offers the companies the master knows as a picklist, so one company cannot
+drift into three spellings. It stays free text, for stock from a company not in the master.
 
 ## Prices
 

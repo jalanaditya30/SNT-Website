@@ -43,6 +43,7 @@
     </section>
 
     <p id="priceNotice" class="notice hidden">Price is switched off because the <code>price</code> column does not exist yet in Supabase. Run <code>alter table public.near_expiry_items add column if not exists price numeric(10,2);</code> and reload — everything else keeps working in the meantime.</p>
+    <p id="companyNotice" class="notice hidden">Company is switched off because the <code>company</code> column does not exist yet in Supabase. Run <code>alter table public.near_expiry_items add column if not exists company text;</code> and reload — everything else keeps working in the meantime.</p>
 
     <nav class="admin-tabs" aria-label="Admin sections">
       <button class="is-active" type="button" data-admin-tab="inventory">Inventory</button>
@@ -64,7 +65,7 @@
           <label class="search-field">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
             <span class="sr-only">Search inventory</span>
-            <input id="adminSearch" type="search" placeholder="Search product, salt or batch…" autocomplete="off">
+            <input id="adminSearch" type="search" placeholder="Search product, company, salt or batch…" autocomplete="off">
           </label>
           <div class="select-field">
             <label class="sr-only" for="adminStatusFilter">Filter by status</label>
@@ -75,7 +76,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th scope="col">Photo</th><th scope="col">Product</th><th scope="col">Expiry</th><th scope="col">Shelf life</th><th scope="col">Qty</th><th scope="col" data-price-column>Price</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+            <thead><tr><th scope="col">Photo</th><th scope="col">Product</th><th scope="col" data-company-column>Company</th><th scope="col">Expiry</th><th scope="col">Shelf life</th><th scope="col">Qty</th><th scope="col" data-price-column>Price</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody id="inventoryRows"></tbody>
           </table>
         </div>
@@ -105,6 +106,7 @@
             <div class="field"><label for="mapQuantity">Quantity</label><select id="mapQuantity"></select></div>
             <div class="field"><label for="mapBatch">Batch (optional)</label><select id="mapBatch"></select></div>
             <div class="field" data-price-column><label for="mapPrice">Price (optional)</label><select id="mapPrice"></select></div>
+            <div class="field" data-company-column><label for="mapCompany">Company (optional)</label><select id="mapCompany"></select></div>
           </div>
         </div>
 
@@ -115,7 +117,7 @@
           <div id="previewWrap" class="preview-wrap hidden">
             <div class="preview-scroll">
               <table>
-                <thead><tr><th scope="col">Product</th><th scope="col">Salt</th><th scope="col">Expiry</th><th scope="col">Qty</th><th scope="col" data-price-column>Price</th><th scope="col">Batch</th></tr></thead>
+                <thead><tr><th scope="col">Product</th><th scope="col">Salt</th><th scope="col">Expiry</th><th scope="col">Qty</th><th scope="col" data-price-column>Price</th><th scope="col" data-company-column>Company</th><th scope="col">Batch</th></tr></thead>
                 <tbody id="previewRows"></tbody>
               </table>
             </div>
@@ -159,6 +161,7 @@
       <div class="modal-body form-grid">
         <div class="field field--wide"><label for="productName">Product name</label><input id="productName" list="productMasterNames" required autocomplete="off"><datalist id="productMasterNames"></datalist></div>
         <div class="field field--wide"><label for="saltName">Salt / composition</label><input id="saltName" autocomplete="off"></div>
+        <div class="field field--wide" data-company-column><label for="productCompany">Company</label><input id="productCompany" list="companyNames" autocomplete="off" placeholder="Filled in automatically for a known product"><datalist id="companyNames"></datalist></div>
         <div class="field"><label for="expiryMonth">Expiry</label><input id="expiryMonth" type="month" required></div>
         <div class="field"><label for="productQuantity">Quantity</label><input id="productQuantity" type="number" min="0" step="1" required></div>
         <div class="field" data-price-column><label for="productPrice">Price per pack (₹)</label><input id="productPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Leave blank for “on request”"></div>

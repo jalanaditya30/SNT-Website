@@ -3,14 +3,14 @@
 
   if (!window.SNT) return;
   const { client, config, escapeHtml, normalise, searchable, queryTokens, matchesTokens, parseExpiry, formatExpiry,
-    expiryForInput, expiryMeta, formatNumber, formatPrice, parsePrice, detectPriceColumn, photoUrl,
+    expiryForInput, expiryMeta, formatNumber, formatPrice, parsePrice, hasColumn, photoUrl,
     websitePhoto, photoTableReady, toast } = window.SNT;
 
   const CHUNK = 100;
   const PREVIEW_ROWS = 60;
   const state = {
     user: null, role: "operator", products: [], master: [],
-    workbookRows: [], rawRows: [], headers: [], parsed: [], editing: null, photos: [], hasPrice: false,
+    workbookRows: [], rawRows: [], headers: [], parsed: [], editing: null, photos: [], hasPrice: false, hasCompany: false,
     /* ids whose delete is still in flight, so a double-click cannot fire two */
     removing: new Set(), deletingAll: null
   };
@@ -49,19 +49,26 @@
     return data.user;
   }
 
-  /* Price lives behind a migration this repository does not ship, so the whole feature is
-     switched on only once the column is really there. */
-  async function applyPriceSupport() {
-    state.hasPrice = await detectPriceColumn();
-    document.querySelectorAll("[data-price-column]").forEach((node) => node.classList.toggle("hidden", !state.hasPrice));
-    element("#priceNotice").classList.toggle("hidden", state.hasPrice);
+  /* Price and company each live behind a migration this repository does not ship, so each
+     feature is switched on only once its column is really there. */
+  async function applyOptionalColumns() {
+    [state.hasPrice, state.hasCompany] = await Promise.all([hasColumn("price"), hasColumn("company")]);
+    [["price", state.hasPrice], ["company", state.hasCompany]].forEach(([name, present]) => {
+      document.querySelectorAll(`[data-${name}-column]`).forEach((node) => node.classList.toggle("hidden", !present));
+      element(`#${name}Notice`).classList.toggle("hidden", present);
+    });
+  }
+
+  /* Columns the inventory table is currently showing, for an empty row to span. */
+  function tableColumns() {
+    return 7 + (state.hasPrice ? 1 : 0) + (state.hasCompany ? 1 : 0);
   }
 
   async function showAuthenticated() {
     elements.loginView.classList.add("hidden");
     elements.adminView.classList.remove("hidden");
     element("#signOutButton").classList.remove("hidden");
-    await applyPriceSupport();
+    await applyOptionalColumns();
     await Promise.all([loadProducts(), loadMaster()]);
   }
 
@@ -92,9 +99,10 @@
     element("#importPreview").textContent = "Select a file to preview its rows.";
     element("#importButton").disabled = true;
     element("#importButton").textContent = "Import products";
-    ["#mapProduct", "#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice"].forEach((id) => { element(id).innerHTML = ""; });
+    ["#mapProduct", "#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice", "#mapCompany"].forEach((id) => { element(id).innerHTML = ""; });
     element("#photoTabCount").textContent = "";
     element("#inventoryProductNames").innerHTML = "";
+    element("#companyNames").innerHTML = "";
     ["#statTotal", "#statAvailable", "#statSold", "#statPhotos", "#statExpired"].forEach((id) => { element(id).textContent = "0"; });
     element("#loginPassword").value = "";
     elements.search.value = "";
@@ -121,6 +129,10 @@
     if (!response.ok) throw new Error("Product master could not load.");
     state.master = await response.json();
     element("#productMasterNames").innerHTML = state.master.map((item) => `<option value="${escapeHtml(item.name)}"></option>`).join("");
+    /* The handful of companies the master actually carries, so the field is a pick rather
+       than free text and "Alkem - Maxxio" cannot become three different spellings. */
+    const companies = [...new Set(state.master.map((item) => item.company).filter(Boolean))].sort();
+    element("#companyNames").innerHTML = companies.map((name) => `<option value="${escapeHtml(name)}"></option>`).join("");
   }
 
   function filteredProducts() {
@@ -130,7 +142,7 @@
       if (filter === "nophoto" && item.photo_path) return false;
       if (filter === "expired" && !isExpiredAndListed(item)) return false;
       if ((filter === "available" || filter === "sold") && item.status !== filter) return false;
-      return matchesTokens(`${item.product_name} ${item.salt_name || ""} ${item.batch_no || ""}`, tokens);
+      return matchesTokens(`${item.product_name} ${item.salt_name || ""} ${item.batch_no || ""} ${item.company || ""}`, tokens);
     });
   }
 
@@ -182,6 +194,7 @@
       return `<tr data-row-id="${escapeHtml(item.id)}">
         <td>${photoCell(item)}</td>
         <td><strong>${escapeHtml(item.product_name)}</strong><small>${escapeHtml(item.salt_name || "No composition")}${item.batch_no ? ` · Batch ${escapeHtml(item.batch_no)}` : ""}</small></td>
+        <td class="cell-company${state.hasCompany ? "" : " hidden"}" data-company-column>${escapeHtml(item.company) || "—"}</td>
         <td class="cell-exp">${formatExpiry(item.expiry_date)}</td>
         <td><span class="shelf shelf--${shelf.tone}">${escapeHtml(shelf.label)}</span></td>
         <td class="cell-num">${formatNumber(item.quantity)}</td>
@@ -189,7 +202,7 @@
         <td><button class="mini-badge ${escapeHtml(item.status)}" type="button" data-toggle-status="${escapeHtml(item.id)}" title="Change status">${escapeHtml(item.status)}</button></td>
         <td><div class="row-actions"><button class="icon-button" type="button" data-edit="${escapeHtml(item.id)}">Edit</button><button class="icon-button danger" type="button" data-delete="${escapeHtml(item.id)}">Delete</button></div></td>
       </tr>`;
-    }).join("") : `<tr><td class="table-empty" colspan="${state.hasPrice ? 8 : 7}">No products match this search.</td></tr>`;
+    }).join("") : `<tr><td class="table-empty" colspan="${tableColumns()}">No products match this search.</td></tr>`;
   }
 
   function masterMatch(name) {
@@ -203,6 +216,7 @@
     element("#productFormTitle").textContent = product ? "Edit product" : "Add product";
     element("#productName").value = product?.product_name || "";
     element("#saltName").value = product?.salt_name || "";
+    element("#productCompany").value = product?.company || "";
     element("#expiryMonth").value = expiryForInput(product?.expiry_date);
     element("#productQuantity").value = product?.quantity ?? 0;
     element("#productPrice").value = product?.price ?? "";
@@ -250,6 +264,7 @@
       status: element("#productStatus").value, updated_by: state.user.id, source: state.editing?.source || "manual"
     };
     if (!record.product_name) return toast("Product name is required.", "error");
+    if (state.hasCompany) record.company = element("#productCompany").value.trim() || null;
     if (state.hasPrice) {
       const raw = element("#productPrice").value.trim();
       if (raw && parsePrice(raw) === null) return toast("Enter a valid price, or leave it blank.", "error");
@@ -389,7 +404,8 @@
     return {
       product: element("#mapProduct").value, salt: element("#mapSalt").value, expiry: element("#mapExpiry").value,
       quantity: element("#mapQuantity").value, batch: element("#mapBatch").value,
-      price: state.hasPrice ? element("#mapPrice").value : ""
+      price: state.hasPrice ? element("#mapPrice").value : "",
+      company: state.hasCompany ? element("#mapCompany").value : ""
     };
   }
 
@@ -405,6 +421,9 @@
       const batch = mapping.batch ? String(row[mapping.batch] ?? "").trim() : "";
       const quantity = Math.max(0, Math.trunc(Number(String(row[mapping.quantity] ?? "").replace(/[,\s]/g, "")) || 0));
       const salt = (mapping.salt ? String(row[mapping.salt] ?? "").trim() : "") || lookup.get(normalise(name))?.salt || "";
+      /* Most sheets carry no company column, and the master already knows it for every
+         catalogue product — so an unmapped company is looked up rather than left blank. */
+      const company = (mapping.company ? String(row[mapping.company] ?? "").trim() : "") || lookup.get(normalise(name))?.company || "";
       const rawPrice = mapping.price ? row[mapping.price] : "";
       const price = parsePrice(rawPrice);
       const problems = [];
@@ -413,7 +432,7 @@
       /* An unreadable price is a warning, not a reason to drop a whole product row. */
       const warnings = mapping.price && String(rawPrice ?? "").trim() && price === null
         ? [`price "${String(rawPrice).trim()}" not understood — imported without a price`] : [];
-      return { line: index + 2, name, salt, batch, quantity, expiry, rawExpiry, price, problems, warnings };
+      return { line: index + 2, name, salt, company, batch, quantity, expiry, rawExpiry, price, problems, warnings };
     });
     return state.parsed;
   }
@@ -455,6 +474,7 @@
       <td class="cell-exp" title="${escapeHtml(row.problems.join("; ") || "")}">${row.expiry ? formatExpiry(row.expiry) : escapeHtml(String(row.rawExpiry ?? "").trim() || "blank")}</td>
       <td class="cell-num">${formatNumber(row.quantity)}</td>
       <td class="cell-price${state.hasPrice ? "" : " hidden"}" data-price-column>${escapeHtml(formatPrice(row.price)) || "—"}</td>
+      <td class="cell-company${state.hasCompany ? "" : " hidden"}" data-company-column>${escapeHtml(row.company) || "—"}</td>
       <td>${escapeHtml(row.batch || "—")}</td>
     </tr>`).join("");
     wrap.classList.remove("hidden");
@@ -490,7 +510,8 @@
         expiry: detectHeader([/^exp$/, /expiry/, /expiration/, /^exp\b/]),
         quantity: detectHeader([/^qty$/, /quantity/, /stock/, /^pcs$/]),
         batch: detectHeader([/batch/, /^b\.?no\.?$/, /lot/]),
-        price: detectHeader([/^price$/, /^rate$/, /^mrp$/, /^ptr$/, /^pts$/, /price/, /rate/])
+        price: detectHeader([/^price$/, /^rate$/, /^mrp$/, /^ptr$/, /^pts$/, /price/, /rate/]),
+        company: detectHeader([/^company$/, /^companies$/, /^mfr$/, /manufacturer/, /^brand$/, /^division$/, /^supplier$/, /company/])
       };
       element("#mapProduct").innerHTML = columnOptions(selected.product);
       element("#mapSalt").innerHTML = columnOptions(selected.salt, true);
@@ -498,6 +519,7 @@
       element("#mapQuantity").innerHTML = columnOptions(selected.quantity);
       element("#mapBatch").innerHTML = columnOptions(selected.batch, true);
       element("#mapPrice").innerHTML = columnOptions(selected.price, true);
+      element("#mapCompany").innerHTML = columnOptions(selected.company, true);
       element("#excelFileStatus").textContent = `${file.name} · ${formatNumber(rows.length)} rows`;
       renderPreview();
     } catch (error) { toast(error.message || "Spreadsheet could not be read.", "error"); }
@@ -525,7 +547,10 @@
         status: row.quantity > 0 && !staleSoldRow ? "available" : "sold",
         source: "excel", created_by: state.user.id, updated_by: state.user.id,
         /* Keep a price already on the record when the sheet has no price column. */
-        ...(state.hasPrice && (mapping.price || row.price !== null) ? { price: row.price } : {})
+        ...(state.hasPrice && (mapping.price || row.price !== null) ? { price: row.price } : {}),
+        /* Only write a company we actually resolved, so a re-import from a sheet without
+           the column cannot blank one that is already on the record. */
+        ...(state.hasCompany && row.company ? { company: row.company } : {})
       });
     });
     const records = [...unique.values()];
@@ -695,9 +720,13 @@
   element("#addProductButton").addEventListener("click", () => resetProductForm(null));
   document.querySelectorAll("[data-close-product]").forEach((button) => button.addEventListener("click", closeProductForm));
   elements.formDialog.addEventListener("cancel", () => { state.editing = null; });
+  /* The master already knows the salt and the company for every catalogue product, so a
+     recognised name fills both in. Anything typed by hand is left alone. */
   element("#productName").addEventListener("change", (event) => {
     const match = masterMatch(event.target.value);
-    if (match && !element("#saltName").value.trim()) element("#saltName").value = match.salt || "";
+    if (!match) return;
+    if (!element("#saltName").value.trim()) element("#saltName").value = match.salt || "";
+    if (!element("#productCompany").value.trim()) element("#productCompany").value = match.company || "";
   });
   element("#productQuantity").addEventListener("input", updateFormNote);
   element("#productStatus").addEventListener("change", updateFormNote);
@@ -732,7 +761,7 @@
   element("#confirmDeleteAll").addEventListener("click", deleteAllShown);
 
   element("#excelFile").addEventListener("change", (event) => { if (event.target.files[0]) readExcel(event.target.files[0]); });
-  ["#mapProduct", "#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice"].forEach((id) => element(id).addEventListener("change", renderPreview));
+  ["#mapProduct", "#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice", "#mapCompany"].forEach((id) => element(id).addEventListener("change", renderPreview));
   element("#importButton").addEventListener("click", importExcel);
   wireDropZone("#excelDrop", "#excelFile", readExcel);
 

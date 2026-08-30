@@ -163,8 +163,11 @@
 
   /* The price column is added by a migration this repository does not ship. Probe for it once
      so both pages keep working — without prices — until that migration has been run. */
-  async function detectPriceColumn() {
-    const { error } = await client.from("near_expiry_items").select("price").limit(1);
+  /* Price and company each live behind a migration this repository does not ship, so both
+     pages ask the database what it actually has rather than assuming. Probed one column at
+     a time: asking for both at once cannot tell which of them is missing. */
+  async function hasColumn(column) {
+    const { error } = await client.from("near_expiry_items").select(column).limit(1);
     return !error;
   }
 
@@ -250,7 +253,7 @@
   window.SNT = {
     client, config, escapeHtml, normalise, searchable, queryTokens, matchesTokens, relevance,
     parseExpiry, formatExpiry, expiryParts, expiryForInput, monthToDate, expiryMeta, formatNumber,
-    formatPrice, parsePrice, detectPriceColumn, whatsappLink, photoUrl, websitePhoto, productPhoto,
+    formatPrice, parsePrice, hasColumn, whatsappLink, photoUrl, websitePhoto, productPhoto,
     photoTableReady, initials, toast
   };
 })();
