@@ -477,3 +477,7 @@ td small{display:block;margin-top:.1rem;max-width:44ch;overflow:hidden;text-over
 .match-state.none{color:var(--faint)}
 .match-note{margin:.7rem 0 0;color:var(--muted);font-size:.72rem;line-height:1.5}
 .faint{color:var(--faint)}
+
+/* --- unused photos ------------------------------------------------------ */
+.orphan-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin:.9rem 0;padding:.7rem .85rem;border:1px solid var(--line);border-radius:var(--r-md);background:var(--canvas)}
+.orphan-bar p{flex:1 1 16rem;margin:0;color:var(--muted);font-size:.72rem;line-height:1.5}

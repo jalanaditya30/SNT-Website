@@ -102,6 +102,36 @@ database refusal cannot destroy a photo under a product that is still listed.
 
 Nothing here can be undone, so be deliberate with it.
 
+### Photos left behind in storage
+
+`storage.remove()` refuses the same way the table delete does: it answers with the objects it
+actually removed, and a bucket policy that declines simply returns an empty list with no
+error. Checking only the error therefore left the file in the bucket while the page reported
+success — invisible in the admin, still counting against storage, which is how photos pile up
+under a folder named after the account that uploaded them.
+
+Every removal is now checked against what came back, and whatever stayed is named in the
+message. **Photo inbox → Find unused photos** walks the bucket, subtracts every `photo_path`
+the table holds, and offers to delete the difference — both the ones already stranded and
+anything a future refusal leaves. Deleting from there asks first, since it acts on a list
+rather than a row.
+
+A bulk delete that the database only partly allows now removes the photos of the products it
+did delete, rather than orphaning all of them.
+
+If photos will not delete, the bucket needs a delete policy for signed-in users on
+`storage.objects`:
+
+```sql
+create policy "Signed-in staff can delete photos"
+  on storage.objects for delete to authenticated
+  using (bucket_id = 'near-expiry-photos');
+```
+
+A policy scoped to `owner = auth.uid()` instead means each account can only remove what it
+uploaded, so one person's photos survive another's delete — worth checking if the bucket has
+files under more than one folder.
+
 ### If Delete does nothing
 
 A row-level security policy that declines a delete is **not** an error in PostgREST: the
