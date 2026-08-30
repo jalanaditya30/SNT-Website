@@ -1,0 +1,7 @@
+# The near-expiry catalogue is shared by link with trade contacts rather than
+# advertised, and nothing on this site links to it. Keeping it out of search
+# results is a courtesy, not a control: both pages are still publicly readable
+# to anyone holding the URL, and access is enforced by Supabase Auth on the
+# admin page, not here.
+User-agent: *
+Disallow: /near-expiry/

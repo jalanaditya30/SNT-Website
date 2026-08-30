@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#241f1a">
+  <!-- Shared by link, not linked from the main site — keep it out of search results. -->
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="Search current near-expiry pharmaceutical offers from Shree Narayani Traders — product, salt, expiry and available quantity.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://sfrfjznzlrkofjddfzfh.supabase.co; connect-src 'self' https://sfrfjznzlrkofjddfzfh.supabase.co; frame-src https://wa.me https://api.whatsapp.com; base-uri 'self'; form-action 'self'">
+  <title>SNT Near Expiry Offers</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js"></script>
+  <script defer src="config.js"></script>
+  <script defer src="shared.js"></script>
+  <script defer src="catalog.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="SNT Near Expiry home">
+      <span class="brand__seal">SNT</span>
+      <span class="brand__text"><strong>Shree Narayani Traders</strong><small>Near Expiry Offers</small></span>
+    </a>
+    <div class="header-actions">
+      <a class="header-whatsapp" href="https://wa.me/919304818900" data-whatsapp-link target="_blank" rel="noopener" aria-label="Message SNT on WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.5 14.1c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.6-.1-.4-.1-.9-.3-1.5-.6a11 11 0 0 1-4.2-3.8c-.3-.5-.7-1.1-.7-1.8 0-.7.3-1.1.5-1.3.2-.2.4-.3.6-.3h.4c.1 0 .3 0 .5.4l.6 1.5c0 .1.1.2 0 .4l-.3.4-.2.3c-.1.1-.2.2 0 .4.2.3.6 1 1.3 1.6.9.8 1.6 1 1.9 1.1.2.1.4.1.5-.1l.6-.7c.2-.2.3-.2.5-.1l1.5.7c.2.1.4.2.4.3.1.1.1.4 0 .5Z"/></svg><span>WhatsApp SNT</span></a>
+    </div>
+  </header>
+
+  <main class="catalog-main">
+    <section class="hero">
+      <div class="hero__head">
+        <h1>Near-expiry catalogue</h1>
+        <span id="updatedLine" class="hero__updated"></span>
+      </div>
+      <p class="hero__lede">Search by product name, salt or batch<span class="hero__lede-more"> — save a shortlist and share any offer straight to WhatsApp</span>.</p>
+      <div class="hero__search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <label class="sr-only" for="searchInput">Search products</label>
+        <input id="searchInput" type="search" placeholder="Search product, salt or batch…" autocomplete="off" enterkeyhint="search">
+        <button id="clearSearch" class="clear-search" type="button" aria-label="Clear search">×</button>
+        <kbd class="search-hint">/</kbd>
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="Catalogue filters">
+      <div class="segmented" role="tablist" aria-label="Product status">
+        <button class="is-active" type="button" role="tab" aria-selected="true" data-view="available">Available <b id="availableTabCount">0</b></button>
+        <button type="button" role="tab" aria-selected="false" data-view="sold">Sold <b id="soldTabCount">0</b></button>
+        <button type="button" role="tab" aria-selected="false" data-view="favourites">♡ Saved <b id="savedTabCount">0</b></button>
+      </div>
+      <div class="toolbar__spacer"></div>
+      <div class="select-field">
+        <label class="sr-only" for="shelfFilter">Filter by shelf life</label>
+        <select id="shelfFilter">
+          <option value="all">Any expiry</option>
+          <option value="3">Expiring in 3 months</option>
+          <option value="6">Expiring in 6 months</option>
+          <option value="12">Expiring within a year</option>
+        </select>
+      </div>
+      <div class="select-field">
+        <label class="sr-only" for="sortSelect">Sort results</label>
+        <select id="sortSelect">
+          <option value="expiry">Expiry: soonest</option>
+          <option value="expiry-late">Expiry: latest</option>
+          <option value="quantity">Quantity: highest</option>
+          <option value="name">Name: A–Z</option>
+        </select>
+      </div>
+      <div class="layout-toggle" role="group" aria-label="Result layout">
+        <button class="is-active" type="button" data-layout="grid" aria-label="Grid view" title="Grid view"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"></rect><rect x="13" y="3" width="8" height="8" rx="1.5"></rect><rect x="3" y="13" width="8" height="8" rx="1.5"></rect><rect x="13" y="13" width="8" height="8" rx="1.5"></rect></svg></button>
+        <button type="button" data-layout="list" aria-label="List view" title="List view"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="18" height="3.5" rx="1.5"></rect><rect x="3" y="10.25" width="18" height="3.5" rx="1.5"></rect><rect x="3" y="16.5" width="18" height="3.5" rx="1.5"></rect></svg></button>
+      </div>
+    </section>
+
+    <p id="resultsMeta" class="results-meta" aria-live="polite"></p>
+    <div id="catalogStatus" class="catalog-status">Loading current offers…</div>
+    <section id="productGrid" class="product-grid"></section>
+  </main>
+
+  <footer><strong>Shree Narayani Traders</strong>Pharmaceutical C&amp;F · Ahmedabad, Gujarat<br>Availability and expiry are confirmed by SNT at the time of order.</footer>
+
+  <dialog id="productDialog" class="product-dialog" aria-label="Product details">
+    <button class="dialog-close" type="button" data-close-dialog aria-label="Close">×</button>
+    <div id="productDialogBody"></div>
+  </dialog>
+
+  <dialog id="imageViewer" class="image-viewer" aria-label="Product photo">
+    <div id="viewerStage" class="viewer-stage"><img id="viewerImage" alt=""></div>
+    <div class="viewer-bar">
+      <p id="viewerCaption"></p>
+      <button class="viewer-button viewer-button--primary" type="button" data-copy-image><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg> Copy image</button>
+      <button class="viewer-button" type="button" data-download-image><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 11 5 5 5-5"></path><path d="M4 20h16"></path></svg> Save</button>
+      <button class="viewer-button" type="button" data-close-viewer aria-label="Close photo">Close</button>
+    </div>
+  </dialog>
+
+  <template id="emptyTemplate">
+    <div class="empty-state">
+      <span aria-hidden="true">⌕</span>
+      <h2>No matching products</h2>
+      <p id="emptyDetail">Try a shorter search — a brand name like “pan” or a salt like “paracetamol”.</p>
+      <button type="button" data-reset-filters>Clear search and filters</button>
+    </div>
+  </template>
+</body>
+</html>
