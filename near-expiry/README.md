@@ -33,6 +33,35 @@ Expiry is a calendar month, and is formatted from the stored digits rather than 
 timestamp, so `2026-08-01` reads as `Aug/26` in every timezone. Shelf life counts whole months
 to the end of the expiry month, so the expiry label and the shelf-life badge always agree.
 
+## Matching a sheet to the catalogue
+
+Distributor sheets do not name products the way the SNT master does — `ALCOXIB 120 10S`
+against `ALCOXIB 120 (10'S)`, `ALDIGESIC 100 TAB 20X10` against `ALDIGESIC 100 Tab`. Exact
+matching found six products in a real 184-row sheet, and since both the salt and the pack
+photo hang off the master name, almost the whole benefit of the catalogue went with it.
+
+Reading a sheet now opens a match dialog listing every product with the closest catalogue
+name, its confidence, its salt and its photo. The name settled on there is the one published,
+so accepting a match is what pulls the salt and the website photo through. On that sheet it
+takes the import from 6 products with a salt to 114, and from none with a photo to 91.
+
+Matches are scored on shared words weighted by how rare each is across the master. A word in
+half the catalogue says nothing and a word in two products says almost everything; without
+that weighting `ALKEM COLD + SUS` matches `ALKEM COLD ACTIVE TAB` on the strength of the word
+ALKEM rather than `NEW ALKEM COLD + SUSPENSION`. Dose and pack figures are decisive — ALCOXIB
+120 is never ALCOXIB 90.
+
+The best suggestion is filled in wherever there is one, so it can be read without opening a
+dropdown and a long sheet does not need fifty clicks. Confidence is carried by the badge
+instead: anything under 72% is tinted, marked **Suggested — check it**, sorted to the top of
+the list and counted on the button beside Import. **Accept every suggestion** and **Keep all
+sheet names** settle the whole sheet at once. A product the catalogue does not have imports
+under the sheet's own name with no salt and no photo, which is what the old behaviour did for
+everything.
+
+Nothing is decided permanently: reopen the dialog from the button next to Import, change any
+row, and the preview follows.
+
 ## Importing stock
 
 1. Drop the current `.xlsx`/`.xls`/`.csv`/`.tsv` on step 1. The first worksheet is read.
@@ -59,6 +88,56 @@ row back exactly where it was and says why. The photo is removed after the row, 
 database refusal cannot destroy a photo under a product that is still listed.
 
 Nothing here can be undone, so be deliberate with it.
+
+### If Delete does nothing
+
+A row-level security policy that declines a delete is **not** an error in PostgREST: the
+statement matches no rows and the request comes back `204 No Content` with nothing to
+complain about. So a delete the database refuses looks exactly like one it performed, unless
+the page asks for the deleted rows back and checks that any arrived — which every write here
+now does. If nothing came back, the page says so and puts the row back rather than showing a
+table that disagrees with the database.
+
+Seeing that message means `near_expiry_items` has no policy letting signed-in users delete.
+Check what it does have:
+
+```sql
+select policyname, cmd, roles, qual
+from pg_policies
+where schemaname = 'public' and tablename = 'near_expiry_items';
+```
+
+A table with RLS enabled and no `DELETE` policy refuses every delete, silently. Add one:
+
+```sql
+grant delete on public.near_expiry_items to authenticated;
+
+create policy "Signed-in staff can delete"
+  on public.near_expiry_items
+  for delete
+  to authenticated
+  using (true);
+```
+
+Editing needs the matching `UPDATE` policy, and the status toggle and photo upload report the
+same way if it is missing:
+
+```sql
+grant update on public.near_expiry_items to authenticated;
+
+create policy "Signed-in staff can update"
+  on public.near_expiry_items
+  for update
+  to authenticated
+  using (true) with check (true);
+```
+
+`using (true)` lets any signed-in account delete. To restrict it to certain staff, put the
+condition there instead — for example `using (exists (select 1 from public.profiles p where
+p.id = auth.uid() and p.role = 'admin'))`.
+
+Missing the table `grant` rather than the policy is the other half of this: that one Postgres
+*does* raise, as `42501`, and the page reports it as an account permission problem.
 
 **Delete all** clears exactly what the table is showing — not the whole catalogue sitting
 behind a filter. Filter to *Sold only* and it deletes the sold stock; clear the filters and
@@ -200,6 +279,20 @@ this repository.
 The database migration is maintained privately in Supabase and is intentionally not included in
 this public website repository.
 
+## Deploying
+
+GitHub Pages will happily hand a browser a cached `admin.js` while re-fetching the `admin.html`
+that loads it, which deploys as new markup driving old code — the symptom being a new control
+that renders empty because the cached script knows nothing about it. The script and stylesheet
+links therefore carry a content hash. **After changing any JS or CSS here, restamp them before
+committing:**
+
+```sh
+python3 tools/stamp-assets.py
+```
+
+Re-running it with nothing changed rewrites nothing.
+
 ## Source layout
 
 - `shared.js` — Supabase client plus the shared helpers: expiry parsing and shelf-life
@@ -208,6 +301,7 @@ this public website repository.
 - `styles.css` — one design system for both pages.
 - `photo-map.json` — generated; product name → filename in `../Photos/`.
 - `../tools/build-photo-map.py` — regenerates that map from the main site's `data.js`.
+- `../tools/stamp-assets.py` — re-hashes the script and stylesheet links after a JS or CSS change.
 
 ## Main dependencies
 

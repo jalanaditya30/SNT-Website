@@ -9,13 +9,13 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://sfrfjznzlrkofjddfzfh.supabase.co; connect-src 'self' https://sfrfjznzlrkofjddfzfh.supabase.co; base-uri 'self'; form-action 'self'">
   <title>SNT Near Expiry Admin</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=4ceba8b7">
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/fflate@0.8.3/umd/index.js"></script>
-  <script defer src="config.js"></script>
-  <script defer src="shared.js"></script>
-  <script defer src="admin.js"></script>
+  <script defer src="config.js?v=0d42f382"></script>
+  <script defer src="shared.js?v=26855fca"></script>
+  <script defer src="admin.js?v=62694ad8"></script>
 </head>
 <body class="admin-body">
   <header class="site-header admin-topbar">
@@ -125,6 +125,7 @@
           <p id="importPreview" class="import-preview">Select a file to preview its rows.</p>
           <div class="import-actions">
             <button id="importButton" class="primary-button" type="button" disabled>Import products</button>
+          <button class="secondary-button hidden" id="reviewMatchesButton" type="button">Review matches</button>
             <label class="checkbox-row" title="A row already marked sold, whose quantity in the sheet has not changed, stays sold."><input id="keepSoldStatus" type="checkbox" checked> Keep sold items sold when the sheet is unchanged</label>
           </div>
           <div class="progress-bar"><span id="importProgress"></span></div>
@@ -172,6 +173,29 @@
       </div>
       <div class="modal-actions"><button class="secondary-button" type="button" data-close-product>Cancel</button><button class="primary-button" type="submit">Save product</button></div>
     </form>
+  </dialog>
+
+  <dialog id="matchDialog" class="modal modal--wide">
+    <div class="modal-header">
+      <h2>Match to the SNT catalogue</h2>
+      <button class="icon-button" type="button" id="closeMatchDialog" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-lede">Each product is matched to the SNT catalogue so it publishes with the right salt and the pack photo from the website. Confident matches are already set; the ones below the line are worth a look.</p>
+      <div class="match-summary" id="matchSummary"></div>
+      <div class="match-actions">
+        <button class="secondary-button" type="button" id="acceptAllMatches">Accept every suggestion</button>
+        <button class="secondary-button" type="button" id="clearAllMatches">Keep all sheet names</button>
+      </div>
+      <div class="match-wrap">
+        <table class="match-table">
+          <thead><tr><th scope="col">Photo</th><th scope="col">Sheet name → catalogue product</th><th scope="col">Salt</th></tr></thead>
+          <tbody id="matchRows"></tbody>
+        </table>
+      </div>
+      <p class="match-note" id="matchNote"></p>
+    </div>
+    <div class="modal-actions"><button class="primary-button" type="button" id="confirmMatches">Done</button></div>
   </dialog>
 
   <dialog id="deleteAllDialog" class="modal">
