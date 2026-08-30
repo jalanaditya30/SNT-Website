@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#241f1a">
+  <!-- Shared by link, not linked from the main site — keep it out of search results. -->
+  <meta name="robots" content="noindex,nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://sfrfjznzlrkofjddfzfh.supabase.co; connect-src 'self' https://sfrfjznzlrkofjddfzfh.supabase.co; base-uri 'self'; form-action 'self'">
+  <title>SNT Near Expiry Admin</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/fflate@0.8.3/umd/index.js"></script>
+  <script defer src="config.js"></script>
+  <script defer src="shared.js"></script>
+  <script defer src="admin.js"></script>
+</head>
+<body class="admin-body">
+  <header class="site-header admin-topbar">
+    <a class="brand" href="./"><span class="brand__seal">SNT</span><span class="brand__text"><strong>Near Expiry Admin</strong><small>Shree Narayani Traders</small></span></a>
+    <div class="header-actions">
+      <span id="adminUser" class="admin-user"></span>
+      <a class="text-button" href="./">Public site</a>
+      <button id="signOutButton" class="text-button hidden" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <section id="loginView" class="login-shell">
+    <form id="loginForm" class="login-card">
+      <h1>Admin sign in</h1>
+      <p>Use the SNT email and password registered in Supabase.</p>
+      <div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required></div>
+      <button class="primary-button" type="submit">Sign in</button>
+    </form>
+  </section>
+
+  <main id="adminView" class="admin-main hidden">
+    <section class="admin-heading">
+      <div><h1>Catalog control</h1><p>Import the Excel master, attach the original WhatsApp photos, and publish straight to the public catalogue.</p></div>
+    </section>
+
+    <p id="priceNotice" class="notice hidden">Price is switched off because the <code>price</code> column does not exist yet in Supabase. Run <code>alter table public.near_expiry_items add column if not exists price numeric(10,2);</code> and reload — everything else keeps working in the meantime.</p>
+
+    <nav class="admin-tabs" aria-label="Admin sections">
+      <button class="is-active" type="button" data-admin-tab="inventory">Inventory</button>
+      <button type="button" data-admin-tab="excel">Excel import</button>
+      <button type="button" data-admin-tab="photos">Photo inbox <span id="photoTabCount"></span></button>
+    </nav>
+
+    <!-- Inventory -->
+    <section class="admin-panel is-active" data-admin-panel="inventory">
+      <div class="stats-grid">
+        <div class="stat-card"><small>Total products</small><strong id="statTotal">0</strong></div>
+        <div class="stat-card"><small>Available</small><strong id="statAvailable">0</strong></div>
+        <div class="stat-card"><small>Sold</small><strong id="statSold">0</strong></div>
+        <div class="stat-card stat-card--alert"><small>Photos pending</small><strong id="statPhotos">0</strong></div>
+        <div class="stat-card stat-card--alert"><small>Expired, still listed</small><strong id="statExpired">0</strong></div>
+      </div>
+      <div class="panel-card">
+        <div class="panel-toolbar">
+          <label class="search-field">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+            <span class="sr-only">Search inventory</span>
+            <input id="adminSearch" type="search" placeholder="Search product, salt or batch…" autocomplete="off">
+          </label>
+          <div class="select-field">
+            <label class="sr-only" for="adminStatusFilter">Filter by status</label>
+            <select id="adminStatusFilter"><option value="all">All statuses</option><option value="available">Available only</option><option value="sold">Sold only</option><option value="expired">Expired, still listed</option><option value="nophoto">Missing photo</option></select>
+          </div>
+          <button id="addProductButton" class="primary-button" type="button">+ Add product</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Photo</th><th scope="col">Product</th><th scope="col">Expiry</th><th scope="col">Shelf life</th><th scope="col">Qty</th><th scope="col" data-price-column>Price</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody id="inventoryRows"></tbody>
+          </table>
+        </div>
+        <p id="inventoryMeta" class="import-preview"></p>
+      </div>
+    </section>
+
+    <!-- Excel import -->
+    <section class="admin-panel" data-admin-panel="excel">
+      <div class="import-grid">
+        <div class="panel-card">
+          <h2><span class="step-badge">1</span>Choose the file</h2>
+          <p>Drag the current stock sheet here, or click to browse. Nothing is published until you review the preview on the right.</p>
+          <label class="drop-zone" id="excelDrop">
+            <input id="excelFile" type="file" accept=".xlsx,.xls,.csv,.tsv">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"></path><path d="M14 3v5h5"></path><path d="m9 15 3-3 3 3"></path><path d="M12 12v6"></path></svg>
+            <b id="excelFileStatus">Drop an Excel or CSV file</b>
+            <small>.xlsx · .xls · .csv · .tsv — first worksheet is read</small>
+          </label>
+
+          <h2 style="margin-top:1.4rem"><span class="step-badge">2</span>Match the columns</h2>
+          <p>Product, expiry and quantity are required. Salt is filled in from the SNT product master when the sheet leaves it blank.</p>
+          <div class="mapping-grid">
+            <div class="field"><label for="mapProduct">Product</label><select id="mapProduct"></select></div>
+            <div class="field"><label for="mapSalt">Salt / composition</label><select id="mapSalt"></select></div>
+            <div class="field"><label for="mapExpiry">Expiry</label><select id="mapExpiry"></select></div>
+            <div class="field"><label for="mapQuantity">Quantity</label><select id="mapQuantity"></select></div>
+            <div class="field"><label for="mapBatch">Batch (optional)</label><select id="mapBatch"></select></div>
+            <div class="field" data-price-column><label for="mapPrice">Price (optional)</label><select id="mapPrice"></select></div>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <h2><span class="step-badge">3</span>Check and publish</h2>
+          <p>Every row is parsed here before anything is sent. Rows with an expiry the tool cannot read are highlighted and skipped.</p>
+          <div id="validationSummary" class="validation"></div>
+          <div id="previewWrap" class="preview-wrap hidden">
+            <div class="preview-scroll">
+              <table>
+                <thead><tr><th scope="col">Product</th><th scope="col">Salt</th><th scope="col">Expiry</th><th scope="col">Qty</th><th scope="col" data-price-column>Price</th><th scope="col">Batch</th></tr></thead>
+                <tbody id="previewRows"></tbody>
+              </table>
+            </div>
+          </div>
+          <p id="importPreview" class="import-preview">Select a file to preview its rows.</p>
+          <div class="import-actions">
+            <button id="importButton" class="primary-button" type="button" disabled>Import products</button>
+            <label class="checkbox-row" title="A row already marked sold, whose quantity in the sheet has not changed, stays sold."><input id="keepSoldStatus" type="checkbox" checked> Keep sold items sold when the sheet is unchanged</label>
+          </div>
+          <div class="progress-bar"><span id="importProgress"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Photo inbox -->
+    <section class="admin-panel" data-admin-panel="photos">
+      <div class="panel-card">
+        <h2>Bulk photo inbox</h2>
+        <p>Drop many WhatsApp images at once, or a whole WhatsApp export ZIP. Filenames are matched to products already in the catalogue — confirm or correct each one, then upload.</p>
+        <label class="drop-zone" id="photoDrop">
+          <input id="photoFiles" type="file" accept="image/*,.zip,application/zip" multiple>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.8"></circle><path d="m21 16-5-5-6 6-3-3-4 4"></path></svg>
+          <b>Drop photos or a WhatsApp ZIP</b>
+          <small>JPG · PNG · WEBP · HEIC · GIF, or a .zip export</small>
+        </label>
+        <div class="panel-toolbar" style="margin-top:1rem">
+          <p id="photoStatus" class="import-preview" style="margin:0;flex:1">No photos waiting.</p>
+          <button id="applySuggestions" class="secondary-button" type="button" disabled>Apply all suggestions</button>
+          <button id="clearInbox" class="secondary-button" type="button" disabled>Clear inbox</button>
+          <button id="uploadMatchedButton" class="primary-button" type="button" disabled>Upload matched</button>
+        </div>
+        <div class="progress-bar"><span id="photoProgress"></span></div>
+        <div id="photoInbox" class="photo-inbox"></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="productFormDialog" class="modal">
+    <form id="productForm">
+      <div class="modal-header"><h2 id="productFormTitle">Add product</h2><button class="icon-button" type="button" data-close-product aria-label="Close">×</button></div>
+      <div class="modal-body form-grid">
+        <div class="field field--wide"><label for="productName">Product name</label><input id="productName" list="productMasterNames" required autocomplete="off"><datalist id="productMasterNames"></datalist></div>
+        <div class="field field--wide"><label for="saltName">Salt / composition</label><input id="saltName" autocomplete="off"></div>
+        <div class="field"><label for="expiryMonth">Expiry</label><input id="expiryMonth" type="month" required></div>
+        <div class="field"><label for="productQuantity">Quantity</label><input id="productQuantity" type="number" min="0" step="1" required></div>
+        <div class="field" data-price-column><label for="productPrice">Price per pack (₹)</label><input id="productPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Leave blank for “on request”"></div>
+        <div class="field"><label for="batchNumber">Batch number</label><input id="batchNumber" autocomplete="off"></div>
+        <div class="field"><label for="productStatus">Status</label><select id="productStatus"><option value="available">Available</option><option value="sold">Sold</option></select></div>
+        <div class="field field--wide"><label for="productPhoto">Original photo (optional)</label><input id="productPhoto" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif"></div>
+        <p id="productFormNote" class="field-error field--wide" role="status"></p>
+      </div>
+      <div class="modal-actions"><button class="secondary-button" type="button" data-close-product>Cancel</button><button class="primary-button" type="submit">Save product</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="deleteDialog" class="modal">
+    <div class="modal-header"><h2>Delete product?</h2></div>
+    <div class="modal-body">
+      <div class="delete-target"><strong id="deleteName"></strong><small id="deleteDetails"></small></div>
+      <p id="deleteMessage">This permanently removes the product and its photo from the database. It cannot be undone.</p>
+    </div>
+    <div class="modal-actions"><button id="cancelDelete" class="secondary-button" type="button">Cancel</button><button id="confirmDelete" class="danger-button" type="button">Delete</button></div>
+  </dialog>
+
+  <datalist id="inventoryProductNames"></datalist>
+  <div id="loadingOverlay" class="loading-overlay"><span>Connecting to SNT…</span></div>
+</body>
+</html>
