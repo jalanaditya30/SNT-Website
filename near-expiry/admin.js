@@ -12,7 +12,7 @@
     user: null, role: "operator", products: [], master: [],
     workbookRows: [], rawRows: [], headers: [], parsed: [], editing: null, photos: [], hasPrice: false, hasCompany: false,
     /* ids whose delete is still in flight, so a double-click cannot fire two */
-    removing: new Set(), deletingAll: null,
+    removing: new Set(), deletingAll: null, orphans: [],
     /* sheet name -> the master product the operator settled on ("" = keep the sheet name) */
     matches: new Map(), suggestions: new Map(), matchNotes: new Map(), matchIndex: null
   };
@@ -398,6 +398,84 @@
      plus a full reload between each one made that a chore. The row going is the receipt,
      so a success toast would only be noise; a refusal puts the row back where it was and
      says why. */
+  /* storage.remove() reports a policy refusal the way the table delete does — by doing
+     nothing and saying nothing. It answers with the objects it actually removed, so whatever
+     does not come back is still sitting in the bucket. Returns the paths that stayed. */
+  async function removePhotos(paths) {
+    const left = [];
+    for (let start = 0; start < paths.length; start += CHUNK) {
+      const batch = paths.slice(start, start + CHUNK);
+      const { data, error } = await client.storage.from(config.photoBucket).remove(batch);
+      if (error) { left.push(...batch); continue; }
+      const gone = new Set((data || []).flatMap((object) => [object.name, String(object.name).split("/").pop()]));
+      left.push(...batch.filter((path) => !gone.has(path) && !gone.has(path.split("/").pop())));
+    }
+    return left;
+  }
+
+  /* ---- photos no product points at ----------------------------------------
+     A removal the bucket's policy refuses leaves the file behind with nothing referring to
+     it: invisible in the admin, still counting against storage. Walking the bucket and
+     subtracting every photo_path in the table is the only way to find them again. */
+  async function listStoredPhotos() {
+    const found = [];
+    const PAGE = 100;
+    async function walk(prefix) {
+      for (let offset = 0; ; offset += PAGE) {
+        const { data, error } = await client.storage.from(config.photoBucket)
+          .list(prefix, { limit: PAGE, offset, sortBy: { column: "name", order: "asc" } });
+        if (error) throw error;
+        if (!data.length) return;
+        for (const entry of data) {
+          const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+          /* A folder comes back with no id of its own. */
+          if (entry.id === null || entry.id === undefined) await walk(path);
+          else found.push(path);
+        }
+        if (data.length < PAGE) return;
+      }
+    }
+    await walk("");
+    return found;
+  }
+
+  async function findOrphanPhotos() {
+    setLoading(true, "Reading the photo bucket…");
+    try {
+      const stored = await listStoredPhotos();
+      const used = new Set(state.products.map((item) => item.photo_path).filter(Boolean));
+      state.orphans = stored.filter((path) => !used.has(path));
+      const used_ = stored.length - state.orphans.length;
+      element("#orphanStatus").textContent = state.orphans.length
+        ? `${formatNumber(state.orphans.length)} of ${formatNumber(stored.length)} photos in storage belong to no product${used_ ? `, and ${used_ === 1 ? "one is" : `${formatNumber(used_)} are`} in use` : ""}.`
+        : `Nothing to clear — ${stored.length === 1 ? "the one photo" : `all ${formatNumber(stored.length)} photos`} in storage ${stored.length === 1 ? "belongs" : "belong"} to a product.`;
+      element("#deleteOrphansButton").classList.toggle("hidden", !state.orphans.length);
+      element("#deleteOrphansButton").textContent = `Delete ${formatNumber(state.orphans.length)} unused`;
+    } catch (error) {
+      element("#orphanStatus").textContent = "";
+      toast(error.message || "The photo bucket could not be read.", "error");
+    } finally { setLoading(false); }
+  }
+
+  async function deleteOrphanPhotos() {
+    if (!state.orphans.length) return;
+    /* Deleting files is not undoable, and this one is driven by a list the operator has not
+       read row by row, so it asks. */
+    if (!window.confirm(`Permanently delete ${state.orphans.length} photos that no product points at?`)) return;
+    setLoading(true, `Deleting ${formatNumber(state.orphans.length)} photos…`);
+    try {
+      const left = await removePhotos(state.orphans);
+      const cleared = state.orphans.length - left.length;
+      state.orphans = left;
+      element("#deleteOrphansButton").classList.toggle("hidden", !left.length);
+      element("#orphanStatus").textContent = left.length
+        ? `${formatNumber(cleared)} deleted. ${formatNumber(left.length)} could not be removed — the bucket has no delete policy for this account.`
+        : `${formatNumber(cleared)} unused photos deleted.`;
+      toast(left.length ? `${formatNumber(cleared)} deleted, ${formatNumber(left.length)} refused by the bucket.` : `${formatNumber(cleared)} unused photos deleted.`, left.length ? "warning" : "success");
+    } catch (error) { toast(error.message || "The photos could not be deleted.", "error"); }
+    finally { setLoading(false); }
+  }
+
   async function deleteProduct(product) {
     if (!product || state.removing.has(product.id)) return;
     state.removing.add(product.id);
@@ -411,8 +489,8 @@
       /* The row is gone, so the product is deleted whatever happens next. A photo left behind
          in storage is worth a warning, not a failure the operator has to act on. */
       if (product.photo_path) {
-        const { error: storageError } = await client.storage.from(config.photoBucket).remove([product.photo_path]);
-        if (storageError) toast(`${product.product_name} was deleted, but its photo is still in storage.`, "warning");
+        const left = await removePhotos([product.photo_path]);
+        if (left.length) toast(`${product.product_name} was deleted, but its photo is still in storage. Photo inbox → Find unused photos clears these.`, "warning");
       }
     } catch (error) {
       state.products.splice(Math.min(position, state.products.length), 0, product);
@@ -445,32 +523,32 @@
     state.deletingAll = null;
 
     const ids = doomed.map((item) => item.id);
-    const photos = doomed.map((item) => item.photo_path).filter(Boolean);
     setLoading(true, `Deleting ${formatNumber(ids.length)} products…`);
     try {
-      let removed = 0;
+      /* Track which rows actually went, so a partly refused run still clears the photos of
+         the products it did delete instead of orphaning every one of them. */
+      const byId = new Map(doomed.map((item) => [item.id, item]));
+      const deleted = [];
       for (let start = 0; start < ids.length; start += CHUNK) {
         const chunk = ids.slice(start, start + CHUNK);
         const { data, error } = await client.from("near_expiry_items").delete().in("id", chunk).select("id");
         if (error) throw error;
-        removed += data?.length || 0;
-        setLoading(true, `Deleted ${formatNumber(removed)} of ${formatNumber(ids.length)}…`);
+        deleted.push(...(data || []).map((row) => row.id));
+        setLoading(true, `Deleted ${formatNumber(deleted.length)} of ${formatNumber(ids.length)}…`);
       }
       /* Nothing removed at all is the policy refusing outright; a shortfall means some rows
          were kept, and saying so beats a success message the inventory contradicts. */
-      if (!removed) throw refused(NO_DELETE_POLICY);
-      if (removed < ids.length) {
-        await loadProducts();
-        return toast(`${formatNumber(removed)} deleted — the database kept the other ${formatNumber(ids.length - removed)}.`, "warning");
-      }
-      let photosRemoved = true;
-      for (let start = 0; start < photos.length; start += CHUNK) {
-        const { error } = await client.storage.from(config.photoBucket).remove(photos.slice(start, start + CHUNK));
-        if (error) photosRemoved = false;
-      }
+      if (!deleted.length) throw refused(NO_DELETE_POLICY);
+
+      setLoading(true, "Removing photos…");
+      const left = await removePhotos(deleted.map((id) => byId.get(id)?.photo_path).filter(Boolean));
       await loadProducts();
-      if (photosRemoved) toast(`${formatNumber(ids.length)} products deleted.`);
-      else toast(`${formatNumber(ids.length)} products deleted, but some photos are still in storage.`, "warning");
+
+      const kept = ids.length - deleted.length;
+      const parts = [`${formatNumber(deleted.length)} products deleted`];
+      if (kept) parts.push(`the database kept the other ${formatNumber(kept)}`);
+      if (left.length) parts.push(`${formatNumber(left.length)} photos are still in storage — Photo inbox → Find unused photos clears them`);
+      toast(`${parts.join(" — ")}.`, kept || left.length ? "warning" : "success");
     } catch (error) {
       /* Part of the run may already be gone, so reload rather than guess what survived. */
       await loadProducts();
@@ -1062,6 +1140,8 @@
   element("#mapProduct").addEventListener("change", () => { state.matches = new Map(); state.matchNotes = new Map(); computeSuggestions(); renderPreview(); });
 
   element("#reviewMatchesButton").addEventListener("click", openMatchDialog);
+  element("#findOrphansButton").addEventListener("click", findOrphanPhotos);
+  element("#deleteOrphansButton").addEventListener("click", deleteOrphanPhotos);
   /* change, not input: resolve once the operator has finished typing or taken a name from
      the list, rather than on every keystroke. */
   element("#matchRows").addEventListener("change", (event) => {

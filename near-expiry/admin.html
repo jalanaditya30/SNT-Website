@@ -9,13 +9,13 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://sfrfjznzlrkofjddfzfh.supabase.co; connect-src 'self' https://sfrfjznzlrkofjddfzfh.supabase.co; base-uri 'self'; form-action 'self'">
   <title>SNT Near Expiry Admin</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=7a4d8518">
+  <link rel="stylesheet" href="styles.css?v=08960edc">
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/fflate@0.8.3/umd/index.js"></script>
   <script defer src="config.js?v=0d42f382"></script>
   <script defer src="shared.js?v=26855fca"></script>
-  <script defer src="admin.js?v=e9112efe"></script>
+  <script defer src="admin.js?v=b9161e41"></script>
 </head>
 <body class="admin-body">
   <header class="site-header admin-topbar">
@@ -151,6 +151,11 @@
           <button id="uploadMatchedButton" class="primary-button" type="button" disabled>Upload matched</button>
         </div>
         <div class="progress-bar"><span id="photoProgress"></span></div>
+        <div class="orphan-bar">
+          <button id="findOrphansButton" class="secondary-button" type="button">Find unused photos</button>
+          <p id="orphanStatus">Photos left in storage when a delete could not remove them stay hidden but still count against the bucket. This lists any that no product points at.</p>
+          <button id="deleteOrphansButton" class="danger-button hidden" type="button">Delete them</button>
+        </div>
         <div id="photoInbox" class="photo-inbox"></div>
       </div>
     </section>
