@@ -13,7 +13,9 @@ as before. The admin page is protected by Supabase Auth, as it always was.
 - `index.html` — public search tool: token search across product, salt and batch, shelf-life
   filtering, sorting, grid/list layouts, favourites and one-tap WhatsApp sharing.
 - `admin.html` — Supabase-authenticated inventory, Excel/CSV import with a pre-flight
-  validation preview, bulk photo/WhatsApp ZIP inbox and CRUD.
+  validation preview, bulk photo/WhatsApp ZIP inbox and CRUD. Reached from the
+  **SNT staff sign-in** link in the catalogue footer, or directly at
+  `shreenarayanitraders.com/near-expiry/admin.html`.
 
 ## Using the catalogue
 
@@ -47,12 +49,26 @@ to the end of the expiry month, so the expiry label and the shelf-life badge alw
    a hand-marked sold row alone when its sheet quantity has not moved, so a stale sheet line
    cannot put phantom stock back on the public site.
 
-Delete removes the product row and its stored photo permanently. The confirmation names the
-product with its batch, expiry and quantity, because several products differ only by batch.
-The row is deleted first and the photo second: if the database refuses the delete, the photo
-is left untouched rather than destroyed under a product that is still listed.
+## Deleting
 
-Every signed-in user sees Delete. Anyone who can reach the admin page can already edit any
+**Delete** on a row goes immediately, with no confirmation: the row leaves the table on the
+click and the database catches up behind it. Sold-out stock is cleared in runs, and a
+confirmation plus a reload between each one made that a chore. The row disappearing is the
+receipt, so there is no success message either — only a refusal speaks up, and it puts the
+row back exactly where it was and says why. The photo is removed after the row, so a
+database refusal cannot destroy a photo under a product that is still listed.
+
+Nothing here can be undone, so be deliberate with it.
+
+**Delete all** clears exactly what the table is showing — not the whole catalogue sitting
+behind a filter. Filter to *Sold only* and it deletes the sold stock; clear the filters and
+it deletes everything. The button counts what it would take ("Delete all 47 shown"), and the
+confirmation names that count, the filter it came from, and how many carry a photo. This one
+does confirm, because it is the single click that cannot be walked back. Large runs go in
+batches of 100 with progress on screen; if one batch fails partway, the table reloads to show
+what actually survived rather than guessing.
+
+Every signed-in user sees both. Anyone who can reach the admin page can already edit any
 field and re-import the whole catalogue, so hiding only this one button was not a real
 control. If delete should be restricted to certain staff, do it with a row-level security
 policy on `near_expiry_items` — the page reports a refusal from the database in plain words

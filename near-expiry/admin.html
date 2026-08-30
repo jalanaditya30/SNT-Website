@@ -71,6 +71,7 @@
             <select id="adminStatusFilter"><option value="all">All statuses</option><option value="available">Available only</option><option value="sold">Sold only</option><option value="expired">Expired, still listed</option><option value="nophoto">Missing photo</option></select>
           </div>
           <button id="addProductButton" class="primary-button" type="button">+ Add product</button>
+          <button id="deleteAllButton" class="danger-button" type="button" disabled>Delete all</button>
         </div>
         <div class="table-wrap">
           <table>
@@ -170,13 +171,13 @@
     </form>
   </dialog>
 
-  <dialog id="deleteDialog" class="modal">
-    <div class="modal-header"><h2>Delete product?</h2></div>
+  <dialog id="deleteAllDialog" class="modal">
+    <div class="modal-header"><h2>Delete all shown?</h2></div>
     <div class="modal-body">
-      <div class="delete-target"><strong id="deleteName"></strong><small id="deleteDetails"></small></div>
-      <p id="deleteMessage">This permanently removes the product and its photo from the database. It cannot be undone.</p>
+      <div class="delete-target"><strong id="deleteAllCount"></strong><small id="deleteAllDetails"></small></div>
+      <p id="deleteAllMessage"></p>
     </div>
-    <div class="modal-actions"><button id="cancelDelete" class="secondary-button" type="button">Cancel</button><button id="confirmDelete" class="danger-button" type="button">Delete</button></div>
+    <div class="modal-actions"><button id="cancelDeleteAll" class="secondary-button" type="button">Cancel</button><button id="confirmDeleteAll" class="danger-button" type="button">Delete them</button></div>
   </dialog>
 
   <datalist id="inventoryProductNames"></datalist>
