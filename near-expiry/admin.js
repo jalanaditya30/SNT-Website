@@ -10,13 +10,15 @@
   const PREVIEW_ROWS = 60;
   const state = {
     user: null, role: "operator", products: [], master: [],
-    workbookRows: [], rawRows: [], headers: [], parsed: [], editing: null, deleting: null, photos: [], hasPrice: false
+    workbookRows: [], rawRows: [], headers: [], parsed: [], editing: null, photos: [], hasPrice: false,
+    /* ids whose delete is still in flight, so a double-click cannot fire two */
+    removing: new Set(), deletingAll: null
   };
   const element = (selector) => document.querySelector(selector);
   const elements = {
     loginView: element("#loginView"), adminView: element("#adminView"), loading: element("#loadingOverlay"),
     rows: element("#inventoryRows"), search: element("#adminSearch"), statusFilter: element("#adminStatusFilter"),
-    formDialog: element("#productFormDialog"), deleteDialog: element("#deleteDialog"), photoInbox: element("#photoInbox")
+    formDialog: element("#productFormDialog"), deleteAllDialog: element("#deleteAllDialog"), photoInbox: element("#photoInbox")
   };
 
   function setLoading(active, message = "Working…") {
@@ -73,7 +75,8 @@
     state.headers = [];
     state.parsed = [];
     state.editing = null;
-    state.deleting = null;
+    state.removing.clear();
+    state.deletingAll = null;
     state.photos.forEach((photo) => URL.revokeObjectURL(photo.url));
     state.photos = [];
     elements.rows.innerHTML = "";
@@ -96,7 +99,7 @@
     element("#loginPassword").value = "";
     elements.search.value = "";
     if (elements.formDialog.open) elements.formDialog.close();
-    if (elements.deleteDialog.open) elements.deleteDialog.close();
+    if (elements.deleteAllDialog.open) elements.deleteAllDialog.close();
     elements.loginView.classList.remove("hidden");
     elements.adminView.classList.add("hidden");
     element("#signOutButton").classList.add("hidden");
@@ -165,6 +168,14 @@
     element("#inventoryMeta").textContent = products.length === state.products.length
       ? `${formatNumber(products.length)} products`
       : `${formatNumber(products.length)} of ${formatNumber(state.products.length)} products shown`;
+
+    /* The label counts what the button would actually take, so a filtered table never
+       reads as if it were about to clear the catalogue. */
+    const deleteAll = element("#deleteAllButton");
+    deleteAll.disabled = !products.length;
+    deleteAll.textContent = products.length && products.length !== state.products.length
+      ? `Delete all ${formatNumber(products.length)} shown`
+      : "Delete all";
 
     elements.rows.innerHTML = products.length ? products.map((item) => {
       const shelf = expiryMeta(item.expiry_date);
@@ -275,27 +286,79 @@
       : error?.message || "Product could not be deleted.";
   }
 
-  async function deleteProduct() {
-    const product = state.deleting;
-    if (!product) return;
-    setLoading(true, "Deleting product…");
+  /* Deleting is immediate and optimistic: the row leaves the table on the click and the
+     database catches up behind it. Sold-out stock is cleared in runs, and a confirmation
+     plus a full reload between each one made that a chore. The row going is the receipt,
+     so a success toast would only be noise; a refusal puts the row back where it was and
+     says why. */
+  async function deleteProduct(product) {
+    if (!product || state.removing.has(product.id)) return;
+    state.removing.add(product.id);
+    const position = state.products.indexOf(product);
+    state.products.splice(position, 1);
+    renderInventory();
     try {
       const { error } = await client.from("near_expiry_items").delete().eq("id", product.id);
       if (error) throw error;
       /* The row is gone, so the product is deleted whatever happens next. A photo left behind
          in storage is worth a warning, not a failure the operator has to act on. */
-      let photoRemoved = true;
       if (product.photo_path) {
         const { error: storageError } = await client.storage.from(config.photoBucket).remove([product.photo_path]);
-        photoRemoved = !storageError;
+        if (storageError) toast(`${product.product_name} was deleted, but its photo is still in storage.`, "warning");
       }
-      state.deleting = null;
-      elements.deleteDialog.close();
+    } catch (error) {
+      state.products.splice(Math.min(position, state.products.length), 0, product);
+      renderInventory();
+      toast(permissionMessage(error), "error");
+    } finally {
+      state.removing.delete(product.id);
+    }
+  }
+
+  /* Delete all clears exactly what the table is showing, not the whole catalogue behind a
+     filter - "sold only, delete all" is the reason it exists. The dialog names the count
+     and the filter so the two can never be confused, and this one does confirm: it is the
+     single click that cannot be walked back. */
+  function describeSelection(count) {
+    const [one, many] = {
+      available: ["available product", "available products"],
+      sold: ["sold product", "sold products"],
+      expired: ["expired product still listed", "expired products still listed"],
+      nophoto: ["product with no photo of its own", "products with no photo of their own"]
+    }[elements.statusFilter.value] || ["product", "products"];
+    const search = elements.search.value.trim();
+    return `${formatNumber(count)} ${count === 1 ? one : many}${search ? ` matching “${search}”` : ""}`;
+  }
+
+  async function deleteAllShown() {
+    const doomed = state.deletingAll || [];
+    if (!doomed.length) return;
+    elements.deleteAllDialog.close();
+    state.deletingAll = null;
+
+    const ids = doomed.map((item) => item.id);
+    const photos = doomed.map((item) => item.photo_path).filter(Boolean);
+    setLoading(true, `Deleting ${formatNumber(ids.length)} products…`);
+    try {
+      for (let start = 0; start < ids.length; start += CHUNK) {
+        const chunk = ids.slice(start, start + CHUNK);
+        const { error } = await client.from("near_expiry_items").delete().in("id", chunk);
+        if (error) throw error;
+        setLoading(true, `Deleted ${formatNumber(start + chunk.length)} of ${formatNumber(ids.length)}…`);
+      }
+      let photosRemoved = true;
+      for (let start = 0; start < photos.length; start += CHUNK) {
+        const { error } = await client.storage.from(config.photoBucket).remove(photos.slice(start, start + CHUNK));
+        if (error) photosRemoved = false;
+      }
       await loadProducts();
-      if (photoRemoved) toast(product.photo_path ? "Product and photo deleted." : "Product deleted.");
-      else toast("Product deleted, but its photo could not be removed from storage.", "warning");
-    } catch (error) { toast(permissionMessage(error), "error"); }
-    finally { setLoading(false); }
+      if (photosRemoved) toast(`${formatNumber(ids.length)} products deleted.`);
+      else toast(`${formatNumber(ids.length)} products deleted, but some photos are still in storage.`, "warning");
+    } catch (error) {
+      /* Part of the run may already be gone, so reload rather than guess what survived. */
+      await loadProducts();
+      toast(permissionMessage(error), "error");
+    } finally { setLoading(false); }
   }
 
   /* ---------------------------------------------------------------- Excel */
@@ -647,25 +710,26 @@
     const find = (id) => state.products.find((item) => item.id === id) || null;
     if (edit) resetProductForm(find(edit.dataset.edit));
     if (toggle) toggleStatus(find(toggle.dataset.toggleStatus));
-    if (remove) {
-      state.deleting = find(remove.dataset.delete);
-      if (!state.deleting) return;
-      const details = [
-        state.deleting.batch_no ? `Batch ${state.deleting.batch_no}` : "",
-        `Expiry ${formatExpiry(state.deleting.expiry_date)}`,
-        `Qty ${formatNumber(state.deleting.quantity)}`
-      ].filter(Boolean).join(" · ");
-      element("#deleteName").textContent = state.deleting.product_name;
-      element("#deleteDetails").textContent = details;
-      element("#deleteMessage").textContent = state.deleting.photo_path
-        ? "This permanently removes the product and its photo from the database. It cannot be undone."
-        : "This permanently removes the product from the database. It cannot be undone.";
-      elements.deleteDialog.showModal();
-    }
+    if (remove) deleteProduct(find(remove.dataset.delete));
   });
-  element("#cancelDelete").addEventListener("click", () => { state.deleting = null; elements.deleteDialog.close(); });
-  elements.deleteDialog.addEventListener("cancel", () => { state.deleting = null; });
-  element("#confirmDelete").addEventListener("click", deleteProduct);
+
+  element("#deleteAllButton").addEventListener("click", () => {
+    const doomed = filteredProducts();
+    if (!doomed.length) return;
+    state.deletingAll = doomed;
+    element("#deleteAllCount").textContent = describeSelection(doomed.length);
+    const withPhotos = doomed.filter((item) => item.photo_path).length;
+    element("#deleteAllDetails").textContent = withPhotos
+      ? `${withPhotos === 1 ? "One has" : `${formatNumber(withPhotos)} of them have`} an uploaded photo, which is deleted too.`
+      : "None of them have an uploaded photo.";
+    element("#deleteAllMessage").textContent = doomed.length === state.products.length
+      ? "That is the whole catalogue. This cannot be undone."
+      : "Only the products currently shown are deleted. This cannot be undone.";
+    elements.deleteAllDialog.showModal();
+  });
+  element("#cancelDeleteAll").addEventListener("click", () => { state.deletingAll = null; elements.deleteAllDialog.close(); });
+  elements.deleteAllDialog.addEventListener("cancel", () => { state.deletingAll = null; });
+  element("#confirmDeleteAll").addEventListener("click", deleteAllShown);
 
   element("#excelFile").addEventListener("change", (event) => { if (event.target.files[0]) readExcel(event.target.files[0]); });
   ["#mapProduct", "#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice"].forEach((id) => element(id).addEventListener("change", renderPreview));
