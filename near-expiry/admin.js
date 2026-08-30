@@ -14,7 +14,7 @@
     /* ids whose delete is still in flight, so a double-click cannot fire two */
     removing: new Set(), deletingAll: null,
     /* sheet name -> the master product the operator settled on ("" = keep the sheet name) */
-    matches: new Map(), suggestions: new Map(), matchIndex: null
+    matches: new Map(), suggestions: new Map(), matchNotes: new Map(), matchIndex: null
   };
   const element = (selector) => document.querySelector(selector);
   const elements = {
@@ -571,12 +571,14 @@
   function matchConfidence(name, list) {
     const chosen = state.matches.get(name) || "";
     if (!chosen) return list.length ? "rejected" : "none";
-    const best = list.find((r) => r.item.name === chosen);
-    return best && best.score >= STRONG_MATCH ? "strong" : "check";
+    const suggested = list.find((r) => r.item.name === chosen);
+    /* Picked by hand rather than offered: nothing to second-guess. */
+    if (!suggested) return "manual";
+    return suggested.score >= STRONG_MATCH ? "strong" : "check";
   }
 
   function matchCounts() {
-    const counts = { strong: 0, check: 0, none: 0, rejected: 0, total: state.suggestions.size };
+    const counts = { strong: 0, manual: 0, check: 0, none: 0, rejected: 0, total: state.suggestions.size };
     state.suggestions.forEach((list, name) => { counts[matchConfidence(name, list)]++; });
     return counts;
   }
@@ -584,10 +586,36 @@
   function summaryMarkup() {
     const counts = matchCounts();
     return [
-      `<span class="pill pill--ok">${formatNumber(counts.strong)} confident</span>`,
+      `<span class="pill pill--ok">${formatNumber(counts.strong + counts.manual)} matched</span>`,
       counts.check ? `<span class="pill pill--warn">${formatNumber(counts.check)} to check</span>` : "",
       counts.none + counts.rejected ? `<span class="pill">${formatNumber(counts.none + counts.rejected)} keeping the sheet name</span>` : ""
     ].filter(Boolean).join("");
+  }
+
+  /* Any catalogue product can be typed in, not only the handful that scored well: a
+     suggestion that is wrong must never be a dead end. The name has to be a real one, so
+     what is typed is resolved against the master and anything else is said out loud rather
+     than silently kept or silently dropped. */
+  function chooseMatch(sheetName, value) {
+    const typed = String(value ?? "").trim();
+    state.matchNotes.delete(sheetName);
+    if (!typed) {
+      state.matches.set(sheetName, "");
+    } else {
+      const exact = state.master.find((item) => item.name === typed)
+        || state.master.find((item) => item.name.toLowerCase() === typed.toLowerCase())
+        || state.master.find((item) => normalise(item.name) === normalise(typed));
+      state.matches.set(sheetName, exact ? exact.name : "");
+      if (!exact) state.matchNotes.set(sheetName, `“${typed}” is not in the SNT catalogue — keeping the sheet name.`);
+    }
+    repaintMatchRow(sheetName);
+    element("#matchSummary").innerHTML = summaryMarkup();
+    renderPreview();
+  }
+
+  function repaintMatchRow(sheetName) {
+    const row = element(`[data-match-row="${CSS.escape(sheetName)}"]`);
+    if (row) row.outerHTML = matchRowMarkup(sheetName, state.suggestions.get(sheetName) || []);
   }
 
   function renderPreview() {
@@ -640,7 +668,7 @@
     review.classList.toggle("hidden", !counts.total);
     review.textContent = counts.check
       ? `Check ${formatNumber(counts.check)} suggested matches`
-      : `Matched ${formatNumber(counts.strong)} of ${formatNumber(counts.total)}`;
+      : `Matched ${formatNumber(counts.strong + counts.manual)} of ${formatNumber(counts.total)}`;
     review.classList.toggle("danger-button", Boolean(counts.check));
     review.classList.toggle("secondary-button", !counts.check);
     element("#importButton").disabled = unique.size === 0;
@@ -656,11 +684,20 @@
     const chosen = state.matches.get(name) || "";
     const state_ = matchConfidence(name, list);
     const label = {
-      strong: "Matched", check: "Suggested — check it",
-      rejected: "Keeping the sheet name", none: "Not in the catalogue"
+      strong: "Matched", manual: "Chosen by you", check: "Suggested — check it",
+      rejected: "Keeping the sheet name", none: "Nothing close in the catalogue"
     }[state_];
     const target = chosen ? masterByName(chosen) : null;
     const photo = chosen ? websitePhoto(chosen) : "";
+    const note = state.matchNotes.get(name) || "";
+    /* The runners-up stay one click away and the field itself searches the whole catalogue,
+       so a wrong suggestion is never a dead end. */
+    const others = list.filter((r) => r.item.name !== chosen).slice(0, 3);
+    const chips = [
+      ...others.map((r) => `<button class="match-chip" type="button" data-pick-for="${escapeHtml(name)}" data-pick="${escapeHtml(r.item.name)}">${escapeHtml(r.item.name)} · ${Math.round(r.score * 100)}%</button>`),
+      chosen ? `<button class="match-chip match-chip--clear" type="button" data-pick-for="${escapeHtml(name)}" data-pick="">Keep the sheet name</button>` : ""
+    ].filter(Boolean).join("");
+
     return `<tr class="match-row match-row--${state_}" data-match-row="${escapeHtml(name)}">
       <td class="match-cell-photo">${photo
         ? `<img class="table-photo" src="${escapeHtml(photo)}" alt="" loading="lazy">`
@@ -668,11 +705,12 @@
       <td>
         <strong>${escapeHtml(name)}</strong>
         <span class="match-state ${state_}">${label}</span>
-        <select class="match-select" data-match-for="${escapeHtml(name)}" aria-label="Catalogue product for ${escapeHtml(name)}">
-          <option value="">Keep the sheet name — no salt or photo</option>
-          ${list.map((r) => `<option value="${escapeHtml(r.item.name)}" ${r.item.name === chosen ? "selected" : ""}>${escapeHtml(r.item.name)} · ${Math.round(r.score * 100)}%</option>`).join("")}
-          ${chosen && !list.some((r) => r.item.name === chosen) ? `<option value="${escapeHtml(chosen)}" selected>${escapeHtml(chosen)}</option>` : ""}
-        </select>
+        <input class="match-input" type="text" list="productMasterNames" autocomplete="off" spellcheck="false"
+          data-match-for="${escapeHtml(name)}" value="${escapeHtml(chosen)}"
+          aria-label="Catalogue product for ${escapeHtml(name)}"
+          placeholder="Type any SNT product — leave blank to keep the sheet name">
+        ${note ? `<span class="match-warn">${escapeHtml(note)}</span>` : ""}
+        ${chips ? `<div class="match-chips">${chips}</div>` : ""}
       </td>
       <td class="match-cell-salt">${escapeHtml(target?.salt || "") || '<span class="faint">No salt until a product is chosen</span>'}</td>
     </tr>`;
@@ -683,7 +721,7 @@
 
     /* Uncertain guesses first - those are the ones worth the operator's attention - then the
        products the catalogue simply does not have, then the matches needing no thought. */
-    const order = { check: 0, rejected: 1, none: 2, strong: 3 };
+    const order = { check: 0, rejected: 1, none: 2, manual: 3, strong: 4 };
     const rows = [...state.suggestions.entries()].sort((a, b) =>
       order[matchConfidence(a[0], a[1])] - order[matchConfidence(b[0], b[1])] || a[0].localeCompare(b[0]));
     element("#matchRows").innerHTML = rows.map(([name, list]) => matchRowMarkup(name, list)).join("");
@@ -735,6 +773,7 @@
       element("#mapCompany").innerHTML = columnOptions(selected.company, true);
       element("#excelFileStatus").textContent = `${file.name} · ${formatNumber(rows.length)} rows`;
       state.matches = new Map();
+      state.matchNotes = new Map();
       computeSuggestions();
       renderPreview();
       openMatchDialog();
@@ -979,27 +1018,27 @@
   element("#excelFile").addEventListener("change", (event) => { if (event.target.files[0]) readExcel(event.target.files[0]); });
   ["#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice", "#mapCompany"].forEach((id) => element(id).addEventListener("change", renderPreview));
   /* Changing which column holds the name invalidates every match. */
-  element("#mapProduct").addEventListener("change", () => { state.matches = new Map(); computeSuggestions(); renderPreview(); });
+  element("#mapProduct").addEventListener("change", () => { state.matches = new Map(); state.matchNotes = new Map(); computeSuggestions(); renderPreview(); });
 
   element("#reviewMatchesButton").addEventListener("click", openMatchDialog);
+  /* change, not input: resolve once the operator has finished typing or taken a name from
+     the list, rather than on every keystroke. */
   element("#matchRows").addEventListener("change", (event) => {
-    const select = event.target.closest("[data-match-for]");
-    if (!select) return;
-    state.matches.set(select.dataset.matchFor, select.value);
-    /* Repaint just this row so a long list does not jump under the operator. */
-    const name = select.dataset.matchFor;
-    const row = element(`[data-match-row="${CSS.escape(name)}"]`);
-    if (row) row.outerHTML = matchRowMarkup(name, state.suggestions.get(name) || []);
-    element("#matchSummary").innerHTML = "";
-    element("#matchSummary").innerHTML = summaryMarkup();
-    renderPreview();
+    const field = event.target.closest("[data-match-for]");
+    if (field) chooseMatch(field.dataset.matchFor, field.value);
+  });
+  element("#matchRows").addEventListener("click", (event) => {
+    const chip = event.target.closest("[data-pick-for]");
+    if (chip) chooseMatch(chip.dataset.pickFor, chip.dataset.pick);
   });
   element("#acceptAllMatches").addEventListener("click", () => {
     state.suggestions.forEach((list, name) => { if (list.length) state.matches.set(name, list[0].item.name); });
+    state.matchNotes.clear();
     renderMatchDialog(); renderPreview();
   });
   element("#clearAllMatches").addEventListener("click", () => {
     state.suggestions.forEach((_list, name) => state.matches.set(name, ""));
+    state.matchNotes.clear();
     renderMatchDialog(); renderPreview();
   });
   element("#closeMatchDialog").addEventListener("click", () => elements.matchDialog.close());
