@@ -3,11 +3,11 @@
 
   if (!window.SNT) return;
   const { client, config, escapeHtml, queryTokens, matchesTokens, relevance, formatExpiry, expiryMeta, formatNumber,
-    formatPrice, detectPriceColumn, whatsappLink, websitePhoto, productPhoto, photoTableReady,
+    formatPrice, hasColumn, whatsappLink, websitePhoto, productPhoto, photoTableReady,
     initials, toast } = window.SNT;
 
   const LAYOUT_KEY = "snt-near-expiry-layout";
-  const state = { products: [], view: "available", query: "", shelf: "all", sort: "expiry", layout: "grid", favourites: new Set(), selected: null, viewing: null, hasPrice: false, anyPrice: false };
+  const state = { products: [], view: "available", query: "", shelf: "all", sort: "expiry", layout: "grid", favourites: new Set(), selected: null, viewing: null, hasPrice: false, anyPrice: false, hasCompany: false };
   const elements = {
     grid: document.querySelector("#productGrid"), status: document.querySelector("#catalogStatus"),
     search: document.querySelector("#searchInput"), clear: document.querySelector("#clearSearch"),
@@ -22,7 +22,7 @@
   try { state.layout = localStorage.getItem(LAYOUT_KEY) === "list" ? "list" : "grid"; } catch { state.layout = "grid"; }
 
   function haystack(product) {
-    return `${product.product_name} ${product.salt_name || ""} ${product.batch_no || ""}`;
+    return `${product.product_name} ${product.salt_name || ""} ${product.batch_no || ""} ${product.company || ""}`;
   }
 
   function inView(product, view) {
@@ -79,6 +79,7 @@
       </div>
       <div class="product-card__content">
         <div class="list-main">
+          ${product.company ? `<p class="product-card__company">${escapeHtml(product.company)}</p>` : ""}
           <h2>${escapeHtml(product.product_name)}</h2>
           <p class="product-card__salt">${escapeHtml(product.salt_name || "Composition not listed")}</p>
         </div>
@@ -162,6 +163,7 @@
     const shelf = expiryMeta(product.expiry_date);
     return [
       `*${product.product_name}*`,
+      product.company ? `Company: ${product.company}` : "",
       product.salt_name ? `Salt: ${product.salt_name}` : "",
       `Expiry: ${formatExpiry(product.expiry_date)}${shelf.months === null ? "" : ` (${shelf.label})`}`,
       `Quantity: ${formatNumber(product.quantity)}`,
@@ -206,6 +208,7 @@
     const hasPhoto = Boolean(productPhoto(product));
     elements.dialogBody.innerHTML = `<div class="dialog-photo${hasPhoto ? " is-zoomable" : ""}"${hasPhoto ? ' role="button" tabindex="0" aria-label="View full-size photo" data-open-photo' : ""}>${photoMarkup(product, "dialog-photo__image")}${hasPhoto ? '<span class="photo-expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg> Tap to enlarge</span>' : ""}</div>
       <div class="dialog-content">
+        ${product.company ? `<p class="dialog-company">${escapeHtml(product.company)}</p>` : ""}
         <h2>${escapeHtml(product.product_name)}</h2>
         <p class="dialog-salt">${escapeHtml(product.salt_name || "Composition not listed")}</p>
         <div class="dialog-chips">
@@ -324,8 +327,8 @@
 
   async function loadProducts() {
     showSkeleton();
-    state.hasPrice = await detectPriceColumn();
-    const columns = `id,product_name,salt_name,batch_no,expiry_date,quantity,photo_path,status,updated_at${state.hasPrice ? ",price" : ""}`;
+    [state.hasPrice, state.hasCompany] = await Promise.all([hasColumn("price"), hasColumn("company")]);
+    const columns = `id,product_name,salt_name,batch_no,expiry_date,quantity,photo_path,status,updated_at${state.hasPrice ? ",price" : ""}${state.hasCompany ? ",company" : ""}`;
     const { data, error } = await client.from("near_expiry_items")
       .select(columns)
       .order("status", { ascending: true }).order("expiry_date", { ascending: true }).order("product_name", { ascending: true });

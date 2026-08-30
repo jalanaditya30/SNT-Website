@@ -112,6 +112,9 @@ h1,h2,h3{margin:0}
 .favourite-button.is-saved{color:var(--terracotta);border-color:rgba(176,69,28,.35);background:var(--terracotta-wash)}
 .product-card__content{display:flex;flex-direction:column;flex:1;padding:.8rem .85rem .85rem;border-top:1px solid var(--line)}
 .product-card h2{display:-webkit-box;min-height:2.14rem;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:.82rem;font-weight:700;line-height:1.3;letter-spacing:-.005em}
+/* Company reads as a label above the product name, the way it sits on the pack. */
+.product-card__company,.dialog-company{margin:0 0 .15rem;color:var(--muted);font-size:.62rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.dialog-company{margin-bottom:.25rem}
 .product-card__salt{display:-webkit-box;min-height:2.05rem;margin:.3rem 0 0;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:var(--muted);font-size:.7rem;line-height:1.45}
 .card-figures{display:flex;align-items:flex-end;justify-content:space-between;gap:.5rem;margin-top:auto;padding-top:.7rem}
 .figure small{display:block;color:var(--faint);font-size:.53rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
@@ -301,6 +304,8 @@ td strong{display:block;max-width:34ch;font-size:.79rem;font-weight:700}
 td small{display:block;margin-top:.1rem;max-width:44ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:.7rem}
 .cell-num{font-family:var(--mono);font-weight:700}
 .cell-exp{font-family:var(--mono);font-weight:700;color:var(--terracotta)}
+/* Company is reference, not a figure — kept quiet so the product name still leads. */
+.cell-company{max-width:11rem;color:var(--ink-soft);font-size:.72rem;line-height:1.3}
 .table-photo{display:block;width:44px;height:38px;object-fit:contain;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--paper)}
 .table-photo--none{display:grid;place-items:center;color:var(--faint);font-size:.55rem;font-weight:700;letter-spacing:.06em}
 /* Borrowed from the website photo folder — dashed, so a real batch photo is never mistaken for one. */
