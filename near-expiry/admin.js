@@ -12,13 +12,15 @@
     user: null, role: "operator", products: [], master: [],
     workbookRows: [], rawRows: [], headers: [], parsed: [], editing: null, photos: [], hasPrice: false, hasCompany: false,
     /* ids whose delete is still in flight, so a double-click cannot fire two */
-    removing: new Set(), deletingAll: null
+    removing: new Set(), deletingAll: null,
+    /* sheet name -> the master product the operator settled on ("" = keep the sheet name) */
+    matches: new Map(), suggestions: new Map(), matchIndex: null
   };
   const element = (selector) => document.querySelector(selector);
   const elements = {
     loginView: element("#loginView"), adminView: element("#adminView"), loading: element("#loadingOverlay"),
     rows: element("#inventoryRows"), search: element("#adminSearch"), statusFilter: element("#adminStatusFilter"),
-    formDialog: element("#productFormDialog"), deleteAllDialog: element("#deleteAllDialog"), photoInbox: element("#photoInbox")
+    formDialog: element("#productFormDialog"), deleteAllDialog: element("#deleteAllDialog"), matchDialog: element("#matchDialog"), photoInbox: element("#photoInbox")
   };
 
   function setLoading(active, message = "Working…") {
@@ -108,6 +110,7 @@
     elements.search.value = "";
     if (elements.formDialog.open) elements.formDialog.close();
     if (elements.deleteAllDialog.open) elements.deleteAllDialog.close();
+    if (elements.matchDialog.open) elements.matchDialog.close();
     elements.loginView.classList.remove("hidden");
     elements.adminView.classList.add("hidden");
     element("#signOutButton").classList.add("hidden");
@@ -133,6 +136,7 @@
        than free text and "Alkem - Maxxio" cannot become three different spellings. */
     const companies = [...new Set(state.master.map((item) => item.company).filter(Boolean))].sort();
     element("#companyNames").innerHTML = companies.map((name) => `<option value="${escapeHtml(name)}"></option>`).join("");
+    buildMatchIndex();
   }
 
   function filteredProducts() {
@@ -203,6 +207,73 @@
         <td><div class="row-actions"><button class="icon-button" type="button" data-edit="${escapeHtml(item.id)}">Edit</button><button class="icon-button danger" type="button" data-delete="${escapeHtml(item.id)}">Delete</button></div></td>
       </tr>`;
     }).join("") : `<tr><td class="table-empty" colspan="${tableColumns()}">No products match this search.</td></tr>`;
+  }
+
+  /* ---- matching a sheet name to the SNT catalogue --------------------------
+     Distributor sheets name the same product differently from the master - "ALCOXIB 120
+     10S" against "ALCOXIB 120 (10'S)", "ALDIGESIC 100 TAB 20X10" against "ALDIGESIC 100
+     Tab" - so exact matching finds almost nothing: six of one 184-row sheet. Salt and photo
+     both hang off the master name, so the whole benefit of the catalogue is lost with it.
+
+     Tokens are weighted by how rare they are across the master. A word shared by half the
+     catalogue says nothing, one shared by two products says almost everything; without that
+     weighting "ALKEM COLD + SUS" matches "ALKEM COLD ACTIVE TAB" on the strength of the word
+     ALKEM, instead of "NEW ALKEM COLD + SUSPENSION". */
+
+  function nameTokens(value) {
+    /* Apostrophes and dots are noise: the sheet writes 10S where the master writes (10'S). */
+    return String(value ?? "").toLowerCase().replace(/['’.]/g, "").split(/[^a-z0-9]+/).filter(Boolean);
+  }
+
+  function buildMatchIndex() {
+    const frequency = new Map();
+    const entries = state.master.map((item) => {
+      const tokens = nameTokens(item.name);
+      new Set(tokens).forEach((token) => frequency.set(token, (frequency.get(token) || 0) + 1));
+      return { item, tokens };
+    });
+    const weight = (token) => Math.log(state.master.length / (1 + (frequency.get(token) || 0))) + 0.25;
+    const total = (tokens) => tokens.reduce((sum, token) => sum + weight(token), 0);
+    state.matchIndex = { entries, frequency, weight, total };
+  }
+
+  function matchScore(a, b) {
+    const { weight, total } = state.matchIndex;
+    if (!a.length || !b.length) return 0;
+    const pool = [...b];
+    let shared = 0;
+    for (const token of a) {
+      const at = pool.indexOf(token);
+      if (at !== -1) { shared += weight(token); pool.splice(at, 1); }
+    }
+    let score = (2 * shared) / (total(a) + total(b));
+    /* Dose and pack figures decide it: ALCOXIB 120 is not ALCOXIB 90. */
+    const figuresA = a.filter((token) => /\d/.test(token));
+    const figuresB = b.filter((token) => /\d/.test(token));
+    if (figuresA.length && figuresB.length && !figuresA.some((token) => figuresB.includes(token))) score *= 0.35;
+    return Math.min(1, score);
+  }
+
+  const STRONG_MATCH = 0.72;
+
+  function suggestMatches(name, limit = 4) {
+    if (!state.matchIndex) return [];
+    const tokens = nameTokens(name);
+    if (!tokens.length) return [];
+    /* Score only products sharing a reasonably rare token, so a 184-row sheet does not turn
+       into 184 x 1554 comparisons on the main thread. */
+    const rare = tokens.filter((token) => (state.matchIndex.frequency.get(token) || 0) <= 60);
+    let pool = rare.length ? state.matchIndex.entries.filter((e) => e.tokens.some((t) => rare.includes(t))) : state.matchIndex.entries;
+    if (pool.length < 5) pool = state.matchIndex.entries;
+    return pool
+      .map((e) => ({ item: e.item, score: matchScore(tokens, e.tokens) }))
+      .sort((x, y) => y.score - x.score)
+      .slice(0, limit)
+      .filter((r) => r.score >= 0.45);
+  }
+
+  function masterByName(name) {
+    return state.master.find((item) => item.name === name) || null;
   }
 
   function masterMatch(name) {
@@ -446,26 +517,77 @@
     const lookup = new Map(state.master.map((item) => [normalise(item.name), item]));
     state.parsed = state.workbookRows.map((row, index) => {
       const rawRow = state.rawRows[index] || {};
-      const name = String(row[mapping.product] ?? "").trim();
+      const sheetName = String(row[mapping.product] ?? "").trim();
+      /* A match the operator settled on renames the row to the catalogue's own name, which
+         is what the photo folder and the salt are filed under. Undecided rows fall back to
+         the exact lookup that was here before. */
+      const chosen = state.matches.get(sheetName);
+      const matched = chosen ? masterByName(chosen) : lookup.get(normalise(sheetName)) || null;
+      const name = matched?.name || sheetName;
       const rawExpiry = mapping.expiry ? row[mapping.expiry] : "";
       const expiry = excelExpiry(rawExpiry, mapping.expiry ? rawRow[mapping.expiry] : "");
       const batch = mapping.batch ? String(row[mapping.batch] ?? "").trim() : "";
       const quantity = Math.max(0, Math.trunc(Number(String(row[mapping.quantity] ?? "").replace(/[,\s]/g, "")) || 0));
-      const salt = (mapping.salt ? String(row[mapping.salt] ?? "").trim() : "") || lookup.get(normalise(name))?.salt || "";
-      /* Most sheets carry no company column, and the master already knows it for every
-         catalogue product — so an unmapped company is looked up rather than left blank. */
-      const company = (mapping.company ? String(row[mapping.company] ?? "").trim() : "") || lookup.get(normalise(name))?.company || "";
+      const salt = (mapping.salt ? String(row[mapping.salt] ?? "").trim() : "") || matched?.salt || "";
+      /* Sheets write the company as a code — ALKEM, ALKEM-FUT, and a literal -BLANK- for
+         none — so the mapped value wins where it says something, and the master fills the
+         rest. */
+      const sheetCompany = mapping.company ? String(row[mapping.company] ?? "").trim() : "";
+      const company = (/^-?blank-?$/i.test(sheetCompany) ? "" : sheetCompany) || matched?.company || "";
       const rawPrice = mapping.price ? row[mapping.price] : "";
       const price = parsePrice(rawPrice);
       const problems = [];
-      if (!name) problems.push("no product name");
+      if (!sheetName) problems.push("no product name");
       if (!expiry) problems.push(`expiry "${String(rawExpiry ?? "").trim() || "blank"}" not understood`);
       /* An unreadable price is a warning, not a reason to drop a whole product row. */
       const warnings = mapping.price && String(rawPrice ?? "").trim() && price === null
         ? [`price "${String(rawPrice).trim()}" not understood — imported without a price`] : [];
-      return { line: index + 2, name, salt, company, batch, quantity, expiry, rawExpiry, price, problems, warnings };
+      return { line: index + 2, name, sheetName, matched: Boolean(matched), salt, company, batch, quantity, expiry, rawExpiry, price, problems, warnings };
     });
     return state.parsed;
+  }
+
+  /* One pass over the sheet, kept out of renderPreview so remapping a column does not
+     recompute 184 fuzzy searches. */
+  function computeSuggestions() {
+    state.suggestions = new Map();
+    const mapping = currentMapping();
+    if (!mapping.product) return;
+    state.workbookRows.forEach((row) => {
+      const name = String(row[mapping.product] ?? "").trim();
+      if (!name || state.suggestions.has(name)) return;
+      state.suggestions.set(name, suggestMatches(name));
+    });
+    /* The best suggestion is filled in wherever there is one, so it is readable without
+       opening the dropdown and a sheet does not need 50 clicks to be useful. Confidence is
+       carried by the badge and the tint instead: a weak guess is still shown, but it is
+       marked and sorted to the top for someone to agree with or reject. */
+    state.suggestions.forEach((list, name) => {
+      if (state.matches.has(name)) return;
+      state.matches.set(name, list[0]?.item.name || "");
+    });
+  }
+
+  function matchConfidence(name, list) {
+    const chosen = state.matches.get(name) || "";
+    if (!chosen) return list.length ? "rejected" : "none";
+    const best = list.find((r) => r.item.name === chosen);
+    return best && best.score >= STRONG_MATCH ? "strong" : "check";
+  }
+
+  function matchCounts() {
+    const counts = { strong: 0, check: 0, none: 0, rejected: 0, total: state.suggestions.size };
+    state.suggestions.forEach((list, name) => { counts[matchConfidence(name, list)]++; });
+    return counts;
+  }
+
+  function summaryMarkup() {
+    const counts = matchCounts();
+    return [
+      `<span class="pill pill--ok">${formatNumber(counts.strong)} confident</span>`,
+      counts.check ? `<span class="pill pill--warn">${formatNumber(counts.check)} to check</span>` : "",
+      counts.none + counts.rejected ? `<span class="pill">${formatNumber(counts.none + counts.rejected)} keeping the sheet name</span>` : ""
+    ].filter(Boolean).join("");
   }
 
   function renderPreview() {
@@ -513,8 +635,68 @@
     element("#importPreview").textContent = invalid.length
       ? `${formatNumber(invalid.length)} ${invalid.length === 1 ? "row is" : "rows are"} highlighted and will be skipped — first is sheet row ${invalid[0].line} (${invalid[0].problems.join(", ")}). Fix the sheet and re-select it, or import the rest.`
       : `Showing the first ${formatNumber(Math.min(PREVIEW_ROWS, parsed.length))} of ${formatNumber(parsed.length)} rows.`;
+    const counts = matchCounts();
+    const review = element("#reviewMatchesButton");
+    review.classList.toggle("hidden", !counts.total);
+    review.textContent = counts.check
+      ? `Check ${formatNumber(counts.check)} suggested matches`
+      : `Matched ${formatNumber(counts.strong)} of ${formatNumber(counts.total)}`;
+    review.classList.toggle("danger-button", Boolean(counts.check));
+    review.classList.toggle("secondary-button", !counts.check);
     element("#importButton").disabled = unique.size === 0;
     element("#importButton").textContent = `Import ${formatNumber(unique.size)} products`;
+  }
+
+  /* ---- the match review dialog ---------------------------------------------
+     Opened once the sheet is read, because this is the moment the decisions are cheap: the
+     name settled on here is the one the catalogue publishes, and it carries the salt and
+     the pack photo with it. Rows needing a look are listed first. */
+
+  function matchRowMarkup(name, list) {
+    const chosen = state.matches.get(name) || "";
+    const state_ = matchConfidence(name, list);
+    const label = {
+      strong: "Matched", check: "Suggested — check it",
+      rejected: "Keeping the sheet name", none: "Not in the catalogue"
+    }[state_];
+    const target = chosen ? masterByName(chosen) : null;
+    const photo = chosen ? websitePhoto(chosen) : "";
+    return `<tr class="match-row match-row--${state_}" data-match-row="${escapeHtml(name)}">
+      <td class="match-cell-photo">${photo
+        ? `<img class="table-photo" src="${escapeHtml(photo)}" alt="" loading="lazy">`
+        : '<span class="table-photo table-photo--none">none</span>'}</td>
+      <td>
+        <strong>${escapeHtml(name)}</strong>
+        <span class="match-state ${state_}">${label}</span>
+        <select class="match-select" data-match-for="${escapeHtml(name)}" aria-label="Catalogue product for ${escapeHtml(name)}">
+          <option value="">Keep the sheet name — no salt or photo</option>
+          ${list.map((r) => `<option value="${escapeHtml(r.item.name)}" ${r.item.name === chosen ? "selected" : ""}>${escapeHtml(r.item.name)} · ${Math.round(r.score * 100)}%</option>`).join("")}
+          ${chosen && !list.some((r) => r.item.name === chosen) ? `<option value="${escapeHtml(chosen)}" selected>${escapeHtml(chosen)}</option>` : ""}
+        </select>
+      </td>
+      <td class="match-cell-salt">${escapeHtml(target?.salt || "") || '<span class="faint">No salt until a product is chosen</span>'}</td>
+    </tr>`;
+  }
+
+  function renderMatchDialog() {
+    element("#matchSummary").innerHTML = summaryMarkup();
+
+    /* Uncertain guesses first - those are the ones worth the operator's attention - then the
+       products the catalogue simply does not have, then the matches needing no thought. */
+    const order = { check: 0, rejected: 1, none: 2, strong: 3 };
+    const rows = [...state.suggestions.entries()].sort((a, b) =>
+      order[matchConfidence(a[0], a[1])] - order[matchConfidence(b[0], b[1])] || a[0].localeCompare(b[0]));
+    element("#matchRows").innerHTML = rows.map(([name, list]) => matchRowMarkup(name, list)).join("");
+    const counts = matchCounts();
+    element("#matchNote").textContent = counts.none
+      ? `${formatNumber(counts.none)} products are not in the SNT catalogue — they import under the sheet's own name, without a salt or a photo.`
+      : "Every product was found in the SNT catalogue.";
+  }
+
+  function openMatchDialog() {
+    if (!state.suggestions.size) return;
+    renderMatchDialog();
+    if (!elements.matchDialog.open) elements.matchDialog.showModal();
   }
 
   async function readExcel(file) {
@@ -552,7 +734,10 @@
       element("#mapPrice").innerHTML = columnOptions(selected.price, true);
       element("#mapCompany").innerHTML = columnOptions(selected.company, true);
       element("#excelFileStatus").textContent = `${file.name} · ${formatNumber(rows.length)} rows`;
+      state.matches = new Map();
+      computeSuggestions();
       renderPreview();
+      openMatchDialog();
     } catch (error) { toast(error.message || "Spreadsheet could not be read.", "error"); }
     finally { setLoading(false); }
   }
@@ -792,7 +977,33 @@
   element("#confirmDeleteAll").addEventListener("click", deleteAllShown);
 
   element("#excelFile").addEventListener("change", (event) => { if (event.target.files[0]) readExcel(event.target.files[0]); });
-  ["#mapProduct", "#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice", "#mapCompany"].forEach((id) => element(id).addEventListener("change", renderPreview));
+  ["#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice", "#mapCompany"].forEach((id) => element(id).addEventListener("change", renderPreview));
+  /* Changing which column holds the name invalidates every match. */
+  element("#mapProduct").addEventListener("change", () => { state.matches = new Map(); computeSuggestions(); renderPreview(); });
+
+  element("#reviewMatchesButton").addEventListener("click", openMatchDialog);
+  element("#matchRows").addEventListener("change", (event) => {
+    const select = event.target.closest("[data-match-for]");
+    if (!select) return;
+    state.matches.set(select.dataset.matchFor, select.value);
+    /* Repaint just this row so a long list does not jump under the operator. */
+    const name = select.dataset.matchFor;
+    const row = element(`[data-match-row="${CSS.escape(name)}"]`);
+    if (row) row.outerHTML = matchRowMarkup(name, state.suggestions.get(name) || []);
+    element("#matchSummary").innerHTML = "";
+    element("#matchSummary").innerHTML = summaryMarkup();
+    renderPreview();
+  });
+  element("#acceptAllMatches").addEventListener("click", () => {
+    state.suggestions.forEach((list, name) => { if (list.length) state.matches.set(name, list[0].item.name); });
+    renderMatchDialog(); renderPreview();
+  });
+  element("#clearAllMatches").addEventListener("click", () => {
+    state.suggestions.forEach((_list, name) => state.matches.set(name, ""));
+    renderMatchDialog(); renderPreview();
+  });
+  element("#closeMatchDialog").addEventListener("click", () => elements.matchDialog.close());
+  element("#confirmMatches").addEventListener("click", () => { elements.matchDialog.close(); renderPreview(); });
   element("#importButton").addEventListener("click", importExcel);
   wireDropZone("#excelDrop", "#excelFile", readExcel);
 
