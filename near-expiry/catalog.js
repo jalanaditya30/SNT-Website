@@ -7,11 +7,12 @@
     initials, toast } = window.SNT;
 
   const LAYOUT_KEY = "snt-near-expiry-layout";
-  const state = { products: [], view: "available", query: "", shelf: "all", sort: "expiry", layout: "grid", favourites: new Set(), selected: null, viewing: null, hasPrice: false, anyPrice: false, hasCompany: false };
+  const state = { products: [], view: "available", query: "", shelf: "all", sort: "expiry", layout: "grid", favourites: new Set(), selected: null, viewing: null, hasPrice: false, anyPrice: false, hasCompany: false, company: "all" };
   const elements = {
     grid: document.querySelector("#productGrid"), status: document.querySelector("#catalogStatus"),
     search: document.querySelector("#searchInput"), clear: document.querySelector("#clearSearch"),
     meta: document.querySelector("#resultsMeta"), shelf: document.querySelector("#shelfFilter"),
+    company: document.querySelector("#companyFilter"),
     sort: document.querySelector("#sortSelect"), dialog: document.querySelector("#productDialog"),
     dialogBody: document.querySelector("#productDialogBody"), viewer: document.querySelector("#imageViewer"),
     viewerStage: document.querySelector("#viewerStage"), viewerImage: document.querySelector("#viewerImage"),
@@ -46,8 +47,24 @@
     return products.sort((a, b) => (tokens.length ? relevance(b, tokens) - relevance(a, tokens) : 0) || compare(a, b) || String(a.product_name).localeCompare(String(b.product_name)));
   }
 
+  function passesCompany(product) {
+    return state.company === "all" || (product.company || "") === state.company;
+  }
+
   function visibleProducts(tokens) {
-    return sortProducts(state.products.filter((product) => inView(product, state.view) && passesShelf(product) && matchesTokens(haystack(product), tokens)), tokens);
+    return sortProducts(state.products.filter((product) => inView(product, state.view) && passesShelf(product) && passesCompany(product) && matchesTokens(haystack(product), tokens)), tokens);
+  }
+
+  /* Built from the stock on the page, so a company with nothing near expiry never appears,
+     and the filter empties itself when the column has not been added yet. */
+  function fillCompanyFilter() {
+    const companies = [...new Set(state.products.map((product) => product.company).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const field = document.querySelector("#companyFilterField");
+    field.classList.toggle("hidden", companies.length < 2);
+    if (companies.length < 2) { state.company = "all"; return; }
+    elements.company.innerHTML = `<option value="all">All companies</option>${companies.map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}`;
+    if (!companies.includes(state.company)) state.company = "all";
+    elements.company.value = state.company;
   }
 
   function photoMarkup(product, className = "product-card__photo") {
@@ -100,7 +117,9 @@
   /* The tab counters already state how much stock there is. This line only earns its space
      when a search or filter is hiding some of it, or when a match sits under another tab. */
   function renderMeta(products, tokens) {
-    const narrowed = tokens.length || state.shelf !== "all";
+    /* The company filter narrows as surely as the other two, and without it here the tab
+       would read 175 over a grid showing two. */
+    const narrowed = tokens.length || state.shelf !== "all" || state.company !== "all";
     const parts = [];
     if (narrowed) {
       const total = state.products.filter((product) => inView(product, state.view)).length;
@@ -108,7 +127,9 @@
     }
     if (tokens.length) {
       ["available", "sold"].filter((view) => view !== state.view).forEach((view) => {
-        const elsewhere = state.products.filter((product) => inView(product, view) && matchesTokens(haystack(product), tokens)).length;
+        /* Counted under the same company filter, or the offer to look in the other tab
+           promises stock that tab would not show either. */
+        const elsewhere = state.products.filter((product) => inView(product, view) && passesCompany(product) && matchesTokens(haystack(product), tokens)).length;
         if (elsewhere) parts.push(`<button class="cross-hint" type="button" data-view="${view}">${formatNumber(elsewhere)} more in ${view}</button>`);
       });
     }
@@ -337,6 +358,7 @@
     elements.grid.classList.remove("skeleton-grid");
     state.products = data || [];
     state.anyPrice = state.products.some((product) => formatPrice(product.price));
+    fillCompanyFilter();
     const latest = state.products.reduce((newest, product) => (product.updated_at > newest ? product.updated_at : newest), "");
     if (latest) {
       const date = new Date(latest);
@@ -352,6 +374,7 @@
   elements.search.addEventListener("keydown", (event) => { if (event.key === "Escape" && state.query) { event.stopPropagation(); state.query = ""; event.target.value = ""; render(); } });
   elements.clear.addEventListener("click", () => { state.query = ""; elements.search.value = ""; elements.search.focus(); render(); });
   elements.shelf.addEventListener("change", (event) => { state.shelf = event.target.value; render(); });
+  elements.company.addEventListener("change", (event) => { state.company = event.target.value; render(); });
   elements.sort.addEventListener("change", (event) => { state.sort = event.target.value; render(); });
   document.querySelector(".layout-toggle").addEventListener("click", (event) => {
     const button = event.target.closest("[data-layout]");

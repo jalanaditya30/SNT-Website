@@ -781,17 +781,57 @@
     finally { setLoading(false); }
   }
 
+  /* Rows already in the database that the operator has now matched to a catalogue name are
+     renamed by id before anything is upserted, so the upsert meets the record it is meant to
+     update rather than creating its twin. */
+  async function renameToCatalogueNames(renames) {
+    if (!renames.length) return 0;
+    let renamed = 0;
+    const BATCH = 20;
+    for (let start = 0; start < renames.length; start += BATCH) {
+      const batch = renames.slice(start, start + BATCH);
+      const results = await Promise.all(batch.map(({ id, product_name }) =>
+        client.from("near_expiry_items").update({ product_name, updated_by: state.user.id }).eq("id", id).select("id")));
+      const failed = results.find((result) => result.error);
+      if (failed) throw failed.error;
+      renamed += results.reduce((count, result) => count + (result.data?.length || 0), 0);
+      setLoading(true, `Renaming ${formatNumber(renamed)} of ${formatNumber(renames.length)} to their catalogue names…`);
+    }
+    /* Silence here would mean an update policy is refusing, and the upsert that follows would
+       then duplicate every renamed product. */
+    if (!renamed) throw refused(NO_UPDATE_POLICY);
+    return renamed;
+  }
+
   async function importExcel() {
     const parsed = state.parsed.filter((row) => !row.problems.length);
     if (!parsed.length) return toast("There are no valid rows to import.", "error");
     const mapping = currentMapping();
     const keepSold = element("#keepSoldStatus").checked;
-    const existing = new Map(state.products.map((item) => [`${normalise(item.product_name)}|${normalise(item.batch_no)}|${item.expiry_date}`, item]));
+    const identify = (name, batch, expiry) => `${normalise(name)}|${normalise(batch)}|${expiry}`;
+    const existing = new Map(state.products.map((item) => [identify(item.product_name, item.batch_no, item.expiry_date), item]));
+
+    /* A matched product publishes under the catalogue's name, but a row imported before the
+       match was made still carries the sheet's. Both identities have to be tried: by the new
+       name for rows imported since, by the sheet's for rows imported before. Looking only at
+       the new one loses the record twice over - "keep sold" stops recognising the row and
+       puts hand-marked stock back on the public site, and import_key, generated from the row
+       itself, no longer collides, so the upsert inserts a second product instead of updating
+       the first and the old name stays listed beside it. Renaming in place first settles
+       both. */
+    const renames = [];
 
     const unique = new Map();
     parsed.forEach((row) => {
-      const key = `${normalise(row.name)}|${normalise(row.batch)}|${row.expiry}`;
-      const current = existing.get(key);
+      const key = identify(row.name, row.batch, row.expiry);
+      let current = existing.get(key);
+      if (!current && row.sheetName && row.sheetName !== row.name) {
+        const beforeMatching = existing.get(identify(row.sheetName, row.batch, row.expiry));
+        if (beforeMatching) {
+          current = beforeMatching;
+          renames.push({ id: beforeMatching.id, product_name: row.name });
+        }
+      }
       /* A row someone marked sold, whose sheet quantity has not moved since, is a stale
          sheet line rather than a restock — leave it sold instead of putting phantom stock
          back on the public site. A changed quantity means the sheet is the fresher truth. */
@@ -813,6 +853,7 @@
     setLoading(true, `Importing ${formatNumber(records.length)} products…`);
     element("#importButton").disabled = true;
     try {
+      await renameToCatalogueNames(renames);
       for (let start = 0; start < records.length; start += CHUNK) {
         const chunk = records.slice(start, start + CHUNK);
         const { error } = await client.from("near_expiry_items").upsert(chunk, { onConflict: "import_key", ignoreDuplicates: false });

@@ -67,6 +67,14 @@ no salt and no photo, which is what the old behaviour did for everything.
 Nothing is decided permanently: reopen the dialog from the button next to Import, change any
 row, and the preview follows.
 
+A product matched to the catalogue is published under the catalogue's name, so a row imported
+earlier under the sheet's own name is **renamed in place before the import runs**, by id.
+Skipping that would break the record in two ways at once: `import_key` is generated from the
+row, so a changed name no longer collides and the upsert inserts a second product while the
+first stays listed under the old name; and "keep sold items sold" stops recognising the row,
+putting hand-marked stock back on the public site. Renaming by id also means the row keeps its
+identity, so saved shortlists and shared links survive it.
+
 ## Importing stock
 
 1. Drop the current `.xlsx`/`.xls`/`.csv`/`.tsv` on step 1. The first worksheet is read.
@@ -171,6 +179,11 @@ added.
 Each product carries the company it comes from — shown above the product name on the public
 catalogue, in its own column in the admin inventory, in the WhatsApp share text, and matched
 by search, so `lupin` finds the Lupin stock.
+
+The catalogue also has a company filter beside the expiry one. It is built from the stock
+actually listed rather than from the master, so a company with nothing near expiry never
+appears, and it hides itself entirely when fewer than two companies are on the page — which
+includes the case where the migration has not been run.
 
 Like price, the column is not created by anything in this repository. Add it once in
 Supabase:
