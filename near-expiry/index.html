@@ -14,7 +14,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js"></script>
   <script defer src="config.js?v=0d42f382"></script>
   <script defer src="shared.js?v=26855fca"></script>
-  <script defer src="catalog.js?v=9815f410"></script>
+  <script defer src="catalog.js?v=c0419e69"></script>
 </head>
 <body>
   <header class="site-header">
@@ -50,6 +50,10 @@
         <button type="button" role="tab" aria-selected="false" data-view="favourites">♡ Saved <b id="savedTabCount">0</b></button>
       </div>
       <div class="toolbar__spacer"></div>
+      <div class="select-field hidden" id="companyFilterField">
+        <label class="sr-only" for="companyFilter">Filter by company</label>
+        <select id="companyFilter"><option value="all">All companies</option></select>
+      </div>
       <div class="select-field">
         <label class="sr-only" for="shelfFilter">Filter by shelf life</label>
         <select id="shelfFilter">
