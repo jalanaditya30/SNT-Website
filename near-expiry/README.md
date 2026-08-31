@@ -223,9 +223,17 @@ alter table public.near_expiry_items
   add column if not exists company text;
 ```
 
-Both pages probe for it on load. Until it exists they run exactly as before, with the
-company field, column and Excel mapping hidden and a notice on the admin page; companies
-appear everywhere the moment the migration is run, with no further change. If the project
+Until it exists both pages run exactly as before, with the company field, column and Excel
+mapping hidden and a notice on the admin page; companies appear everywhere the moment the
+migration is run, with no further change.
+
+How that is worked out matters, because it used to be got wrong. The catalogue asks for every
+column in one query and gives up only the one PostgREST names as missing; the admin reads the
+answer off the rows it already fetched with `select("*")`. Neither sends a separate probe
+whose failure could be mistaken for absence — a probe that answers "no such column" for a
+dropped connection means one flaky request on a cold page load hides every price and company
+while the products themselves load and look entirely normal. A request that fails for any
+other reason now surfaces as the load error it is, with the reload the page already offers. If the project
 uses column-level grants rather than table-level ones, grant `select` on the new column to
 `anon` and `authenticated` as well.
 
@@ -257,9 +265,9 @@ alter table public.near_expiry_items
   add column if not exists price numeric(10,2);
 ```
 
-Both pages probe for the column on load. Until it exists they run exactly as before, with the
-price field, column and Excel mapping hidden and a notice on the admin page; prices appear
-everywhere the moment the migration is run, with no further change. If the project uses
+Until it exists both pages run exactly as before, with the price field, column and Excel
+mapping hidden and a notice on the admin page; prices appear everywhere the moment the
+migration is run, with no further change. This is worked out the same way company is, above. If the project uses
 column-level grants rather than table-level ones, grant `select` on the new column to `anon`
 and `authenticated` as well.
 

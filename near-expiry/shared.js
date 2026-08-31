@@ -163,12 +163,36 @@
 
   /* The price column is added by a migration this repository does not ship. Probe for it once
      so both pages keep working — without prices — until that migration has been run. */
-  /* Price and company each live behind a migration this repository does not ship, so both
-     pages ask the database what it actually has rather than assuming. Probed one column at
-     a time: asking for both at once cannot tell which of them is missing. */
-  async function hasColumn(column) {
+  /* Price and company each live behind a migration this repository does not ship, so what the
+     database actually has has to be discovered rather than assumed.
+
+     Asking and adapting, not probing. A probe answered "no such column" for every kind of
+     failure, so a single dropped request on a cold connection — a TLS handshake, a token
+     refresh, one rate-limited call — hid every price and company on the page while the
+     products themselves loaded a moment later and looked perfectly normal. PostgREST names
+     the column it does not have, so the query drops that one and runs again; anything else is
+     a real failure and is thrown, where the page already reports it and offers a reload.
+     Wrong data is never quietly preferred to an error. */
+  async function selectWithOptional(build, optional) {
+    let columns = [...optional];
+    for (let attempt = 0; attempt <= optional.length; attempt += 1) {
+      const { data, error } = await build(columns);
+      if (!error) return { data, present: columns };
+      const missing = error.code === "42703"
+        && columns.find((column) => new RegExp(`\\b${column}\\b`).test(error.message || ""));
+      if (!missing) throw error;
+      columns = columns.filter((column) => column !== missing);
+    }
+    throw new Error("The catalogue columns could not be resolved.");
+  }
+
+  /* Only for a table with no rows to learn from. Absent means PostgREST said so; every other
+     failure is thrown rather than read as absence. */
+  async function columnExists(column) {
     const { error } = await client.from("near_expiry_items").select(column).limit(1);
-    return !error;
+    if (!error) return true;
+    if (error.code === "42703") return false;
+    throw error;
   }
 
   function whatsappLink(text) {
@@ -253,7 +277,7 @@
   window.SNT = {
     client, config, escapeHtml, normalise, searchable, queryTokens, matchesTokens, relevance,
     parseExpiry, formatExpiry, expiryParts, expiryForInput, monthToDate, expiryMeta, formatNumber,
-    formatPrice, parsePrice, hasColumn, whatsappLink, photoUrl, websitePhoto, productPhoto,
+    formatPrice, parsePrice, selectWithOptional, columnExists, whatsappLink, photoUrl, websitePhoto, productPhoto,
     photoTableReady, initials, toast
   };
 })();
