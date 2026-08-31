@@ -2,7 +2,7 @@
   "use strict";
 
   if (!window.SNT) return;
-  const { client, config, escapeHtml, queryTokens, matchesTokens, relevance, formatExpiry, expiryMeta, formatNumber,
+  const { publicClient: client, config, escapeHtml, queryTokens, matchesTokens, relevance, formatExpiry, expiryMeta, formatNumber,
     formatPrice, selectWithOptional, whatsappLink, websitePhoto, productPhoto, photoTableReady,
     initials, toast } = window.SNT;
 
@@ -354,7 +354,7 @@
     const { data, present } = await selectWithOptional((optional) => client.from("near_expiry_items")
       .select([BASE, ...optional].join(","))
       .order("status", { ascending: true }).order("expiry_date", { ascending: true }).order("product_name", { ascending: true }),
-    ["price", "company"]);
+    ["price", "company"], client);
     state.hasPrice = present.includes("price");
     state.hasCompany = present.includes("company");
     await photoTableReady;

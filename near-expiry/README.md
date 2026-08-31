@@ -102,6 +102,17 @@ database refusal cannot destroy a photo under a product that is still listed.
 
 Nothing here can be undone, so be deliberate with it.
 
+### Checking the public catalogue
+
+The catalogue and the admin share an origin, so they share the stored Supabase session. Once
+someone signs in to the admin, the public page **in that same browser** reads as that account
+rather than as a visitor — so every permission a visitor lacks looks fine to the one person
+most likely to be checking, and the fault only shows up on somebody else's machine.
+
+The catalogue therefore uses its own client that never picks a session up. What staff see
+there is what a chemist sees, in the same browser, signed in or not. When a column has to be
+given up the console says which and why, rather than the page just quietly going without it.
+
 ### "permission denied for table near_expiry_items"
 
 Postgres error `42501`, and always a grant rather than a policy: row-level security that
@@ -341,6 +352,11 @@ the wrong pack shot. Nine products sit in that category today.
 Between regenerations the map can only go stale in the safe direction: an unrecognised name
 falls to the placeholder, and a filename that has since been renamed fails its image load and
 falls to the placeholder too. Neither breaks a page.
+
+A cold browser fetches `photo-map.json` alongside everything else the page needs, so it is
+retried before being given up on: swallowing one dropped request there took every website
+photo off the page at once, which looks like the photos being broken in that browser rather
+than like a single failed fetch. Giving up on it now says so in the console.
 
 The admin inventory shows a borrowed photo dimmed with a dashed border, and **Missing photo**
 still counts products with no upload of their own — a product wearing the website's pack shot
