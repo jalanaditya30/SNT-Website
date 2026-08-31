@@ -102,6 +102,35 @@ database refusal cannot destroy a photo under a product that is still listed.
 
 Nothing here can be undone, so be deliberate with it.
 
+### "permission denied for table near_expiry_items"
+
+Postgres error `42501`, and always a grant rather than a policy: row-level security that
+refuses a read returns no rows, never this. The public catalogue reads as `anon`, so that role
+needs select on the table:
+
+```sql
+grant select on public.near_expiry_items to anon, authenticated;
+```
+
+What the table currently gives out:
+
+```sql
+select grantee, privilege_type from information_schema.role_table_grants
+where table_schema = 'public' and table_name = 'near_expiry_items';
+```
+
+A project that grants column by column rather than table-wide does not extend those grants to
+a column added later, so `price` or `company` can be refused while everything else is
+readable. That case degrades — the column is dropped from the query and the catalogue loads
+without it — but the fix is to grant it:
+
+```sql
+grant select (price, company) on public.near_expiry_items to anon, authenticated;
+```
+
+A denial covering the whole table is fatal and says so on the page, because there is nothing
+left to show.
+
 ### Photos left behind in storage
 
 `storage.remove()` refuses the same way the table delete does: it answers with the objects it

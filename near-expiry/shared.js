@@ -175,15 +175,40 @@
      Wrong data is never quietly preferred to an error. */
   async function selectWithOptional(build, optional) {
     let columns = [...optional];
-    for (let attempt = 0; attempt <= optional.length; attempt += 1) {
+    let retries = 2;
+    for (;;) {
       const { data, error } = await build(columns);
       if (!error) return { data, present: columns };
-      const missing = error.code === "42703"
-        && columns.find((column) => new RegExp(`\\b${column}\\b`).test(error.message || ""));
-      if (!missing) throw error;
-      columns = columns.filter((column) => column !== missing);
+
+      /* The column is not there. PostgREST names it, so drop that one and ask again. */
+      if (error.code === "42703") {
+        const missing = columns.find((column) => new RegExp(`\\b${column}\\b`).test(error.message || ""));
+        if (missing) { columns = columns.filter((name) => name !== missing); continue; }
+      }
+
+      /* The column is there but this role may not read it — a project granting select
+         column by column does not extend that to a column added later. The message names
+         only the table, so each optional column is tried on its own to find which. If none
+         of them is the problem the denial is on the table itself, and that is fatal. */
+      if (error.code === "42501" && columns.length) {
+        const readable = [];
+        for (const column of columns) {
+          const { error: denied } = await client.from("near_expiry_items").select(column).limit(1);
+          if (!denied) readable.push(column);
+        }
+        if (readable.length < columns.length) { columns = readable; continue; }
+      }
+
+      /* Anything else is the request failing, not the schema. One dropped call must never
+         be read as a missing column - that hid every price on the page - so the same query
+         is tried again before the failure is believed and reported. */
+      if (retries > 0) {
+        retries -= 1;
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        continue;
+      }
+      throw error;
     }
-    throw new Error("The catalogue columns could not be resolved.");
   }
 
   /* Only for a table with no rows to learn from. Absent means PostgREST said so; every other
