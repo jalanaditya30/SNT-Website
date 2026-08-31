@@ -18,6 +18,15 @@
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
 
+  /* The catalogue and the admin share an origin, so they share the stored session: once
+     somebody signs in to the admin, the public page in that same browser starts reading as
+     that account instead of as a visitor. Every permission a visitor lacks then looks fine to
+     the one person most likely to check. The catalogue therefore gets its own client that
+     never picks a session up, so what staff see there is exactly what a chemist sees. */
+  const publicClient = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: "snt-near-expiry-anon" }
+  });
+
   const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
   const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const MIN_YEAR = new Date().getFullYear() - 6;
@@ -173,7 +182,7 @@
      the column it does not have, so the query drops that one and runs again; anything else is
      a real failure and is thrown, where the page already reports it and offers a reload.
      Wrong data is never quietly preferred to an error. */
-  async function selectWithOptional(build, optional) {
+  async function selectWithOptional(build, optional, reader = client) {
     let columns = [...optional];
     let retries = 2;
     for (;;) {
@@ -193,10 +202,19 @@
       if (error.code === "42501" && columns.length) {
         const readable = [];
         for (const column of columns) {
-          const { error: denied } = await client.from("near_expiry_items").select(column).limit(1);
+          /* Asked as whoever is running the query, so the catalogue tests what a visitor may
+             read rather than what the signed-in admin may. */
+          const { error: denied } = await reader.from("near_expiry_items").select(column).limit(1);
           if (!denied) readable.push(column);
         }
-        if (readable.length < columns.length) { columns = readable; continue; }
+        if (readable.length < columns.length) {
+          /* Said out loud: a column silently dropped is exactly how "no prices on this page"
+             looks like a caching problem for a day. */
+          console.warn(`[SNT] Dropped ${columns.filter((c) => !readable.includes(c)).join(" and ")} — this role may not read them. `
+            + "Run: grant select (price, company) on public.near_expiry_items to anon, authenticated;");
+          columns = readable;
+          continue;
+        }
       }
 
       /* Anything else is the request failing, not the schema. One dropped call must never
@@ -270,15 +288,31 @@
   /* Read once, in parallel with the product load. A missing or broken map is not
      an error worth stopping a page for: the fallback simply never fires and every
      product falls back to its placeholder, exactly as before this existed. */
-  const photoTableReady = fetch(config.websitePhotoMap)
-    .then((response) => (response.ok ? response.json() : null))
-    .then((table) => {
-      if (!table || !Array.isArray(table.files)) return;
-      photoTable.files = table.files;
-      photoTable.exact = table.exact || {};
-      photoTable.loose = table.loose || {};
-    })
-    .catch(() => { /* offline, or the map has not been generated yet */ });
+  /* A cold browser fetches this alongside everything else the page needs, and swallowing a
+     failure here means every website photo quietly disappears while the products load — which
+     reads as "the photos are broken in this browser" rather than as one dropped request. So it
+     is tried again before being given up on, and giving up says so. */
+  const photoTableReady = (async () => {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const response = await fetch(config.websitePhotoMap, { cache: "force-cache" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const table = await response.json();
+        if (!table || !Array.isArray(table.files)) throw new Error("the photo map is not in the expected shape");
+        photoTable.files = table.files;
+        photoTable.exact = table.exact || {};
+        photoTable.loose = table.loose || {};
+        return true;
+      } catch (error) {
+        if (attempt === 2) {
+          console.warn(`[SNT] ${config.websitePhotoMap} could not be read (${error.message}); products will fall back to their placeholder rather than the website photo.`);
+          return false;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+      }
+    }
+    return false;
+  })();
 
   function initials(name) {
     return String(name || "SNT").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
@@ -300,7 +334,7 @@
   }
 
   window.SNT = {
-    client, config, escapeHtml, normalise, searchable, queryTokens, matchesTokens, relevance,
+    client, publicClient, config, escapeHtml, normalise, searchable, queryTokens, matchesTokens, relevance,
     parseExpiry, formatExpiry, expiryParts, expiryForInput, monthToDate, expiryMeta, formatNumber,
     formatPrice, parsePrice, selectWithOptional, columnExists, whatsappLink, photoUrl, websitePhoto, productPhoto,
     photoTableReady, initials, toast
