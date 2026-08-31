@@ -3,7 +3,7 @@
 
   if (!window.SNT) return;
   const { client, config, escapeHtml, normalise, searchable, queryTokens, matchesTokens, parseExpiry, formatExpiry,
-    expiryForInput, expiryMeta, formatNumber, formatPrice, parsePrice, hasColumn, photoUrl,
+    expiryForInput, expiryMeta, formatNumber, formatPrice, parsePrice, columnExists, photoUrl,
     websitePhoto, photoTableReady, toast } = window.SNT;
 
   const CHUNK = 100;
@@ -52,9 +52,18 @@
   }
 
   /* Price and company each live behind a migration this repository does not ship, so each
-     feature is switched on only once its column is really there. */
-  async function applyOptionalColumns() {
-    [state.hasPrice, state.hasCompany] = await Promise.all([hasColumn("price"), hasColumn("company")]);
+     feature is switched on only once its column is really there.
+
+     The inventory is read with select("*"), so a row that came back settles the question
+     exactly and for free — no extra request to go wrong. Probing is left for a table with no
+     rows to learn from, and there absence means PostgREST said so; a probe that fails any
+     other way is thrown rather than read as "the column is missing", which is how a single
+     dropped request used to hide every price on the page. */
+  function applyOptionalColumns(sample) {
+    if (sample) {
+      state.hasPrice = "price" in sample;
+      state.hasCompany = "company" in sample;
+    }
     [["price", state.hasPrice], ["company", state.hasCompany]].forEach(([name, present]) => {
       document.querySelectorAll(`[data-${name}-column]`).forEach((node) => node.classList.toggle("hidden", !present));
       element(`#${name}Notice`).classList.toggle("hidden", present);
@@ -70,7 +79,6 @@
     elements.loginView.classList.add("hidden");
     elements.adminView.classList.remove("hidden");
     element("#signOutButton").classList.remove("hidden");
-    await applyOptionalColumns();
     await Promise.all([loadProducts(), loadMaster()]);
   }
 
@@ -122,6 +130,11 @@
     if (error) throw error;
     await photoTableReady;
     state.products = data || [];
+    /* An empty table teaches nothing, so ask directly — the one case where a probe is right. */
+    if (!state.products.length) {
+      [state.hasPrice, state.hasCompany] = await Promise.all([columnExists("price"), columnExists("company")]);
+    }
+    applyOptionalColumns(state.products[0]);
     renderInventory();
     element("#inventoryProductNames").innerHTML = state.products.map((item) => `<option value="${escapeHtml(item.product_name)}"></option>`).join("");
   }

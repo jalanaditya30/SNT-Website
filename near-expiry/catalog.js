@@ -3,7 +3,7 @@
 
   if (!window.SNT) return;
   const { client, config, escapeHtml, queryTokens, matchesTokens, relevance, formatExpiry, expiryMeta, formatNumber,
-    formatPrice, hasColumn, whatsappLink, websitePhoto, productPhoto, photoTableReady,
+    formatPrice, selectWithOptional, whatsappLink, websitePhoto, productPhoto, photoTableReady,
     initials, toast } = window.SNT;
 
   const LAYOUT_KEY = "snt-near-expiry-layout";
@@ -348,12 +348,15 @@
 
   async function loadProducts() {
     showSkeleton();
-    [state.hasPrice, state.hasCompany] = await Promise.all([hasColumn("price"), hasColumn("company")]);
-    const columns = `id,product_name,salt_name,batch_no,expiry_date,quantity,photo_path,status,updated_at${state.hasPrice ? ",price" : ""}${state.hasCompany ? ",company" : ""}`;
-    const { data, error } = await client.from("near_expiry_items")
-      .select(columns)
-      .order("status", { ascending: true }).order("expiry_date", { ascending: true }).order("product_name", { ascending: true });
-    if (error) throw error;
+    const BASE = "id,product_name,salt_name,batch_no,expiry_date,quantity,photo_path,status,updated_at";
+    /* One query that asks for everything and gives up only what the database says it lacks,
+       so a flaky first request can no longer read as "this catalogue has no prices". */
+    const { data, present } = await selectWithOptional((optional) => client.from("near_expiry_items")
+      .select([BASE, ...optional].join(","))
+      .order("status", { ascending: true }).order("expiry_date", { ascending: true }).order("product_name", { ascending: true }),
+    ["price", "company"]);
+    state.hasPrice = present.includes("price");
+    state.hasCompany = present.includes("company");
     await photoTableReady;
     elements.grid.classList.remove("skeleton-grid");
     state.products = data || [];
