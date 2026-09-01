@@ -1,0 +1,585 @@
+/* Product matching for the near-expiry importer.
+   ============================================================================
+
+   A distributor sheet names a medicine differently from the SNT master - "ALCOXIB 120 10S"
+   against "ALCOXIB 120 (10'S)", "ONE CLAV DRY SYP" against "ONE CLAV DRY SYRUP 30 ML-GLASS
+   BOTTLE" - and both the salt and the pack photo hang off the master name, so exact matching
+   throws almost the whole catalogue away. Guessing is worse: this is inventory for medicines,
+   and a confident wrong match is more dangerous than no match at all.
+
+   Everything here is therefore deterministic and explainable. No model, no embedding, no
+   network call: the same sheet and the same master always produce the same scores, in the
+   browser and under `node --test` alike. Nothing in this file touches the DOM, Supabase or
+   the spreadsheet reader, so the whole of it is testable.
+
+   The decision runs in layers, each of which can only ever refuse:
+
+     normalise  -> spelling, punctuation, dosage abbreviations and packaging noise
+     company    -> a hard gate: a candidate from another manufacturer never gets scored
+     weigh      -> rare words identify a product, common ones do not
+     penalise   -> a dose or a dosage form that disagrees is close to fatal
+     gate       -> a top score that is not clear of its runner-up is left for a person
+
+   Exported through `window.SNTMatching` in the browser and `module.exports` under Node. */
+
+(function (root, factory) {
+  "use strict";
+  const api = factory();
+  if (typeof module === "object" && module && module.exports) module.exports = api;
+  else root.SNTMatching = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  /* ---- thresholds ----------------------------------------------------------
+     Every number the matcher leans on is named here rather than buried in the code, so the
+     effect of moving one is arguable rather than mysterious. They are covered by the tests
+     in tests/matching.test.js; lowering one without a regression run is how a wrong medicine
+     gets published. */
+
+  const THRESHOLDS = Object.freeze({
+    /* A suggestion below this is not worth showing at all. */
+    SUGGEST_FLOOR: 0.42,
+    /* At or above this the normalised names are effectively the same string. */
+    EXACT: 0.995,
+    /* An automatic match needs both of these: a high score AND daylight behind it. */
+    AUTO_SCORE: 0.80,
+    AUTO_LEAD: 0.07,
+    /* A word has to be this long before a spelling-distance match is allowed at all, and
+       that similar. Shorter words are too easy to confuse: "d" and "o" are different drugs. */
+    FUZZY_MIN_LENGTH: 5,
+    FUZZY_SIMILARITY: 0.72,
+    /* A typo is never worth as much as the word spelled correctly. */
+    FUZZY_DISCOUNT: 0.72,
+    /* How the two views of the name are blended. */
+    TOKEN_WEIGHT: 0.72,
+    TEXT_WEIGHT: 0.28,
+    /* The leading word is the brand. Same word helps; a very different one is decisive. */
+    FIRST_TOKEN_BONUS: 0.08,
+    FIRST_TOKEN_SIMILARITY: 0.55,
+    FIRST_TOKEN_PENALTY: 0.55,
+    /* 125 mg is not 250 mg, and an injection is not a tablet. */
+    DOSE_CONFLICT: 0.32,
+    FORM_CONFLICT: 0.42,
+    /* Same manufacturer is corroboration, not proof, so the nudge is small. */
+    COMPANY_DIVISION_BONUS: 0.06,
+    COMPANY_FAMILY_BONUS: 0.03,
+    /* Inverse-frequency weighting: log((entries + 1) / (frequency + 1)) + FLOOR. */
+    WEIGHT_FLOOR: 0.35,
+    /* Candidate-pool narrowing. A purely mechanical speed-up: it may only ever be applied
+       when it still leaves enough candidates to rank. */
+    RARE_TOKEN_CUTOFF: 80,
+    NARROW_MIN_POOL: 3,
+    /* How many suggestions an operator is asked to choose between. */
+    MAX_SUGGESTIONS: 4
+  });
+
+  /* ---- normalisation -------------------------------------------------------
+     Sheets and the master disagree on punctuation ("10S" / "(10'S)"), on abbreviation
+     ("SYP" / "SYRUP"), and on packaging words that identify nothing ("GLASS BOTTLE",
+     "W.C."). All three are flattened here so the scoring only ever sees what distinguishes
+     one medicine from another. */
+
+  /* Every spelling of a dosage form collapses to one token, so a form comparison is a set
+     comparison rather than a list of string tests. */
+  const FORM_ALIASES = new Map(Object.entries({
+    tab: "tablet", tabs: "tablet", tablet: "tablet", tablets: "tablet", dt: "tablet",
+    cap: "capsule", caps: "capsule", capsule: "capsule", capsules: "capsule",
+    sg: "softgel", softgel: "softgel", softgels: "softgel",
+    syp: "syrup", syr: "syrup", syrup: "syrup", syrups: "syrup",
+    sus: "suspension", susp: "suspension", suspension: "suspension",
+    inj: "injection", injection: "injection", injections: "injection",
+    soln: "solution", sol: "solution", solution: "solution",
+    drop: "drops", drops: "drops",
+    crm: "cream", cream: "cream",
+    oint: "ointment", onitment: "ointment", ointment: "ointment",
+    pwd: "powder", pow: "powder", powder: "powder",
+    gel: "gel", lotion: "lotion", spray: "spray"
+  }));
+
+  /* The normalised forms themselves, for the conflict test. */
+  const FORMS = new Set(FORM_ALIASES.values());
+
+  /* Words that describe the packaging rather than the medicine. "NEW ALKEM COLD +
+     SUSPENSION" and "ALKEM COLD + SUS" are the same product; "(60ML W.C.)" and "(60 ML WITH
+     CAP)" are the same bottle. Keeping them would let a shared "BOTTLE" stand in for a
+     shared brand. */
+  const NOISE_TOKENS = new Set([
+    "new", "novo", "wc", "with", "wifi", "wfi", "bottle", "glass", "pack", "packing"
+  ]);
+
+  /* Units that make a number mean something. A bare "10" is a pack size and proves little;
+     "10 mg" is a dose and proves a great deal. */
+  const UNITS = new Set(["mg", "mcg", "gm", "g", "ml", "iu", "percent"]);
+
+  /* gm and g are the same unit written two ways; compare doses in one of them. */
+  function canonicalUnit(token) {
+    return token === "gm" ? "g" : token;
+  }
+
+  /* The normalisation contract, in order:
+       NFKD, lowercase, apostrophes dropped, % -> percent, & -> plus, everything else
+       non-alphanumeric to space, then decimal numbers and words tokenised separately,
+       dosage forms canonicalised and packaging noise dropped.
+
+     A dot is two different characters here. Between digits it is a decimal point and has to
+     survive, because ALKEMERO 0.5 Gm and 1.5 Gm are different medicines. Anywhere else it
+     abbreviates - "W.C.", "SYP.", "NO." - and closing it up rather than splitting on it is
+     what makes "(60ML W.C.)" carry the one packaging word "wc" instead of the two letters
+     "w" and "c", neither of which means anything on its own. */
+  const DECIMAL_MARK = "\u0001";
+
+  function tokenize(value) {
+    const text = String(value ?? "")
+      .normalize("NFKD")
+      .toLowerCase()
+      .replace(/['‘’ʼ]/g, "")
+      .replace(/(\d)\.(\d)/g, `$1${DECIMAL_MARK}$2`)
+      .replace(/\./g, "")
+      .split(DECIMAL_MARK).join(".")
+      .replace(/%/g, " percent ")
+      .replace(/&/g, " plus ")
+      .replace(/[^a-z0-9.]+/g, " ");
+    const raw = text.match(/\d+(?:\.\d+)?|[a-z]+/g) || [];
+    const tokens = [];
+    for (const token of raw) {
+      const canonical = FORM_ALIASES.get(token) || token;
+      if (NOISE_TOKENS.has(canonical)) continue;
+      tokens.push(canonical);
+    }
+    return tokens;
+  }
+
+  /* Both views of a name: the token list the weighted score works on, and the tokens run
+     together, which is what catches a word split or joined differently ("ONECLAV" against
+     "ONE CLAV") without any special case for it. */
+  function normalizeName(value) {
+    const tokens = tokenize(value);
+    return { tokens, compact: tokens.join("") };
+  }
+
+  /* ---- Sørensen-Dice on character bigrams ---------------------------------
+     Cheap, symmetric, and forgiving of exactly the errors that appear in these sheets - a
+     dropped letter, a transposition, a plural. Multiset intersection rather than set, so a
+     repeated bigram cannot be counted more often than it occurs. */
+
+  function bigrams(value) {
+    const counts = new Map();
+    for (let index = 0; index < value.length - 1; index += 1) {
+      const pair = value.slice(index, index + 2);
+      counts.set(pair, (counts.get(pair) || 0) + 1);
+    }
+    return counts;
+  }
+
+  function dice(a, b) {
+    if (!a || !b) return 0;
+    if (a === b) return 1;
+    /* Under two characters there are no bigrams to compare, and equality was just ruled
+       out, so there is nothing this can honestly report but "different". */
+    if (a.length < 2 || b.length < 2) return 0;
+    const left = bigrams(a);
+    const right = bigrams(b);
+    let shared = 0;
+    left.forEach((count, pair) => { shared += Math.min(count, right.get(pair) || 0); });
+    return (2 * shared) / ((a.length - 1) + (b.length - 1));
+  }
+
+  /* ---- companies ----------------------------------------------------------
+     The safety boundary, and the reason this file exists in the shape it does. A sheet says
+     ALKEM-FUT, ALKEM, LUPIN or a literal -BLANK-; the master says "Alkem - Futura / NEXX".
+     Both are reduced to a family and, where one is named, a division, and a candidate from
+     another family is refused before it is ever scored - so a brand that looks similar can
+     never be suggested across a manufacturer boundary.
+
+     Aliases are a table on purpose. A company the table does not know keeps its own name as
+     its family, which means it matches only itself: an unrecognised manufacturer therefore
+     yields no suggestions rather than being quietly folded into whichever family looks
+     closest. Adding a company is an edit here plus a test, deliberately. */
+
+  const COMPANY_ALIASES = Object.freeze([
+    /* Divisions first: "Alkem - Futura / NEXX" also contains the word "alkem", and the more
+       specific reading is the right one. */
+    { family: "alkem", division: "futura", patterns: [/\bfutura\b/, /\bfut\b/, /\bnexx\b/] },
+    { family: "alkem", division: "maxxio", patterns: [/\bmaxxio\b/, /\bmaxx\b/, /\bmax\b/] },
+    { family: "alkem", division: "novokem", patterns: [/\bnovokem\b/, /\bnovokem\b/, /\bnov\b/] },
+    { family: "alkem", division: "healthcare", patterns: [/\bhealthcare\b/, /\bhealth care\b/, /\bhc\b/] },
+    { family: "alkem", division: "", patterns: [/\balkem\b/] },
+    { family: "lupin", division: "", patterns: [/\blupin\b/] },
+    { family: "sun", division: "", patterns: [/\branbaxy\b/, /\bsun pharma\b/, /\bsun\b/] },
+    { family: "torque", division: "", patterns: [/\btorque\b/] },
+    { family: "shivayur", division: "", patterns: [/\bshivayur\b/] },
+    { family: "silver cross", division: "", patterns: [/\bsilver cross\b/, /\bsilvercross\b/] }
+  ]);
+
+  /* Suffixes that say what kind of business it is rather than which one. Stripped only
+     after the alias table has had its look, because "Healthcare" is a generic word for most
+     companies and the name of an Alkem division for this one. */
+  const COMPANY_GENERIC = /\b(?:private|pvt|limited|ltd|llp|inc|incorporated|company|co|corp|corporation|laboratories|laboratory|labs|lab|pharmaceuticals?|pharma|healthcare|health\s?care|lifesciences?|life\s+sciences?|sciences?|remedies|drugs?|india|indian)\b/g;
+
+  /* A sheet writes "-BLANK-" where it means "no company". */
+  const BLANK_COMPANY = /^-*\s*blank\s*-*$/;
+
+  function companyText(value) {
+    return String(value ?? "")
+      .normalize("NFKD")
+      .toLowerCase()
+      .replace(/['‘’ʼ]/g, "")
+      .replace(/&/g, " plus ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  /* -> { supplied, family, division, known, label }
+     `supplied: false` means the sheet said nothing, which is not the same as saying
+     something unrecognised: the first allows every candidate, the second allows none. */
+  function normalizeCompany(value) {
+    const label = String(value ?? "").trim();
+    const text = companyText(value);
+    if (!text || BLANK_COMPANY.test(text)) {
+      return { supplied: false, family: "", division: "", known: false, label: "" };
+    }
+    const padded = ` ${text} `;
+    for (const alias of COMPANY_ALIASES) {
+      if (alias.patterns.some((pattern) => pattern.test(padded))) {
+        return { supplied: true, family: alias.family, division: alias.division, known: true, label };
+      }
+    }
+    /* Unknown to the table: it becomes its own family, so it can only ever match itself. */
+    const stripped = text.replace(COMPANY_GENERIC, " ").replace(/\s+/g, " ").trim();
+    return { supplied: true, family: stripped || text, division: "", known: false, label };
+  }
+
+  function companyKey(company) {
+    return company.supplied ? `${company.family}/${company.division}` : "";
+  }
+
+  /* The gate itself. Nothing but this decides whether a candidate is scored at all. */
+  function companiesCompatible(source, candidate) {
+    if (!source.supplied) return true;
+    if (source.family !== candidate.family) return false;
+    /* Two named divisions of one family are as separate as two companies: an Alkem-Maxxio
+       sheet line is not an Alkem-Novokem product. A sheet that names only the family still
+       reaches all of them. */
+    if (source.division && candidate.division && source.division !== candidate.division) return false;
+    return true;
+  }
+
+  function companyBonus(source, candidate) {
+    if (!source.supplied) return 0;
+    if (source.division && source.division === candidate.division) return THRESHOLDS.COMPANY_DIVISION_BONUS;
+    if (source.family === candidate.family) return THRESHOLDS.COMPANY_FAMILY_BONUS;
+    return 0;
+  }
+
+  /* ---- doses and forms -----------------------------------------------------
+     A number is only a dose when a unit follows it, so "10'S" stays a pack size. Values are
+     collected per unit: a conflict is a unit both names quantify, differently. */
+
+  function doseFigures(tokens) {
+    const figures = new Map();
+    for (let index = 0; index < tokens.length - 1; index += 1) {
+      const value = tokens[index];
+      const unit = canonicalUnit(tokens[index + 1]);
+      if (!/^\d+(\.\d+)?$/.test(value) || !UNITS.has(unit)) continue;
+      if (!figures.has(unit)) figures.set(unit, new Set());
+      /* Number, not string: "500" and "500.0" are the same dose. */
+      figures.get(unit).add(Number(value));
+    }
+    return figures;
+  }
+
+  function doseConflict(a, b) {
+    for (const [unit, values] of a) {
+      const other = b.get(unit);
+      if (!other) continue;
+      if (![...values].some((value) => other.has(value))) return true;
+    }
+    return false;
+  }
+
+  function formSet(tokens) {
+    const forms = new Set();
+    tokens.forEach((token) => { if (FORMS.has(token)) forms.add(token); });
+    return forms;
+  }
+
+  /* Only a stated disagreement counts. A sheet that never says which form it is has not
+     contradicted anything, and must not be penalised for staying quiet. */
+  function formConflict(a, b) {
+    if (!a.size || !b.size) return false;
+    return ![...a].some((form) => b.has(form));
+  }
+
+  /* The brand: the first word that is not a number, a unit or a dosage form. */
+  function firstMeaningfulToken(tokens) {
+    return tokens.find((token) =>
+      !/^\d/.test(token) && !UNITS.has(canonicalUnit(token)) && !FORMS.has(token)) || "";
+  }
+
+  /* ---- the master index ----------------------------------------------------
+     Built once per master, because token frequencies are a property of the catalogue rather
+     than of any one sheet, and because 184 sheet names against 1554 products is not
+     something to recompute per keystroke. */
+
+  function buildIndex(master) {
+    const entries = [];
+    const seen = new Set();
+    const frequency = new Map();
+
+    (master || []).forEach((item) => {
+      const name = String(item?.name ?? "").trim();
+      if (!name) return;
+      const { tokens, compact } = normalizeName(name);
+      if (!compact) return;
+      const company = normalizeCompany(item.company);
+      const key = `${compact}|${companyKey(company)}`;
+      /* The master carries the same product twice here and there; a duplicate would split
+         its own score and could never win a lead over itself. */
+      if (seen.has(key)) return;
+      seen.add(key);
+      entries.push({
+        item, name, tokens, compact, company,
+        forms: formSet(tokens), doses: doseFigures(tokens), first: firstMeaningfulToken(tokens)
+      });
+    });
+
+    entries.forEach((entry) => {
+      new Set(entry.tokens).forEach((token) => frequency.set(token, (frequency.get(token) || 0) + 1));
+    });
+
+    const total = entries.length;
+    /* A word in two products all but names one; a word in half the catalogue names nothing.
+       The floor keeps a very common word worth a little rather than nothing, so a name made
+       only of common words still scores. */
+    const weights = new Map();
+    frequency.forEach((count, token) => {
+      weights.set(token, Math.log((total + 1) / (count + 1)) + THRESHOLDS.WEIGHT_FLOOR);
+    });
+    const weight = (token) =>
+      weights.has(token) ? weights.get(token) : Math.log(total + 1) + THRESHOLDS.WEIGHT_FLOOR;
+
+    /* Candidates grouped by manufacturer, so the company gate is a lookup rather than a
+       scan, and by token, for the rare-token narrowing. */
+    const byFamily = new Map();
+    const byToken = new Map();
+    entries.forEach((entry) => {
+      const family = entry.company.supplied ? entry.company.family : "";
+      if (!byFamily.has(family)) byFamily.set(family, []);
+      byFamily.get(family).push(entry);
+      new Set(entry.tokens).forEach((token) => {
+        if (!byToken.has(token)) byToken.set(token, []);
+        byToken.get(token).push(entry);
+      });
+    });
+
+    return {
+      entries, frequency, weight, total, byFamily, byToken,
+      vocabulary: [...frequency.keys()].sort(),
+      /* Spelling neighbours of a token across the whole vocabulary, worked out once. */
+      fuzzyCache: new Map()
+    };
+  }
+
+  function totalWeight(index, tokens) {
+    return tokens.reduce((sum, token) => sum + index.weight(token), 0);
+  }
+
+  /* ---- the weighted token score -------------------------------------------
+     Dice over tokens rather than characters, with each token worth its rarity. Exact matches
+     are taken first and removed from the pool, so a name repeating a word cannot match it
+     twice; only what is left over is offered to the spelling comparison. */
+
+  function weightedTokenScore(index, sourceTokens, candidateTokens) {
+    if (!sourceTokens.length || !candidateTokens.length) return 0;
+    const pool = [...candidateTokens];
+    const unmatched = [];
+    let shared = 0;
+
+    for (const token of sourceTokens) {
+      const at = pool.indexOf(token);
+      if (at === -1) { unmatched.push(token); continue; }
+      pool.splice(at, 1);
+      shared += index.weight(token);
+    }
+
+    /* A typo is allowed to count, at a discount and only for a word long enough that the
+       resemblance means something. Ties go to the alphabetically first candidate token, so
+       the result cannot depend on the order the master happens to be in. */
+    for (const token of unmatched) {
+      if (token.length < THRESHOLDS.FUZZY_MIN_LENGTH) continue;
+      let best = -1;
+      let bestScore = 0;
+      for (let at = 0; at < pool.length; at += 1) {
+        const other = pool[at];
+        if (other.length < THRESHOLDS.FUZZY_MIN_LENGTH) continue;
+        const similarity = dice(token, other);
+        if (similarity > bestScore || (similarity === bestScore && best !== -1 && other < pool[best])) {
+          bestScore = similarity;
+          best = at;
+        }
+      }
+      if (best === -1 || bestScore < THRESHOLDS.FUZZY_SIMILARITY) continue;
+      const pair = (index.weight(token) + index.weight(pool[best])) / 2;
+      shared += pair * bestScore * THRESHOLDS.FUZZY_DISCOUNT;
+      pool.splice(best, 1);
+    }
+
+    const denominator = totalWeight(index, sourceTokens) + totalWeight(index, candidateTokens);
+    return denominator > 0 ? (2 * shared) / denominator : 0;
+  }
+
+  /* ---- scoring one candidate ----------------------------------------------
+     Returns the score and the reasons for it, so the review dialog and a failing test can
+     both say why a number came out the way it did. */
+
+  function scoreCandidate(index, source, entry) {
+    const reasons = [];
+
+    if (source.compact && source.compact === entry.compact) {
+      return { score: 1, reasons: ["exact name"], exact: true };
+    }
+
+    const tokenScore = weightedTokenScore(index, source.tokens, entry.tokens);
+    const textScore = dice(source.compact, entry.compact);
+    let score = (THRESHOLDS.TOKEN_WEIGHT * tokenScore) + (THRESHOLDS.TEXT_WEIGHT * textScore);
+
+    /* The brand word carries the identity. Sharing it is corroboration; a leading word that
+       is nothing like the other one is close to a refusal, whatever else the names share. */
+    if (source.first && entry.first) {
+      if (source.first === entry.first) {
+        score += THRESHOLDS.FIRST_TOKEN_BONUS;
+        reasons.push("same leading word");
+      } else if (dice(source.first, entry.first) < THRESHOLDS.FIRST_TOKEN_SIMILARITY) {
+        score *= THRESHOLDS.FIRST_TOKEN_PENALTY;
+        reasons.push("different leading word");
+      }
+    }
+
+    /* The two penalties that keep this honest. 125 mg is not 250 mg however alike the rest
+       of the name reads, and a brand shared with an injection does not make a tablet. */
+    if (doseConflict(source.doses, entry.doses)) {
+      score *= THRESHOLDS.DOSE_CONFLICT;
+      reasons.push("dose disagrees");
+    }
+    if (formConflict(source.forms, entry.forms)) {
+      score *= THRESHOLDS.FORM_CONFLICT;
+      reasons.push("dosage form disagrees");
+    }
+
+    const bonus = companyBonus(source.company, entry.company);
+    if (bonus) {
+      score += bonus;
+      reasons.push(bonus === THRESHOLDS.COMPANY_DIVISION_BONUS ? "same division" : "same company");
+    }
+
+    return { score: Math.min(1, Math.max(0, score)), reasons, exact: false };
+  }
+
+  /* ---- candidate pool ------------------------------------------------------ */
+
+  /* Which master entries this sheet line is even allowed to be. */
+  function candidatesFor(index, company) {
+    if (!company.supplied) return index.entries;
+    const family = index.byFamily.get(company.family) || [];
+    if (!company.division) return family;
+    /* A sheet naming a division still reaches that family's undivided entries. */
+    return family.filter((entry) => !entry.company.division || entry.company.division === company.division);
+  }
+
+  function fuzzyVocabulary(index, token) {
+    if (index.fuzzyCache.has(token)) return index.fuzzyCache.get(token);
+    const near = [];
+    if (token.length >= THRESHOLDS.FUZZY_MIN_LENGTH) {
+      for (const other of index.vocabulary) {
+        if (other === token || other.length < THRESHOLDS.FUZZY_MIN_LENGTH) continue;
+        if (dice(token, other) >= THRESHOLDS.FUZZY_SIMILARITY) near.push(other);
+      }
+    }
+    index.fuzzyCache.set(token, near);
+    return near;
+  }
+
+  /* Scoring every company-compatible product against every sheet line is affordable but not
+     free, and most of those comparisons are between names sharing nothing. Narrowing to the
+     products that carry one of the source's rare words - or a close spelling of one - skips
+     them. It is applied only when it still leaves enough candidates to rank, so it can
+     change how long the match takes and not what it decides. */
+  function narrowPool(index, source, pool) {
+    const rare = source.tokens.filter((token) =>
+      (index.frequency.get(token) || 0) <= THRESHOLDS.RARE_TOKEN_CUTOFF);
+    if (!rare.length) return pool;
+
+    const wanted = new Set();
+    rare.forEach((token) => {
+      wanted.add(token);
+      fuzzyVocabulary(index, token).forEach((near) => wanted.add(near));
+    });
+
+    const narrowed = pool.filter((entry) => entry.tokens.some((token) => wanted.has(token)));
+    return narrowed.length >= THRESHOLDS.NARROW_MIN_POOL ? narrowed : pool;
+  }
+
+  /* ---- the public call -----------------------------------------------------
+     One sheet line in, a ranked shortlist and a verdict out. */
+
+  function prepareSource(name, company) {
+    const { tokens, compact } = normalizeName(name);
+    return {
+      name: String(name ?? "").trim(), tokens, compact,
+      company: normalizeCompany(company),
+      forms: formSet(tokens), doses: doseFigures(tokens), first: firstMeaningfulToken(tokens)
+    };
+  }
+
+  function suggestMatches(index, name, companyValue, options) {
+    const limit = options?.limit ?? THRESHOLDS.MAX_SUGGESTIONS;
+    const source = prepareSource(name, companyValue);
+    const empty = { source, suggestions: [], top: null, runnerUp: null, lead: 0, auto: null, decision: "none" };
+    if (!index || !source.tokens.length) return empty;
+
+    /* The company gate. A manufacturer the master has never heard of leaves nothing to
+       score, which is exactly the intended answer: no suggestions, sheet name retained. */
+    const allowed = candidatesFor(index, source.company);
+    if (!allowed.length) return empty;
+
+    const pool = narrowPool(index, source, allowed);
+    const scored = [];
+    for (const entry of pool) {
+      const result = scoreCandidate(index, source, entry);
+      if (result.score < THRESHOLDS.SUGGEST_FLOOR) continue;
+      scored.push({
+        name: entry.name, item: entry.item, company: entry.company, score: result.score,
+        reasons: result.reasons, exact: result.exact
+      });
+    }
+
+    /* Name breaks a tie, so identical scores rank the same way on every machine and in
+       every run. */
+    scored.sort((a, b) => (b.score - a.score) || a.name.localeCompare(b.name));
+    const suggestions = scored.slice(0, limit);
+    if (!suggestions.length) return empty;
+
+    const top = suggestions[0];
+    const runnerUp = suggestions[1] || null;
+    const lead = top.score - (runnerUp ? runnerUp.score : 0);
+
+    /* The whole point of the exercise. "Best" is not "safe": a top candidate its runner-up
+       is breathing down the neck of is exactly the flavour/strength/pack ambiguity a person
+       has to settle, and it is left for them. */
+    const auto = top.score >= THRESHOLDS.EXACT
+      || (top.score >= THRESHOLDS.AUTO_SCORE && lead >= THRESHOLDS.AUTO_LEAD);
+
+    return {
+      source, suggestions, top, runnerUp, lead,
+      auto: auto ? top : null,
+      decision: auto ? "auto" : "review"
+    };
+  }
+
+  return {
+    THRESHOLDS, FORM_ALIASES, NOISE_TOKENS, UNITS, COMPANY_ALIASES,
+    tokenize, normalizeName, normalizeCompany, companyKey, companiesCompatible, companyBonus,
+    bigrams, dice, doseFigures, doseConflict, formSet, formConflict, firstMeaningfulToken,
+    buildIndex, weightedTokenScore, scoreCandidate, prepareSource, candidatesFor, suggestMatches
+  };
+});
