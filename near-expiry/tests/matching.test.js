@@ -127,6 +127,7 @@ test("a name that states no form is not penalised for staying quiet", () => {
 test("an exact catalogue name scores 1.0 and is selected automatically", () => {
   const result = suggest("RABALKEM-D TABLETS (10'S)", "ALKEM-FUT");
   assert.equal(result.top.score, 1);
+  assert.equal(result.top.exact, true);
   assert.equal(result.decision, "auto");
   assert.equal(result.auto.name, "RABALKEM-D TABLETS (10'S)");
 });
@@ -144,20 +145,142 @@ test("ALZYME SYP has suggestions but is left for a person", () => {
 });
 
 test("the automatic gate needs the score AND the lead", () => {
-  const auto = (score, lead) => score >= THRESHOLDS.EXACT
-    || (score >= THRESHOLDS.AUTO_SCORE && lead >= THRESHOLDS.AUTO_LEAD);
+  const auto = (score, lead) => score >= THRESHOLDS.AUTO_SCORE && lead >= THRESHOLDS.AUTO_LEAD;
   assert.equal(auto(0.99, 0.02), false, "a high score with no daylight is not safe");
   assert.equal(auto(0.79, 0.40), false, "a big lead over nothing much is not safe");
   assert.equal(auto(0.81, 0.08), true);
-  assert.equal(auto(1, 0), true, "an exact name needs no lead");
+});
+
+/* Only identity skips the lead, and only when it is unique. A score threshold near 1 cannot
+   stand in for identity: scores are clamped to 1 and the leading-word and company bonuses
+   carry a merely close candidate over any such threshold, which on a real sheet auto-selected
+   CEFKEM 200 for CEFKEM CV-200 and the 30 ml ALMOX syrup for the 60 ml, both at a zero
+   lead. */
+test("a near-miss inflated to a perfect score is not treated as exact", () => {
+  const result = suggest("CEFKEM CV -200 TAB 10S", "ALKEM-FUT");
+  assert.equal(result.top.score, 1, "bonuses and the clamp do take it to 1.0");
+  assert.equal(result.top.exact, false);
+  assert.equal(result.decision, "review", "which is exactly why 1.0 must not mean exact");
+  /* And the product the sheet actually names is there to be picked. */
+  assert.ok(names(result).includes("CEFKEM CV- 200 TABLETS"));
+});
+
+test("an exact name is ranked above anything merely scoring 1.0, and is selected", () => {
+  /* Both the 30 ml and the 60 ml bottle reach a clamped 1.0; only one reduces to the
+     sheet's own normalised name. Sorting on the score alone published the wrong bottle. */
+  const result = suggest("ALMOX DRY SYP 125MG/5ML WIFI 60ML", "ALKEM-FUT");
+  assert.equal(result.top.name, "ALMOX DRY SYRUP 125MG/5ML (60ML W.C.)");
+  assert.equal(result.top.exact, true);
+  assert.equal(result.decision, "auto");
+  assert.equal(result.lead, 0, "with no lead at all — identity is what carried it");
+});
+
+test("two candidates that are both exact are left for a person", () => {
+  /* A sheet naming only the family can reach the same normalised name in two divisions.
+     Identity stops being evidence the moment two products share it. */
+  const built = matching.buildIndex([
+    { name: "ZZTEST TABLETS (10'S)", company: "Alkem - Maxxio" },
+    { name: "ZZTEST TABLETS 10S", company: "Alkem - Novokem" }
+  ]);
+  const result = matching.suggestMatches(built, "ZZTEST TAB 10S", "ALKEM");
+  assert.equal(result.suggestions.length, 2);
+  assert.ok(result.suggestions.every((suggestion) => suggestion.exact));
+  assert.equal(result.decision, "review");
 });
 
 test("the thresholds are the documented ones", () => {
   assert.equal(THRESHOLDS.AUTO_SCORE, 0.80);
   assert.equal(THRESHOLDS.AUTO_LEAD, 0.07);
-  assert.equal(THRESHOLDS.EXACT, 0.995);
   assert.equal(THRESHOLDS.SUGGEST_FLOOR, 0.42);
   assert.equal(THRESHOLDS.MAX_SUGGESTIONS, 4);
+  assert.equal(THRESHOLDS.FUZZY_SIMILARITY, 0.72);
+  assert.equal(THRESHOLDS.FUZZY_MIN_LENGTH, 5);
+  assert.equal(THRESHOLDS.FUZZY_CANDIDATE_LENGTH, 4);
+});
+
+/* ---- what a real distributor sheet turned up ------------------------------
+   These all come from the 184-row NEAR_EXP sheet, and each one was wrong before it was a
+   test. */
+
+test("SYP, SUSPENSION and ORAL SOLUTION are one form, not three", () => {
+  /* The master writes all three for the same kind of liquid; the sheet writes SYP for all
+     of them. Treating them as conflicting hid five real products below the 42% floor, where
+     the operator could not see them to accept. */
+  assert.equal(suggest("ALCAL-D SUSPENSION 200ML", "ALKEM-FUT").top.name, "ALCAL-D SYRUP (200 ML)");
+  assert.equal(suggest("LACTUDOS-SYP 100ML (25X1)", "ALKEM-NOV").top.name, "LACTUDOS ORAL SOLUTION (100ML)");
+  assert.equal(suggest("ULTIVIT-SYP 200ML (5X1)", "ALKEM-NOV").top.name, "ULTIVIT SUSPENSION (200ML)");
+  assert.equal(matching.formConflict(
+    matching.formSet(matching.tokenize("LCM-SYP 60ML")),
+    matching.formSet(matching.tokenize("LCM SUSPENSION (60ML)"))
+  ), false);
+});
+
+test("but drops, tablets and injections stay apart", () => {
+  const conflicts = (a, b) => matching.formConflict(
+    matching.formSet(matching.tokenize(a)), matching.formSet(matching.tokenize(b)));
+  assert.equal(conflicts("ULTIVIT-SYP 200ML", "ULTIVIT DROPS (15 ML)"), true);
+  assert.equal(conflicts("ALMOX SYRUP", "ALMOX DT 125 MG TABLETS"), true);
+  assert.equal(conflicts("RABALKEM-D TABLETS", "RABALKEM INJECTION (20MG) VIAL"), true);
+  /* A softgel is a capsule by definition. */
+  assert.equal(conflicts("VPLEX GOLD SOFTGEL CAP", "VPLEX GOLD SOFT GEL CAP"), false);
+});
+
+test("a word matches one a letter shorter, so FORTE reaches the master's FORT", () => {
+  const result = suggest("ALMOX-CV FORTE DRY SYRUP 30 ML", "ALKEM-FUT");
+  assert.ok(names(result).includes("ALMOX-CV FORT DRY SYP. (WITH WFI)"));
+  /* It does not win — the other candidate matches the pack exactly — but it is close
+     enough now that the row is not decided without a person. */
+  assert.equal(result.decision, "review");
+});
+
+test("flavours and strengths on the real sheet are told apart", () => {
+  assert.equal(suggest("OMEE-G POW(GUAVA) 60X5GM", "ALKEM-NOV").top.name, "OMEE-G POWDER (GUAVA FLAVOUR) (5GM)");
+  assert.equal(suggest("OMEE-G POW(ORANGE) 60X5GM", "ALKEM-NOV").top.name, "OMEE-G POWDER (ORANGE FLAVOUR) (5GM)");
+  assert.equal(suggest("ORS INSTA-LIQ(APPLE) (30X200ML)", "ALKEM-NOV").top.name, "ORS INSTA LIQUID (APPLE) (200ML)");
+  assert.equal(suggest("CIPROKEM-250 TAB (20X10)", "ALKEM-NOV").top.name, "CIPROKEM 250 MG TABLETS (10S)");
+  /* A misspelled flavour still lands, because the word is long enough to guess at. */
+  assert.equal(suggest("ALZYME + SYP (STRAWBERY)3 200ML", "ALKEM-FUT").top.name, "ALZYME + SYP 200 ml (STRAWBERRY FLAVOUR)");
+});
+
+test("products that differ only inside brackets keep separate identities", () => {
+  /* The importer merges rows on this normalisation, and the catalogue distinguishes a great
+     many products by bracketed text alone. All three of these pairs are on one real sheet,
+     in the same expiry month; an identity that dropped the brackets merged each pair into a
+     single row, publishing one flavour carrying both flavours' stock and losing the other. */
+  const distinct = (a, b) =>
+    assert.notEqual(matching.normalizeName(a).compact, matching.normalizeName(b).compact, `${a} vs ${b}`);
+  distinct("ALZYME + SYP 200 ml (ORANGE FLAVOUR)", "ALZYME + SYP 200 ml (STRAWBERRY FLAVOUR)");
+  distinct("ALMOX DRY SYRUP 125MG/5ML (30ML)", "ALMOX DRY SYRUP 125MG/5ML (60ML W.C.)");
+  distinct("ORS INSTA LIQUID (APPLE) (200ML)", "ORS INSTA LIQUID (ORANGE) (200ML)");
+  distinct("ALCOXIB 120 (10'S)", "ALCOXIB 90 (10'S)");
+
+  /* And no two products the master carries under one company share an identity, so merging
+     on it can never combine two different medicines. */
+  const identities = new Map();
+  index.entries.forEach((entry) => {
+    const key = `${entry.compact}|${matching.companyKey(entry.company)}`;
+    assert.equal(identities.has(key), false, `${entry.name} and ${identities.get(key)} share an identity`);
+    identities.set(key, entry.name);
+  });
+});
+
+test("but the same product spelled two ways keeps one identity", () => {
+  /* Which is the other half of it: two sheet lines for one product have to merge. */
+  const same = (a, b) =>
+    assert.equal(matching.normalizeName(a).compact, matching.normalizeName(b).compact, `${a} vs ${b}`);
+  same("ONE CLAV DRY SYP GLASS 30ML", "ONE CLAV DRY SYRUP 30 ML-GLASS BOTTLE");
+  same("ALCOXIB 120 10S", "ALCOXIB 120 (10'S)");
+  same("STANCEF-O 200MG TAB ALU 10's", "STANCEF-O 200MG TAB ALU 10S");
+});
+
+test("the real sheet's unknown companies get nothing at all", () => {
+  /* Eight manufacturers on that sheet are not SNT stock. Every one of their products has a
+     plausible-looking Alkem or Lupin neighbour, and none of them may be offered it. */
+  ["ERIS LIFE", "IND-SWIFT", "WINGS", "NOVITA", "ABBOTT", "ALCO", "GALPHA", "MEDLEY"]
+    .forEach((company) => {
+      assert.equal(index.byFamily.has(matching.normalizeCompany(company).family), false, company);
+      assert.equal(suggest("RABALKEM-D TABLETS (10'S)", company).suggestions.length, 0, company);
+    });
 });
 
 test("no more than four suggestions come back, best first", () => {

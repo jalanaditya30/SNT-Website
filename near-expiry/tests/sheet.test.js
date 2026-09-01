@@ -45,6 +45,23 @@ test("a header already on row 1 is left alone", () => {
   ]), 0);
 });
 
+test("the real sheet's own header names all three concepts", () => {
+  /* "Current Stock" rather than "Qty", and "EXP" rather than "Expiry" — a distributor
+     header that only scored two of three was found by luck, on the fallback. */
+  const matrix = [
+    ["Product Name", "Current Stock", "M.R.P.", "Sales Price", "Company", "EXP"],
+    ["", "", "", "", "", ""],
+    ["SUPERQUIN 500 MG TAB 20*5T", "40", "943.8", "250", "ABBOTT", "1-Mar-27"]
+  ];
+  assert.equal(sheet.findHeaderRow(matrix), 0);
+  assert.equal(sheet.headerConceptsIn(matrix[0]).size, 3);
+  const columns = sheet.detectColumns(matrix[0]);
+  assert.equal(columns.quantity, "Current Stock");
+  assert.equal(columns.expiry, "EXP");
+  assert.equal(columns.company, "Company");
+  assert.equal(columns.batch, "", "that sheet has no batch column, and none is invented");
+});
+
 test("a header naming only two of the three concepts is a last resort", () => {
   const matrix = [
     ["Stock statement", ""],

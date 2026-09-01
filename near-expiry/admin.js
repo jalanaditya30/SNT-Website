@@ -641,9 +641,19 @@
 
   /* Two lines of the same product, batch and expiry are two deliveries of it, so the
      quantities are added. Keeping only the last is how a sheet listing 40 and then 60
-     imports as 60 and the other 40 quietly stops existing. */
+     imports as 60 and the other 40 quietly stops existing.
+
+     Which rows count as "the same product" has to be decided on the whole name. `normalise`
+     drops bracketed text, and this catalogue distinguishes a great many products by nothing
+     else: ALZYME + SYP 200 ml (ORANGE FLAVOUR) from (STRAWBERRY FLAVOUR), ALMOX DRY SYRUP
+     125MG/5ML (30ML) from (60ML W.C.), ORS INSTA LIQUID (APPLE) from (ORANGE). All three
+     pairs are on one real 184-row sheet, in the same expiry month, and a bracket-blind key
+     merges each pair into a single row - one flavour published carrying both flavours'
+     stock, the other gone. The matcher's own normalisation is the right identity here: it
+     keeps everything that distinguishes one product from another and only flattens spelling
+     and punctuation. */
   function importKey(row) {
-    return `${normalise(row.name)}|${normalise(row.batch)}|${row.expiry}`;
+    return `${window.SNTMatching.normalizeName(row.name).compact}|${searchable(row.batch)}|${row.expiry}`;
   }
 
   function mergedRows(parsed) {
@@ -982,7 +992,10 @@
     if (!parsed.length) return toast("There are no valid rows to import.", "error");
     const mapping = currentMapping();
     const keepSold = element("#keepSoldStatus").checked;
-    const identify = (name, batch, expiry) => `${normalise(name)}|${normalise(batch)}|${expiry}`;
+    /* The same identity the merge uses, so a row's twin in the database is found by exactly
+       the rule that decided it was a twin in the sheet. */
+    const identify = (name, batch, expiry) =>
+      importKey({ name, batch, expiry });
     const existing = new Map(state.products.map((item) => [identify(item.product_name, item.batch_no, item.expiry_date), item]));
 
     /* A matched product publishes under the catalogue's name, but a row imported before the

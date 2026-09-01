@@ -28,7 +28,9 @@
   const HEADER_CONCEPTS = Object.freeze({
     product: [/^product/, /product\s*name/, /^item/, /^description/, /^brand/, /particular/, /product/],
     expiry: [/^exp\b/, /^exp$/, /expiry/, /expiration/, /^e\.?d\.?$/, /exp/],
-    quantity: [/^qty/, /^quantity/, /^stock/, /^pcs$/, /^nos$/, /qty/, /quantity/]
+    /* "Current Stock" and "Closing Qty" are both real headers from these sheets, so the
+       word is looked for anywhere in the cell rather than only at the start. */
+    quantity: [/qty/, /quantity/, /stock/, /^pcs$/, /^nos$/]
   });
 
   /* Column auto-detection, in priority order: an exact header name beats a word appearing
@@ -138,6 +140,6 @@
 
   return {
     HEADER_SCAN_ROWS, HEADER_CONCEPTS, COLUMN_PATTERNS,
-    findHeaderRow, detectColumns, parseQuantity, mergeDuplicates
+    headerConceptsIn, findHeaderRow, detectColumns, parseQuantity, mergeDuplicates
   };
 });

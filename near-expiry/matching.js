@@ -39,14 +39,18 @@
   const THRESHOLDS = Object.freeze({
     /* A suggestion below this is not worth showing at all. */
     SUGGEST_FLOOR: 0.42,
-    /* At or above this the normalised names are effectively the same string. */
-    EXACT: 0.995,
     /* An automatic match needs both of these: a high score AND daylight behind it. */
     AUTO_SCORE: 0.80,
     AUTO_LEAD: 0.07,
     /* A word has to be this long before a spelling-distance match is allowed at all, and
        that similar. Shorter words are too easy to confuse: "d" and "o" are different drugs. */
     FUZZY_MIN_LENGTH: 5,
+    /* The word it is compared against may be one shorter - FORTE against the master's FORT,
+       which is the same medicine. It cannot go below four: at three characters or fewer a
+       word has too few bigrams to clear the similarity bar against a five-character one
+       anyway, so this is the floor that actually does something rather than an arbitrary
+       one. */
+    FUZZY_CANDIDATE_LENGTH: 4,
     FUZZY_SIMILARITY: 0.72,
     /* A typo is never worth as much as the word spelled correctly. */
     FUZZY_DISCOUNT: 0.72,
@@ -98,6 +102,32 @@
 
   /* The normalised forms themselves, for the conflict test. */
   const FORMS = new Set(FORM_ALIASES.values());
+
+  /* Which forms are different enough to be a refusal.
+
+     The penalty exists for the difference that matters: an injection is not a tablet, and a
+     shared brand word must never make one out of the other. Some of these words are not that
+     kind of difference at all. A liquid in a bottle is written SYP, SUSP or ORAL SOLUTION by
+     turns, by the same manufacturer, for the same medicine - the SNT master itself carries
+     ALCAL-D SYRUP (200 ML), PAMAGIN DS SUSPENSION (60ML) and LACTUDOS ORAL SOLUTION (100ML)
+     side by side, and the distributor sheet writes SYP for all three. Treating those as
+     conflicting hid five real products on a 184-row sheet behind the 42% floor, where the
+     operator could not even see them to accept. A softgel is a capsule by definition.
+
+     Drops stay separate: a dropper bottle is a different pack and a different dose from a
+     syrup, not another word for it. Tablet and capsule stay separate: the master carries
+     both for the same brand. So the grouping is only where the words are synonyms, and the
+     specific word still costs on the token score - it is just no longer multiplied by 0.42.
+
+     Adding to this table is a safety decision. It needs a reason of this kind, and a test. */
+  const FORM_FAMILIES = new Map(Object.entries({
+    syrup: "oral liquid", suspension: "oral liquid", solution: "oral liquid",
+    capsule: "capsule", softgel: "capsule"
+  }));
+
+  function formFamily(form) {
+    return FORM_FAMILIES.get(form) || form;
+  }
 
   /* Words that describe the packaging rather than the medicine. "NEW ALKEM COLD +
      SUSPENSION" and "ALKEM COLD + SUS" are the same product; "(60ML W.C.)" and "(60 ML WITH
@@ -307,7 +337,8 @@
      contradicted anything, and must not be penalised for staying quiet. */
   function formConflict(a, b) {
     if (!a.size || !b.size) return false;
-    return ![...a].some((form) => b.has(form));
+    const families = new Set([...b].map(formFamily));
+    return ![...a].some((form) => families.has(formFamily(form)));
   }
 
   /* The brand: the first word that is not a number, a unit or a dosage form. */
@@ -411,7 +442,7 @@
       let bestScore = 0;
       for (let at = 0; at < pool.length; at += 1) {
         const other = pool[at];
-        if (other.length < THRESHOLDS.FUZZY_MIN_LENGTH) continue;
+        if (other.length < THRESHOLDS.FUZZY_CANDIDATE_LENGTH) continue;
         const similarity = dice(token, other);
         if (similarity > bestScore || (similarity === bestScore && best !== -1 && other < pool[best])) {
           bestScore = similarity;
@@ -553,9 +584,12 @@
       });
     }
 
-    /* Name breaks a tie, so identical scores rank the same way on every machine and in
-       every run. */
-    scored.sort((a, b) => (b.score - a.score) || a.name.localeCompare(b.name));
+    /* A candidate whose normalised name is identical to the sheet's ranks above one that
+       merely scores 1.0 after bonuses and clamping, so "the top result" and "the exact
+       result" cannot come apart. Name breaks the remaining ties, so identical scores rank
+       the same way on every machine and in every run. */
+    scored.sort((a, b) =>
+      (Number(b.exact) - Number(a.exact)) || (b.score - a.score) || a.name.localeCompare(b.name));
     const suggestions = scored.slice(0, limit);
     if (!suggestions.length) return empty;
 
@@ -565,8 +599,19 @@
 
     /* The whole point of the exercise. "Best" is not "safe": a top candidate its runner-up
        is breathing down the neck of is exactly the flavour/strength/pack ambiguity a person
-       has to settle, and it is left for them. */
-    const auto = top.score >= THRESHOLDS.EXACT
+       has to settle, and it is left for them.
+
+       Exactness is the one thing that excuses a small lead, and it has to mean exactness:
+       the sheet's normalised name and the candidate's are the same string, and no other
+       candidate can say that. A score threshold cannot stand in for it. Scores are clamped
+       to 1, and the leading-word and company bonuses push a merely close candidate over any
+       threshold near 1, so "score >= 0.995" collapsed distinct candidates into ties and then
+       auto-selected whichever sorted first. On a real 184-row sheet that published CEFKEM
+       200 for CEFKEM CV-200, ALDIGESIC-TH for ALDIGESIC-TH 8, the 30 ml ALMOX dry syrup for
+       the 60 ml, and KEMOPRAZ-D for KEMOPRAZ - every one of them with a lead of two points
+       or less. Identity is a fact about the strings; only that is allowed to skip the lead. */
+    const uniquelyExact = top.exact && !(runnerUp && runnerUp.exact);
+    const auto = uniquelyExact
       || (top.score >= THRESHOLDS.AUTO_SCORE && lead >= THRESHOLDS.AUTO_LEAD);
 
     return {
@@ -578,6 +623,7 @@
 
   return {
     THRESHOLDS, FORM_ALIASES, NOISE_TOKENS, UNITS, COMPANY_ALIASES,
+    FORM_FAMILIES, formFamily,
     tokenize, normalizeName, normalizeCompany, companyKey, companiesCompatible, companyBonus,
     bigrams, dice, doseFigures, doseConflict, formSet, formConflict, firstMeaningfulToken,
     buildIndex, weightedTokenScore, scoreCandidate, prepareSource, candidatesFor, suggestMatches
