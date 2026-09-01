@@ -168,7 +168,7 @@ test("a near-miss inflated to a perfect score is not treated as exact", () => {
 test("an exact name is ranked above anything merely scoring 1.0, and is selected", () => {
   /* Both the 30 ml and the 60 ml bottle reach a clamped 1.0; only one reduces to the
      sheet's own normalised name. Sorting on the score alone published the wrong bottle. */
-  const result = suggest("ALMOX DRY SYP 125MG/5ML WIFI 60ML", "ALKEM-FUT");
+  const result = suggest("ALMOX DRY SYP 125MG/5ML W.C. 60ML", "ALKEM-FUT");
   assert.equal(result.top.name, "ALMOX DRY SYRUP 125MG/5ML (60ML W.C.)");
   assert.equal(result.top.exact, true);
   assert.equal(result.decision, "auto");
@@ -254,14 +254,10 @@ test("products that differ only inside brackets keep separate identities", () =>
   distinct("ORS INSTA LIQUID (APPLE) (200ML)", "ORS INSTA LIQUID (ORANGE) (200ML)");
   distinct("ALCOXIB 120 (10'S)", "ALCOXIB 90 (10'S)");
 
-  /* And no two products the master carries under one company share an identity, so merging
-     on it can never combine two different medicines. */
-  const identities = new Map();
-  index.entries.forEach((entry) => {
-    const key = `${entry.compact}|${matching.companyKey(entry.company)}`;
-    assert.equal(identities.has(key), false, `${entry.name} and ${identities.get(key)} share an identity`);
-    identities.set(key, entry.name);
-  });
+  /* No raw catalogue product is silently discarded when identities do collide. */
+  const validMasterRows = master.filter((item) => matching.normalizeName(item.name).compact);
+  assert.equal(index.entries.length, validMasterRows.length);
+  assert.ok(index.identityCollisions.length > 0, "the real master carries known duplicate identities");
 });
 
 test("but the same product spelled two ways keeps one identity", () => {
@@ -404,6 +400,7 @@ test("normalisation flattens exactly what the brief lists", () => {
   assert.deepEqual(matching.tokenize("ALCOXIB 120 10S"), ["alcoxib", "120", "10", "s"]);
   assert.deepEqual(matching.tokenize("VITAMIN 5% W/W"), ["vitamin", "5", "percent", "w", "w"]);
   assert.deepEqual(matching.tokenize("CALCIUM & D3"), ["calcium", "plus", "d", "3"]);
+  assert.deepEqual(matching.tokenize("CALCIUM + D3"), ["calcium", "plus", "d", "3"]);
   assert.deepEqual(matching.tokenize("ALKEMERO 0.5 Gm INJ"), ["alkemero", "0.5", "gm", "injection"]);
   assert.equal(matching.tokenize("SYP").join(""), "syrup");
   assert.equal(matching.tokenize("ONITMENT").join(""), "ointment");
@@ -414,11 +411,11 @@ test("normalisation flattens exactly what the brief lists", () => {
 test("packaging noise is dropped and the compact form joins what is left", () => {
   /* "W.C." is one packaging word, not the letters w and c. */
   assert.deepEqual(matching.tokenize("ALMOX DRY SYRUP (60ML W.C.)"), ["almox", "dry", "syrup", "60", "ml"]);
-  assert.deepEqual(matching.tokenize("ALMOX-CV DRY SYRUP (WITH WFI) (30ML)"), ["almox", "cv", "dry", "syrup", "30", "ml"]);
-  /* "NEW" is packaging, SUS is SUSPENSION, and a bare + is punctuation (only & becomes
-     "plus"), so the sheet's name and the master's reduce to the same string. */
-  assert.equal(matching.normalizeName("NEW ALKEM COLD + SUSPENSION").compact, "alkemcoldsuspension");
-  assert.equal(matching.normalizeName("ALKEM COLD + SUS").compact, "alkemcoldsuspension");
+  assert.deepEqual(matching.tokenize("ALMOX-CV DRY SYRUP (WITH WFI) (30ML)"), ["almox", "cv", "dry", "syrup", "wfi", "30", "ml"]);
+  assert.deepEqual(matching.tokenize("ALMOX-CV DRY SYRUP WIFI 30ML"), ["almox", "cv", "dry", "syrup", "wfi", "30", "ml"]);
+  /* "NEW" is packaging, SUS is SUSPENSION, and + is meaningful in a medicine name. */
+  assert.equal(matching.normalizeName("NEW ALKEM COLD + SUSPENSION").compact, "alkemcoldplussuspension");
+  assert.equal(matching.normalizeName("ALKEM COLD + SUS").compact, "alkemcoldplussuspension");
 });
 
 test("bigram Dice is symmetric, bounded and exact on equality", () => {
@@ -446,7 +443,7 @@ test("a typo counts, at a discount, and only for a long enough word", () => {
 
 /* ---- index hygiene ---------------------------------------------------------- */
 
-test("the index skips nameless records and de-duplicates the master", () => {
+test("the index skips nameless records but retains and marks every identity collision", () => {
   const built = matching.buildIndex([
     { name: "ALCOXIB 120 (10'S)", company: "Alkem Healthcare" },
     { name: "ALCOXIB 120 10S", company: "ALKEM-HC" },       /* same product, same division */
@@ -454,9 +451,40 @@ test("the index skips nameless records and de-duplicates the master", () => {
     { name: null, company: "Lupin" },
     { name: "ALCOXIB 120 (10'S)", company: "Lupin" }        /* same name, another company */
   ]);
-  assert.deepEqual(built.entries.map((entry) => entry.name), ["ALCOXIB 120 (10'S)", "ALCOXIB 120 (10'S)"]);
+  assert.deepEqual(built.entries.map((entry) => entry.name), ["ALCOXIB 120 (10'S)", "ALCOXIB 120 10S", "ALCOXIB 120 (10'S)"]);
   assert.equal(built.entries[0].company.family, "alkem");
-  assert.equal(built.entries[1].company.family, "lupin");
+  assert.equal(built.entries[2].company.family, "lupin");
+  assert.equal(built.identityCollisions.length, 1);
+  assert.deepEqual(built.identityCollisions[0].entries.map((entry) => entry.identitySize), [2, 2]);
+
+  const result = matching.suggestMatches(built, "ALCOXIB 120 10S", "ALKEM-HC", { limit: 1 });
+  assert.equal(result.exactCount, 2, "the hidden exact candidate must still be counted");
+  assert.equal(result.catalogueCollision, true);
+  assert.equal(result.decision, "review");
+  assert.equal(result.auto, null);
+
+  const fuzzy = matching.suggestMatches(built, "ALCOXIB 120 TABLET", "ALKEM-HC", { limit: 1 });
+  assert.equal(fuzzy.suggestions.length, 1, "only one candidate is displayed");
+  assert.ok(fuzzy.runnerUp, "the hidden runner-up still participates in the safety gate");
+  assert.equal(fuzzy.lead, 0);
+  assert.equal(fuzzy.decision, "review");
+});
+
+test("meaningful +, WFI and NOVO variants map to their own catalogue records", () => {
+  const exactAuto = (typed, company, expected) => {
+    const result = suggest(typed, company);
+    assert.equal(result.top.name, expected);
+    assert.equal(result.top.exact, true);
+    assert.equal(result.decision, "auto");
+    assert.equal(result.catalogueCollision, false);
+  };
+
+  exactAuto("PAMAGIN GEL 30 GM", "ALKEM-MAX", "PAMAGIN GEL 30 GM");
+  exactAuto("PAMAGIN + GEL 30 GM", "ALKEM-MAX", "PAMAGIN + GEL 30 GM");
+  exactAuto("ALMOX-CV DRY SYRUP (WITH WFI) (30ML)", "ALKEM-FUT", "ALMOX-CV DRY SYRUP (WITH WFI) (30ML)");
+  exactAuto("ALMOX-CV DRY SYRUP (30ML)", "ALKEM-FUT", "ALMOX-CV DRY SYRUP (30ML)");
+  exactAuto("OFLOKEM-200 TABLETS (10S)", "ALKEM-FUT", "OFLOKEM-200 TABLETS (10S)");
+  exactAuto("OFLOKEM NOVO 200 TABLETS (10'S)", "ALKEM-FUT", "OFLOKEM NOVO 200 TABLETS (10'S)");
 });
 
 test("a rare word outweighs a common one", () => {
