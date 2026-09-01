@@ -132,10 +132,17 @@
   /* Words that describe the packaging rather than the medicine. "NEW ALKEM COLD +
      SUSPENSION" and "ALKEM COLD + SUS" are the same product; "(60ML W.C.)" and "(60 ML WITH
      CAP)" are the same bottle. Keeping them would let a shared "BOTTLE" stand in for a
-     shared brand. */
+     shared brand.
+
+     WFI and NOVO deliberately are not noise. The real master contains same-company products
+     where those are the only words separating two catalogue rows. Removing either word made
+     an exact-looking automatic match select a different SKU. */
   const NOISE_TOKENS = new Set([
-    "new", "novo", "wc", "with", "wifi", "wfi", "bottle", "glass", "pack", "packing"
+    "new", "wc", "with", "bottle", "glass", "pack", "packing"
   ]);
+
+  /* Common sheet/OCR spelling variants that are meaningful after correction. */
+  const TOKEN_ALIASES = new Map(Object.entries({ wifi: "wfi" }));
 
   /* Units that make a number mean something. A bare "10" is a pack size and proves little;
      "10 mg" is a dose and proves a great deal. */
@@ -168,11 +175,12 @@
       .split(DECIMAL_MARK).join(".")
       .replace(/%/g, " percent ")
       .replace(/&/g, " plus ")
+      .replace(/\+/g, " plus ")
       .replace(/[^a-z0-9.]+/g, " ");
     const raw = text.match(/\d+(?:\.\d+)?|[a-z]+/g) || [];
     const tokens = [];
     for (const token of raw) {
-      const canonical = FORM_ALIASES.get(token) || token;
+      const canonical = FORM_ALIASES.get(token) || TOKEN_ALIASES.get(token) || token;
       if (NOISE_TOKENS.has(canonical)) continue;
       tokens.push(canonical);
     }
@@ -354,8 +362,8 @@
 
   function buildIndex(master) {
     const entries = [];
-    const seen = new Set();
     const frequency = new Map();
+    const byIdentity = new Map();
 
     (master || []).forEach((item) => {
       const name = String(item?.name ?? "").trim();
@@ -363,15 +371,24 @@
       const { tokens, compact } = normalizeName(name);
       if (!compact) return;
       const company = normalizeCompany(item.company);
-      const key = `${compact}|${companyKey(company)}`;
-      /* The master carries the same product twice here and there; a duplicate would split
-         its own score and could never win a lead over itself. */
-      if (seen.has(key)) return;
-      seen.add(key);
-      entries.push({
+      const identityKey = `${compact}|${companyKey(company)}`;
+      const entry = {
         item, name, tokens, compact, company,
+        identityKey, identitySize: 1,
         forms: formSet(tokens), doses: doseFigures(tokens), first: firstMeaningfulToken(tokens)
-      });
+      };
+      entries.push(entry);
+      if (!byIdentity.has(identityKey)) byIdentity.set(identityKey, []);
+      byIdentity.get(identityKey).push(entry);
+    });
+
+    /* Never discard a collision. Even rows that look like harmless duplicate spellings are
+       kept because their composition or pack data can differ. Every member is marked so an
+       exact-looking query can be forced to review rather than silently taking the first row. */
+    const identityCollisions = [];
+    byIdentity.forEach((group, identityKey) => {
+      group.forEach((entry) => { entry.identitySize = group.length; });
+      if (group.length > 1) identityCollisions.push({ identityKey, entries: group });
     });
 
     entries.forEach((entry) => {
@@ -404,7 +421,7 @@
     });
 
     return {
-      entries, frequency, weight, total, byFamily, byToken,
+      entries, frequency, weight, total, byFamily, byToken, byIdentity, identityCollisions,
       vocabulary: [...frequency.keys()].sort(),
       /* Spelling neighbours of a token across the whole vocabulary, worked out once. */
       fuzzyCache: new Map()
@@ -565,7 +582,10 @@
   function suggestMatches(index, name, companyValue, options) {
     const limit = options?.limit ?? THRESHOLDS.MAX_SUGGESTIONS;
     const source = prepareSource(name, companyValue);
-    const empty = { source, suggestions: [], top: null, runnerUp: null, lead: 0, auto: null, decision: "none" };
+    const empty = {
+      source, suggestions: [], top: null, runnerUp: null, lead: 0,
+      exactCount: 0, catalogueCollision: false, auto: null, decision: "none"
+    };
     if (!index || !source.tokens.length) return empty;
 
     /* The company gate. A manufacturer the master has never heard of leaves nothing to
@@ -580,7 +600,8 @@
       if (result.score < THRESHOLDS.SUGGEST_FLOOR) continue;
       scored.push({
         name: entry.name, item: entry.item, company: entry.company, score: result.score,
-        reasons: result.reasons, exact: result.exact
+        reasons: result.reasons, exact: result.exact,
+        identityKey: entry.identityKey, identitySize: entry.identitySize
       });
     }
 
@@ -590,11 +611,14 @@
        the same way on every machine and in every run. */
     scored.sort((a, b) =>
       (Number(b.exact) - Number(a.exact)) || (b.score - a.score) || a.name.localeCompare(b.name));
+    const exactCount = scored.reduce((count, candidate) => count + Number(candidate.exact), 0);
     const suggestions = scored.slice(0, limit);
     if (!suggestions.length) return empty;
 
     const top = suggestions[0];
-    const runnerUp = suggestions[1] || null;
+    /* The display limit is not a safety limit. The runner-up and lead always come from the
+       complete ranked pool, otherwise limit:1 would hide the rival and manufacture a lead. */
+    const runnerUp = scored[1] || null;
     const lead = top.score - (runnerUp ? runnerUp.score : 0);
 
     /* The whole point of the exercise. "Best" is not "safe": a top candidate its runner-up
@@ -610,19 +634,26 @@
        200 for CEFKEM CV-200, ALDIGESIC-TH for ALDIGESIC-TH 8, the 30 ml ALMOX dry syrup for
        the 60 ml, and KEMOPRAZ-D for KEMOPRAZ - every one of them with a lead of two points
        or less. Identity is a fact about the strings; only that is allowed to skip the lead. */
-    const uniquelyExact = top.exact && !(runnerUp && runnerUp.exact);
+    /* Count against the full scored pool, not the displayed slice. A caller asking for one
+       suggestion must not turn a hidden second exact identity into an automatic match. */
+    const uniquelyExact = top.exact && exactCount === 1;
     const auto = uniquelyExact
       || (top.score >= THRESHOLDS.AUTO_SCORE && lead >= THRESHOLDS.AUTO_LEAD);
 
+    /* A collision is a hard refusal even if score/lead would otherwise clear the fuzzy gate.
+       All colliding catalogue records are retained, so this can never depend on master order. */
+    const catalogueCollision = top.exact && exactCount > 1;
+    const safeAuto = auto && !catalogueCollision;
+
     return {
-      source, suggestions, top, runnerUp, lead,
-      auto: auto ? top : null,
-      decision: auto ? "auto" : "review"
+      source, suggestions, top, runnerUp, lead, exactCount, catalogueCollision,
+      auto: safeAuto ? top : null,
+      decision: safeAuto ? "auto" : "review"
     };
   }
 
   return {
-    THRESHOLDS, FORM_ALIASES, NOISE_TOKENS, UNITS, COMPANY_ALIASES,
+    THRESHOLDS, FORM_ALIASES, TOKEN_ALIASES, NOISE_TOKENS, UNITS, COMPANY_ALIASES,
     FORM_FAMILIES, formFamily,
     tokenize, normalizeName, normalizeCompany, companyKey, companiesCompatible, companyBonus,
     bigrams, dice, doseFigures, doseConflict, formSet, formConflict, firstMeaningfulToken,

@@ -839,6 +839,9 @@
     const photo = chosen ? websitePhoto(chosen) : "";
     const note = state.matchNotes.get(key) || "";
     const picked = result.suggestions.find((suggestion) => suggestion.name === chosen) || null;
+    const collisionWarning = result.catalogueCollision
+      ? `The catalogue contains ${result.exactCount} products that reduce to the same identity. Automatic matching is blocked; verify the exact product, pack and composition.`
+      : "";
 
     /* The numbers behind the verdict, said plainly. The lead is the half operators do not
        otherwise see, and it is the half that decides: a 94% top candidate one point ahead of
@@ -883,6 +886,7 @@
           aria-label="Catalogue product for ${escapeHtml(name)}"
           placeholder="Type any SNT product — leave blank to keep the sheet name">
         ${note ? `<span class="match-warn">${escapeHtml(note)}</span>` : ""}
+        ${collisionWarning ? `<span class="match-warn">${escapeHtml(collisionWarning)}</span>` : ""}
         ${crossCompany ? `<span class="match-warn">The sheet says ${escapeHtml(company)}; ${escapeHtml(chosen)} is ${escapeHtml(target.company || "another company")}. Importing this publishes the stock under a company the sheet did not name.</span>` : ""}
         ${chips ? `<div class="match-chips">${chips}</div>` : ""}
       </td>
