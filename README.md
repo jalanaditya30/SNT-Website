@@ -15,7 +15,10 @@ The company website, served by GitHub Pages from `main` at
 ## Near-expiry
 
 `near-expiry/` is a self-contained app with its own
-[README](near-expiry/README.md). It is shared by link with trade contacts rather than
+[README](near-expiry/README.md). Its Excel importer matches distributor product names against
+the SNT master; that matcher and the safeguards around it are tested with
+`node --test "near-expiry/tests/*.test.js"` — no dependencies to install. Run it after
+touching `near-expiry/matching.js` or `near-expiry/sheet.js`. It is shared by link with trade contacts rather than
 advertised: nothing on this site links to it, both its pages carry `noindex`, and
 `robots.txt` disallows the folder. That keeps it out of search results — it is not an
 access control, and the catalogue stays readable to anyone holding the URL. Its admin page

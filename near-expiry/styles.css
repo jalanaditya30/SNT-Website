@@ -471,10 +471,17 @@ td small{display:block;margin-top:.1rem;max-width:44ch;overflow:hidden;text-over
 .match-row--none{background:var(--canvas)}
 .match-row--check .match-select{border-color:rgba(176,110,20,.5)}
 .match-state{display:inline-block;margin:.2rem 0 0;font-size:.58rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
-.match-state.ok{color:var(--green)}
+.match-state.ok,.match-state.matched{color:var(--green)}
 .match-state.manual{color:var(--ink-soft)}
 .match-state.check{color:#8a5a10}
-.match-state.none{color:var(--faint)}
+.match-state.none,.match-state.rejected{color:var(--faint)}
+/* The sheet's own wording, above the catalogue name it is being matched to. */
+.match-source{display:block;color:var(--muted);font-size:.64rem;line-height:1.35}
+/* The score and, more to the point, the gap to the runner-up: a 94% top candidate one point
+   ahead of a 93% one is a question, not a match, and that is not visible from the score. */
+.match-confidence{display:inline-block;margin-left:.4rem;color:var(--muted);font-size:.6rem;font-weight:600}
+.match-target-company{display:block;margin-top:.2rem;color:var(--muted);font-size:.62rem}
+.match-row--rejected{background:var(--canvas)}
 .match-note{margin:.7rem 0 0;color:var(--muted);font-size:.72rem;line-height:1.5}
 .faint{color:var(--faint)}
 

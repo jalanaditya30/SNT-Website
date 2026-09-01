@@ -9,13 +9,15 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://sfrfjznzlrkofjddfzfh.supabase.co; connect-src 'self' https://sfrfjznzlrkofjddfzfh.supabase.co; base-uri 'self'; form-action 'self'">
   <title>SNT Near Expiry Admin</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=08960edc">
+  <link rel="stylesheet" href="styles.css?v=840ae7dd">
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/fflate@0.8.3/umd/index.js"></script>
   <script defer src="config.js?v=0d42f382"></script>
   <script defer src="shared.js?v=1c737175"></script>
-  <script defer src="admin.js?v=5cc8915b"></script>
+  <script defer src="matching.js?v=63fe458c"></script>
+  <script defer src="sheet.js?v=2433aa35"></script>
+  <script defer src="admin.js?v=7d2a1c89"></script>
 </head>
 <body class="admin-body">
   <header class="site-header admin-topbar">
@@ -186,7 +188,7 @@
       <button class="icon-button" type="button" id="closeMatchDialog" aria-label="Close">×</button>
     </div>
     <div class="modal-body">
-      <p class="modal-lede">Each product is matched to the SNT catalogue so it publishes with the right salt and the pack photo from the website. Confident matches are already set; the ones below the line are worth a look.</p>
+      <p class="modal-lede">Each product is matched to the SNT catalogue so it publishes with the right salt and the pack photo from the website. Only matches that are both strong and clearly ahead of the runner-up are filled in for you; anything closer than that is listed first, unset, for you to settle. A product from a company the catalogue does not carry is never matched — it imports under the sheet's own name.</p>
       <div class="match-summary" id="matchSummary"></div>
       <div class="match-actions">
         <button class="secondary-button" type="button" id="acceptAllMatches">Accept every suggestion</button>
@@ -194,7 +196,7 @@
       </div>
       <div class="match-wrap">
         <table class="match-table">
-          <thead><tr><th scope="col">Photo</th><th scope="col">Sheet name → catalogue product</th><th scope="col">Salt</th></tr></thead>
+          <thead><tr><th scope="col">Photo</th><th scope="col">Sheet name and company → catalogue product</th><th scope="col">Composition and company</th></tr></thead>
           <tbody id="matchRows"></tbody>
         </table>
       </div>

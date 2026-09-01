@@ -45,23 +45,46 @@ name, its confidence, its salt and its photo. The name settled on there is the o
 so accepting a match is what pulls the salt and the website photo through. On that sheet it
 takes the import from 6 products with a salt to 114, and from none with a photo to 91.
 
-Matches are scored on shared words weighted by how rare each is across the master. A word in
-half the catalogue says nothing and a word in two products says almost everything; without
-that weighting `ALKEM COLD + SUS` matches `ALKEM COLD ACTIVE TAB` on the strength of the word
-ALKEM rather than `NEW ALKEM COLD + SUSPENSION`. Dose and pack figures are decisive — ALCOXIB
-120 is never ALCOXIB 90.
+The company is a gate, not a hint. A sheet line saying LUPIN is scored only against Lupin
+products; one saying ALKEM-FUT never reaches an Alkem-Maxxio product, and one saying a company
+the master has never heard of gets no suggestions at all rather than the nearest-looking
+medicine from somebody else. Sheet codes and master spellings are reduced to a family and,
+where one is named, a division — `ALKEM-FUT` and `Alkem - Futura / NEXX` are the same thing —
+through a table in `matching.js` that is deliberately explicit: a new company is an edit there
+and a test, never a quiet guess.
 
-The best suggestion is filled in wherever there is one, so it can be read at a glance and a
-long sheet does not need fifty clicks. Confidence is carried by the badge instead: anything
-under 72% is tinted, marked **Suggested — check it**, sorted to the top of the list and
-counted on the button beside Import.
+Inside that boundary, matches are scored on shared words weighted by how rare each is across
+the master. A word in half the catalogue says nothing and a word in two products says almost
+everything; without that weighting `ALKEM COLD + SUS` matches `ALKEM COLD ACTIVE TAB` on the
+strength of the word ALKEM rather than `NEW ALKEM COLD + SUSPENSION`. Dose and dosage form are
+decisive: ALCOXIB 120 is never ALCOXIB 90, ALMOX 125 MG is never the 250 MG tablet, and a
+shared brand never makes an injection out of a tablet.
+
+**Only a match that is both strong and clear of its runner-up is filled in** — 80% with a
+seven-point lead. The one thing that excuses a small lead is identity: the sheet's normalised
+name and the catalogue's are the same string, and no other product can say that. That has to
+mean identity rather than a score near 1, because scores are clamped to 1 and the leading-word
+and company bonuses carry a merely close candidate over any such threshold. Treating
+"score ≥ 99.5%" as exact published CEFKEM 200 for CEFKEM CV-200, ALDIGESIC-TH for
+ALDIGESIC-TH 8, the 30 ml ALMOX dry syrup for the 60 ml and KEMOPRAZ-D for KEMOPRAZ — every
+one of them on one real sheet, with a lead of two points or less. Everything else is listed
+with its candidates and left blank on purpose. A 94% top candidate one point ahead of a 93%
+one is not a match, it is a flavour, a strength or a pack the sheet did not name, and
+pre-filling it is how that decision gets made by nobody. Those rows are tinted, marked
+**Suggested — check it**, sorted to the top of the list and counted on the button beside
+Import. Each row shows the sheet's own product and company, the score, the gap to the
+runner-up, and the catalogue product's composition and company.
 
 A suggestion is never a dead end. Each row's field searches the whole master — all 1554
 products — so any product can be typed in whether or not it scored; the runners-up sit under
 it as one-click chips, and **Keep the sheet name** rejects the lot. A name that is not a real
 catalogue product is refused out loud rather than silently kept, and the row falls back to the
-sheet's own name. **Accept every suggestion** and **Keep all sheet names** settle the whole
-sheet at once. A product the catalogue does not have imports under the sheet's own name with
+sheet's own name. A choice that crosses the company the sheet named stays possible — the
+person at the desk may know something the sheet does not say — but it is never quiet: the row
+warns, naming both companies. **Accept every suggestion** and **Keep all sheet names** settle
+the whole sheet at once; the first asks first when some of the rows did not clear the
+automatic check, and marks what it sets as **Chosen by you** rather than as a match the tool
+stands behind. A product the catalogue does not have imports under the sheet's own name with
 no salt and no photo, which is what the old behaviour did for everything.
 
 Nothing is decided permanently: reopen the dialog from the button next to Import, change any
@@ -77,7 +100,10 @@ identity, so saved shortlists and shared links survive it.
 
 ## Importing stock
 
-1. Drop the current `.xlsx`/`.xls`/`.csv`/`.tsv` on step 1. The first worksheet is read.
+1. Drop the current `.xlsx`/`.xls`/`.csv`/`.tsv` on step 1. The first worksheet is read. Its
+   first thirty rows are scanned for the row that really names product, expiry and quantity,
+   so a company banner, a blank line or a "NEAR EXPIRY STOCK STATEMENT" title above the
+   header does not become the header. Where that row is is reported beside the file name.
 2. Columns are auto-detected; correct them in step 2 if the sheet uses unusual headers.
 3. Step 3 parses every row before anything is sent, and reports how many are ready, how many
    duplicates were merged and how many will be skipped. Rows whose expiry cannot be read are
@@ -87,9 +113,33 @@ identity, so saved shortlists and shared links survive it.
 5. Expiry accepts `11/26`, `06.27`, `Nov-26`, `JAN26`, `September 2027`, `2026-11`,
    `01-Nov-2026` and genuine Excel date cells. Anything ambiguous — `26/11`, `13/26`, `n/a` —
    is rejected rather than guessed at, so a wrong expiry is never published.
-6. Quantity 0 is imported as sold. "Keep sold items sold when the sheet is unchanged" leaves
-   a hand-marked sold row alone when its sheet quantity has not moved, so a stale sheet line
-   cannot put phantom stock back on the public site.
+6. Quantity 0 is imported as sold. A quantity that is blank, not a number or negative is
+   **not**: those rows are skipped and named, because zero means sold and quietly reading
+   "n/a" as sold takes real stock off the public site. A decimal quantity is rounded down and
+   says so. "Keep sold items sold when the sheet is unchanged" leaves a hand-marked sold row
+   alone when its sheet quantity has not moved, so a stale sheet line cannot put phantom
+   stock back on the public site.
+7. Two lines for the same product, batch and expiry are one delivery listed twice, so their
+   quantities are **added**. Keeping only the last is how a sheet listing 40 and then 60
+   imports as 60 and the other 40 quietly stops existing.
+
+Which rows count as the same product is decided on the whole name, brackets included. That
+matters more than it sounds: this catalogue distinguishes a great many products by bracketed
+text alone, and a key that dropped it merged `ALZYME + SYP 200 ml (ORANGE FLAVOUR)` with
+`(STRAWBERRY FLAVOUR)`, the 30 ml `ALMOX DRY SYRUP 125MG/5ML` with the 60 ml, and
+`ORS INSTA LIQUID (APPLE)` with `(ORANGE)` — three pairs on one real sheet, each becoming one
+row that carried both products' stock under one of the two names while the other disappeared.
+
+**`import_key` in Supabase has to draw the same distinction.** It is generated there, not
+here, and this repository cannot see it; if it is built from a name with the bracketed text
+stripped, two flavours of one syrup cannot be separate rows in the table at all, and an import
+carrying both will be refused by the upsert. Check it before the first real import:
+
+```sql
+select pg_get_expr(d.adbin, d.adrelid) as import_key_expression
+from pg_attrdef d join pg_attribute a on a.attrelid = d.adrelid and a.attnum = d.adnum
+where d.adrelid = 'public.near_expiry_items'::regclass and a.attname = 'import_key';
+```
 
 ## Deleting
 
@@ -380,6 +430,58 @@ this repository.
 The database migration is maintained privately in Supabase and is intentionally not included in
 this public website repository.
 
+## Testing the matcher
+
+The matcher decides which medicine a sheet line becomes, so it is tested rather than trusted.
+Both modules are plain CommonJS-and-browser files with no dependencies, so there is nothing to
+install:
+
+```sh
+node --test "near-expiry/tests/*.test.js"      # 51 acceptance tests
+node near-expiry/tests/regression.mjs          # the report on the representative sheet
+node near-expiry/tests/regression.mjs sheet.csv --detail   # or on a real one
+```
+
+The tests run against the real `product-master.json`, not a fixture: thresholds this
+consequential are only worth anything against the catalogue they will actually meet, and a
+master that drifts should fail here rather than in the admin. They cover the company gate
+(including a product whose name is an exact catalogue name and whose only defence is its
+manufacturer), the dose and dosage-form penalties, the ambiguity gate, normalisation, header
+detection, quantity validation and duplicate merging, and they assert that the ranking does
+not depend on the order the master happens to be in.
+
+The regression runner exits non-zero on either non-negotiable — a suggestion that crosses a
+company boundary, or a suggestion offered for a company the master does not carry — rather
+than reporting it as a number to read past. On the representative sheet in `tests/`, and on a
+real 184-row distributor sheet (`NEAR_EXP_3008`, not in this repository):
+
+| Outcome | `tests/` sheet | Real sheet |
+|---|---:|---:|
+| Safe automatic matches | 135 | 134 |
+| Ambiguous names left for review | 28 | 27 |
+| No safe match; sheet name retained | 22 | 23 |
+| Cross-company suggestions | 0 | 0 |
+| Unknown-company suggestions | 0 | 0 |
+
+All 114 distinct automatic matches on the real sheet were read one by one and are correct,
+including the ones that turn on a single character: the 30 ml ALMOX dry syrup against the
+60 ml, GUAVA against ORANGE against COLA, CIPROKEM 250 against 500, ALDIGESIC-TH against
+ALDIGESIC-TH 8. That sheet carries eight manufacturers SNT does not stock — Eris Life,
+Ind-Swift, Wings, Novita, Abbott, Alco, Galpha, Medley — and every one of their 21 products
+was refused a suggestion rather than offered a similar-looking Alkem or Lupin one.
+
+`tests/sample-near-expiry.csv` is generated by `tests/build-sample-sheet.py` from the master —
+real distributor sheets are customer data and are not kept in a public repository. It is
+deterministic, and it carries the things a real sheet has that a master does not: four rows of
+preamble above the header, companies SNT does not stock, products the catalogue does not have,
+flavour and pack names stripped of the word that told them apart, a repeated line, and
+quantities that are blank, negative, decimal, zero and not a number.
+
+Every threshold lives in `THRESHOLDS` at the top of `matching.js` and is asserted in the
+tests. Lowering one to raise the automatic-match count trades a person's minute for the chance
+of the wrong medicine on the public site; run the regression and say what the new number costs
+before doing it.
+
 ## Deploying
 
 GitHub Pages will happily hand a browser a cached `admin.js` while re-fetching the `admin.html`
@@ -396,6 +498,13 @@ Re-running it with nothing changed rewrites nothing.
 
 ## Source layout
 
+- `matching.js` — the product matcher: normalisation, the company gate, weighted scoring and
+  the automatic-selection thresholds. A pure module with no DOM, no Supabase and no network,
+  so it runs in the browser and under `node --test` against the real master.
+- `sheet.js` — the import safeguards that are not about product similarity: the header scan,
+  column detection, quantity validation and duplicate merging. Pure for the same reason.
+- `tests/` — the acceptance tests for both, the regression runner, and the representative
+  sheet it reads. See **Testing the matcher** below.
 - `shared.js` — Supabase client plus the shared helpers: expiry parsing and shelf-life
   calculation, token search, escaping and toasts.
 - `catalog.js` / `admin.js` — the two pages' behaviour.

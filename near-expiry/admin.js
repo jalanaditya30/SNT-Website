@@ -2,6 +2,15 @@
   "use strict";
 
   if (!window.SNT) return;
+  /* matching.js and sheet.js are this app's own files rather than a CDN's, so a miss here is
+     a deploy problem, not a network one — but the importer is built entirely on them, and a
+     page that silently imported without the company gate would be worse than one that says
+     it cannot import. */
+  if (!window.SNTMatching || !window.SNTSheet) {
+    console.error("[SNT] matching.js or sheet.js did not load; the importer is disabled.");
+    window.SNT.toast("The matching module did not load — reload this page before importing.", "error");
+    return;
+  }
   const { client, config, escapeHtml, normalise, searchable, queryTokens, matchesTokens, parseExpiry, formatExpiry,
     expiryForInput, expiryMeta, formatNumber, formatPrice, parsePrice, columnExists, photoUrl,
     websitePhoto, photoTableReady, toast } = window.SNT;
@@ -13,8 +22,14 @@
     workbookRows: [], rawRows: [], headers: [], parsed: [], editing: null, photos: [], hasPrice: false, hasCompany: false,
     /* ids whose delete is still in flight, so a double-click cannot fire two */
     removing: new Set(), deletingAll: null, orphans: [],
-    /* sheet name -> the master product the operator settled on ("" = keep the sheet name) */
-    matches: new Map(), suggestions: new Map(), matchNotes: new Map(), matchIndex: null
+    /* Keyed by normalised sheet product + sheet company, because the same brand under two
+       companies is two separate questions.
+         suggestions - what the matcher offered, and its verdict
+         matches     - the master product settled on ("" = keep the sheet name)
+         decided     - keys a person has actually answered, so an unanswered row keeps
+                       reading as "check it" rather than as a deliberate rejection */
+    matches: new Map(), suggestions: new Map(), matchNotes: new Map(), decided: new Set(),
+    matchIndex: null, headerRow: 0
   };
   const element = (selector) => document.querySelector(selector);
   const elements = {
@@ -223,66 +238,40 @@
   }
 
   /* ---- matching a sheet name to the SNT catalogue --------------------------
-     Distributor sheets name the same product differently from the master - "ALCOXIB 120
-     10S" against "ALCOXIB 120 (10'S)", "ALDIGESIC 100 TAB 20X10" against "ALDIGESIC 100
-     Tab" - so exact matching finds almost nothing: six of one 184-row sheet. Salt and photo
-     both hang off the master name, so the whole benefit of the catalogue is lost with it.
+     The scoring itself lives in matching.js, which knows nothing about this page: it is a
+     pure module so it can be run under `node --test` against the real master, which is the
+     only way thresholds this consequential are arguable rather than folklore. See
+     near-expiry/tests/matching.test.js.
 
-     Tokens are weighted by how rare they are across the master. A word shared by half the
-     catalogue says nothing, one shared by two products says almost everything; without that
-     weighting "ALKEM COLD + SUS" matches "ALKEM COLD ACTIVE TAB" on the strength of the word
-     ALKEM, instead of "NEW ALKEM COLD + SUSPENSION". */
-
-  function nameTokens(value) {
-    /* Apostrophes and dots are noise: the sheet writes 10S where the master writes (10'S). */
-    return String(value ?? "").toLowerCase().replace(/['’.]/g, "").split(/[^a-z0-9]+/).filter(Boolean);
-  }
+     What is left here is the plumbing - which pairs to ask about, what the operator is shown,
+     and what a decision does to the preview. */
 
   function buildMatchIndex() {
-    const frequency = new Map();
-    const entries = state.master.map((item) => {
-      const tokens = nameTokens(item.name);
-      new Set(tokens).forEach((token) => frequency.set(token, (frequency.get(token) || 0) + 1));
-      return { item, tokens };
-    });
-    const weight = (token) => Math.log(state.master.length / (1 + (frequency.get(token) || 0))) + 0.25;
-    const total = (tokens) => tokens.reduce((sum, token) => sum + weight(token), 0);
-    state.matchIndex = { entries, frequency, weight, total };
+    state.matchIndex = window.SNTMatching ? window.SNTMatching.buildIndex(state.master) : null;
   }
 
-  function matchScore(a, b) {
-    const { weight, total } = state.matchIndex;
-    if (!a.length || !b.length) return 0;
-    const pool = [...b];
-    let shared = 0;
-    for (const token of a) {
-      const at = pool.indexOf(token);
-      if (at !== -1) { shared += weight(token); pool.splice(at, 1); }
-    }
-    let score = (2 * shared) / (total(a) + total(b));
-    /* Dose and pack figures decide it: ALCOXIB 120 is not ALCOXIB 90. */
-    const figuresA = a.filter((token) => /\d/.test(token));
-    const figuresB = b.filter((token) => /\d/.test(token));
-    if (figuresA.length && figuresB.length && !figuresA.some((token) => figuresB.includes(token))) score *= 0.35;
-    return Math.min(1, score);
+  /* A decision belongs to a product AND the company the sheet put beside it, not to the
+     product name alone: the same brand under two companies is two different questions, and
+     answering one must not answer the other.
+
+     The key is written into the markup as an attribute and read back with CSS.escape, so it
+     has to be printable: CSS.escape turns a NUL into U+FFFD, which then matches nothing and
+     leaves the row it was meant to repaint showing its old verdict. "#" cannot occur in
+     either half - normalisation leaves only [a-z0-9.] in the name, and a company key is
+     letters, spaces and one slash. */
+  const KEY_SEPARATOR = "#";
+
+  function matchKey(name, company) {
+    const M = window.SNTMatching;
+    return `${M.normalizeName(name).compact}${KEY_SEPARATOR}${M.companyKey(M.normalizeCompany(company))}`;
   }
 
-  const STRONG_MATCH = 0.72;
-
-  function suggestMatches(name, limit = 4) {
-    if (!state.matchIndex) return [];
-    const tokens = nameTokens(name);
-    if (!tokens.length) return [];
-    /* Score only products sharing a reasonably rare token, so a 184-row sheet does not turn
-       into 184 x 1554 comparisons on the main thread. */
-    const rare = tokens.filter((token) => (state.matchIndex.frequency.get(token) || 0) <= 60);
-    let pool = rare.length ? state.matchIndex.entries.filter((e) => e.tokens.some((t) => rare.includes(t))) : state.matchIndex.entries;
-    if (pool.length < 5) pool = state.matchIndex.entries;
-    return pool
-      .map((e) => ({ item: e.item, score: matchScore(tokens, e.tokens) }))
-      .sort((x, y) => y.score - x.score)
-      .slice(0, limit)
-      .filter((r) => r.score >= 0.45);
+  /* The company the sheet actually names on this row. A literal "-BLANK-" means the column
+     said nothing, not that the company is called that; what counts as nothing is decided in
+     matching.js, so the gate and the importer cannot disagree about it. */
+  function sheetCompanyOf(row, mapping) {
+    const raw = mapping.company ? String(row[mapping.company] ?? "").trim() : "";
+    return window.SNTMatching.normalizeCompany(raw).supplied ? raw : "";
   }
 
   function masterByName(name) {
@@ -575,10 +564,6 @@
     return `${optional ? '<option value="">Not provided</option>' : '<option value="">Select column</option>'}${state.headers.map((header) => `<option value="${escapeHtml(header)}" ${header === selected ? "selected" : ""}>${escapeHtml(header)}</option>`).join("")}`;
   }
 
-  function detectHeader(patterns) {
-    return state.headers.find((header) => patterns.some((pattern) => pattern.test(header.trim().toLowerCase()))) || "";
-  }
-
   /* Prefer the expiry exactly as it was typed. Spreadsheet readers guess at "11/26" and turn it
      into 26 November 2001; the text is what the pharmacist actually meant (Nov 2026). Only when
      the text is unreadable do we fall back to the cell's real date or Excel serial number. */
@@ -605,108 +590,174 @@
   /* Parse the whole sheet up front so the admin sees exactly what would be published. */
   function parseWorkbook() {
     const mapping = currentMapping();
-    const lookup = new Map(state.master.map((item) => [normalise(item.name), item]));
     state.parsed = state.workbookRows.map((row, index) => {
       const rawRow = state.rawRows[index] || {};
       const sheetName = String(row[mapping.product] ?? "").trim();
-      /* A match the operator settled on renames the row to the catalogue's own name, which
-         is what the photo folder and the salt are filed under. Undecided rows fall back to
-         the exact lookup that was here before. */
-      const chosen = state.matches.get(sheetName);
-      const matched = chosen ? masterByName(chosen) : lookup.get(normalise(sheetName)) || null;
+      const sheetCompany = sheetCompanyOf(row, mapping);
+
+      /* Strictly what was decided for this product + company pair. There is deliberately no
+         fall-back to an exact name lookup here: a name that matches a catalogue product
+         exactly but belongs to another manufacturer is precisely what the company gate
+         exists to refuse, and a lookup behind it would hand that match straight back. */
+      const key = matchKey(sheetName, sheetCompany);
+      const chosen = state.matches.get(key) || "";
+      const matched = chosen ? masterByName(chosen) : null;
       const name = matched?.name || sheetName;
+
       const rawExpiry = mapping.expiry ? row[mapping.expiry] : "";
       const expiry = excelExpiry(rawExpiry, mapping.expiry ? rawRow[mapping.expiry] : "");
       const batch = mapping.batch ? String(row[mapping.batch] ?? "").trim() : "";
-      const quantity = Math.max(0, Math.trunc(Number(String(row[mapping.quantity] ?? "").replace(/[,\s]/g, "")) || 0));
+      const quantity = window.SNTSheet.parseQuantity(mapping.quantity ? row[mapping.quantity] : "");
+      /* The sheet's own composition wins where it has one; the master fills the rest. A row
+         with no match gets neither invented for it. */
       const salt = (mapping.salt ? String(row[mapping.salt] ?? "").trim() : "") || matched?.salt || "";
-      /* Sheets write the company as a code — ALKEM, ALKEM-FUT, and a literal -BLANK- for
-         none — so the mapped value wins where it says something, and the master fills the
-         rest. */
-      const sheetCompany = mapping.company ? String(row[mapping.company] ?? "").trim() : "";
-      const company = (/^-?blank-?$/i.test(sheetCompany) ? "" : sheetCompany) || matched?.company || "";
+      /* A matched row publishes under the catalogue's spelling of the company as well as its
+         name, so "ALKEM-FUT" cannot become a third spelling in the inventory. An unmatched
+         row keeps whatever the sheet said. */
+      const company = (matched?.company || sheetCompany || "");
       const rawPrice = mapping.price ? row[mapping.price] : "";
       const price = parsePrice(rawPrice);
+
       const problems = [];
       if (!sheetName) problems.push("no product name");
       if (!expiry) problems.push(`expiry "${String(rawExpiry ?? "").trim() || "blank"}" not understood`);
+      if (quantity.problem) problems.push(quantity.problem);
+
+      const warnings = [];
+      if (quantity.warning) warnings.push(quantity.warning);
       /* An unreadable price is a warning, not a reason to drop a whole product row. */
-      const warnings = mapping.price && String(rawPrice ?? "").trim() && price === null
-        ? [`price "${String(rawPrice).trim()}" not understood — imported without a price`] : [];
-      return { line: index + 2, name, sheetName, matched: Boolean(matched), salt, company, batch, quantity, expiry, rawExpiry, price, problems, warnings };
+      if (mapping.price && String(rawPrice ?? "").trim() && price === null) {
+        warnings.push(`price "${String(rawPrice).trim()}" not understood — imported without a price`);
+      }
+
+      return {
+        line: index + 2, name, sheetName, sheetCompany, matchKey: key,
+        matched: Boolean(matched), salt, company, batch,
+        quantity: quantity.quantity ?? 0, expiry, rawExpiry, price, problems, warnings
+      };
     });
     return state.parsed;
   }
 
-  /* One pass over the sheet, kept out of renderPreview so remapping a column does not
-     recompute 184 fuzzy searches. */
+  /* Two lines of the same product, batch and expiry are two deliveries of it, so the
+     quantities are added. Keeping only the last is how a sheet listing 40 and then 60
+     imports as 60 and the other 40 quietly stops existing.
+
+     Which rows count as "the same product" has to be decided on the whole name. `normalise`
+     drops bracketed text, and this catalogue distinguishes a great many products by nothing
+     else: ALZYME + SYP 200 ml (ORANGE FLAVOUR) from (STRAWBERRY FLAVOUR), ALMOX DRY SYRUP
+     125MG/5ML (30ML) from (60ML W.C.), ORS INSTA LIQUID (APPLE) from (ORANGE). All three
+     pairs are on one real 184-row sheet, in the same expiry month, and a bracket-blind key
+     merges each pair into a single row - one flavour published carrying both flavours'
+     stock, the other gone. The matcher's own normalisation is the right identity here: it
+     keeps everything that distinguishes one product from another and only flattens spelling
+     and punctuation. */
+  function importKey(row) {
+    return `${window.SNTMatching.normalizeName(row.name).compact}|${searchable(row.batch)}|${row.expiry}`;
+  }
+
+  function mergedRows(parsed) {
+    return window.SNTSheet.mergeDuplicates(parsed.filter((row) => !row.problems.length), importKey);
+  }
+
+  /* ---- asking the matcher --------------------------------------------------
+     One pass over the sheet, kept out of renderPreview so remapping a column does not
+     recompute the whole search, and keyed by product + company so a sheet listing the same
+     product in six batches is one question rather than six. */
   function computeSuggestions() {
     state.suggestions = new Map();
     const mapping = currentMapping();
-    if (!mapping.product) return;
+    if (!mapping.product || !state.matchIndex) return;
     state.workbookRows.forEach((row) => {
       const name = String(row[mapping.product] ?? "").trim();
-      if (!name || state.suggestions.has(name)) return;
-      state.suggestions.set(name, suggestMatches(name));
+      if (!name) return;
+      const company = sheetCompanyOf(row, mapping);
+      const key = matchKey(name, company);
+      if (state.suggestions.has(key)) return;
+      const result = window.SNTMatching.suggestMatches(state.matchIndex, name, company);
+      state.suggestions.set(key, { key, name, company, result });
     });
-    /* The best suggestion is filled in wherever there is one, so it is readable without
-       opening the dropdown and a sheet does not need 50 clicks to be useful. Confidence is
-       carried by the badge and the tint instead: a weak guess is still shown, but it is
-       marked and sorted to the top for someone to agree with or reject. */
-    state.suggestions.forEach((list, name) => {
-      if (state.matches.has(name)) return;
-      state.matches.set(name, list[0]?.item.name || "");
+
+    /* Only what cleared the automatic gate is filled in. Everything else is listed with its
+       candidates and left blank on purpose: a top candidate its runner-up is breathing down
+       the neck of is a flavour, a strength or a pack that a person has to settle, and
+       pre-filling it is how that decision gets made by nobody. */
+    state.suggestions.forEach((entry, key) => {
+      if (state.matches.has(key)) return;
+      state.matches.set(key, entry.result.auto ? entry.result.auto.name : "");
     });
   }
 
-  function matchConfidence(name, list) {
-    const chosen = state.matches.get(name) || "";
-    if (!chosen) return list.length ? "rejected" : "none";
-    const suggested = list.find((r) => r.item.name === chosen);
-    /* Picked by hand rather than offered: nothing to second-guess. */
-    if (!suggested) return "manual";
-    return suggested.score >= STRONG_MATCH ? "strong" : "check";
+  /* What the row is, in the operator's terms rather than the scorer's.
+
+       matched  - cleared the automatic gate: high score and clear of its runner-up
+       manual   - a person typed or clicked it, which is not something to second-guess
+       check    - candidates exist, none of them safely enough to be chosen for anyone
+       rejected - suggestions were offered and deliberately turned down
+       none     - the catalogue has nothing close under this company */
+  function matchConfidence(key) {
+    const entry = state.suggestions.get(key);
+    if (!entry) return "none";
+    const chosen = state.matches.get(key) || "";
+    if (!chosen) return entry.result.suggestions.length ? "rejected" : "none";
+    /* Chosen by hand if it is not the one the gate would have picked itself. */
+    return entry.result.auto && entry.result.auto.name === chosen ? "matched" : "manual";
+  }
+
+  const MATCH_LABELS = {
+    matched: "Matched", manual: "Chosen by you", check: "Suggested — check it",
+    rejected: "Keeping the sheet name", none: "Nothing close in the catalogue"
+  };
+
+  /* A row with candidates and no decision is the one that wants attention, so it reads as
+     "check" rather than as a rejection until somebody actually rejects it. */
+  function matchState(key) {
+    const confidence = matchConfidence(key);
+    if (confidence === "rejected" && !state.decided.has(key)) return "check";
+    return confidence;
   }
 
   function matchCounts() {
-    const counts = { strong: 0, manual: 0, check: 0, none: 0, rejected: 0, total: state.suggestions.size };
-    state.suggestions.forEach((list, name) => { counts[matchConfidence(name, list)]++; });
+    const counts = { matched: 0, manual: 0, check: 0, none: 0, rejected: 0, total: state.suggestions.size };
+    state.suggestions.forEach((_entry, key) => { counts[matchState(key)] += 1; });
     return counts;
   }
 
   function summaryMarkup() {
     const counts = matchCounts();
     return [
-      `<span class="pill pill--ok">${formatNumber(counts.strong + counts.manual)} matched</span>`,
+      `<span class="pill pill--ok">${formatNumber(counts.matched)} matched automatically</span>`,
+      counts.manual ? `<span class="pill">${formatNumber(counts.manual)} chosen by you</span>` : "",
       counts.check ? `<span class="pill pill--warn">${formatNumber(counts.check)} to check</span>` : "",
       counts.none + counts.rejected ? `<span class="pill">${formatNumber(counts.none + counts.rejected)} keeping the sheet name</span>` : ""
     ].filter(Boolean).join("");
   }
 
-  /* Any catalogue product can be typed in, not only the handful that scored well: a
-     suggestion that is wrong must never be a dead end. The name has to be a real one, so
-     what is typed is resolved against the master and anything else is said out loud rather
-     than silently kept or silently dropped. */
-  function chooseMatch(sheetName, value) {
+  /* Any catalogue product can be typed in, not only the four that scored well: a suggestion
+     that is wrong must never be a dead end. The name has to be a real one, so what is typed
+     is resolved against the master and anything else is said out loud rather than silently
+     kept or silently dropped. */
+  function chooseMatch(key, value) {
     const typed = String(value ?? "").trim();
-    state.matchNotes.delete(sheetName);
+    state.matchNotes.delete(key);
+    state.decided.add(key);
     if (!typed) {
-      state.matches.set(sheetName, "");
+      state.matches.set(key, "");
     } else {
       const exact = state.master.find((item) => item.name === typed)
         || state.master.find((item) => item.name.toLowerCase() === typed.toLowerCase())
         || state.master.find((item) => normalise(item.name) === normalise(typed));
-      state.matches.set(sheetName, exact ? exact.name : "");
-      if (!exact) state.matchNotes.set(sheetName, `“${typed}” is not in the SNT catalogue — keeping the sheet name.`);
+      state.matches.set(key, exact ? exact.name : "");
+      if (!exact) state.matchNotes.set(key, `“${typed}” is not in the SNT catalogue — keeping the sheet name.`);
     }
-    repaintMatchRow(sheetName);
+    repaintMatchRow(key);
     element("#matchSummary").innerHTML = summaryMarkup();
     renderPreview();
   }
 
-  function repaintMatchRow(sheetName) {
-    const row = element(`[data-match-row="${CSS.escape(sheetName)}"]`);
-    if (row) row.outerHTML = matchRowMarkup(sheetName, state.suggestions.get(sheetName) || []);
+  function repaintMatchRow(key) {
+    const row = element(`[data-match-row="${CSS.escape(key)}"]`);
+    if (row) row.outerHTML = matchRowMarkup(key);
   }
 
   function renderPreview() {
@@ -725,16 +776,22 @@
     const parsed = parseWorkbook();
     const valid = parsed.filter((row) => !row.problems.length);
     const invalid = parsed.filter((row) => row.problems.length);
-    const unique = new Map(valid.map((row) => [`${normalise(row.name)}|${normalise(row.batch)}|${row.expiry}`, row]));
-    const duplicates = valid.length - unique.size;
-    const zeroQuantity = [...unique.values()].filter((row) => row.quantity <= 0).length;
-    const priceWarnings = valid.filter((row) => row.warnings.length).length;
+    /* Merged, not de-duplicated: two lines of the same batch are added together, so the
+       count here is the count that will be written. */
+    const merged = mergedRows(parsed);
+    const duplicates = valid.length - merged.length;
+    const zeroQuantity = merged.filter((row) => row.quantity <= 0).length;
+    const rounded = valid.filter((row) => row.warnings.some((warning) => warning.startsWith("quantity"))).length;
+    const priceWarnings = valid.filter((row) => row.warnings.some((warning) => warning.startsWith("price"))).length;
+    const badQuantity = invalid.filter((row) => row.problems.some((problem) => problem.startsWith("quantity"))).length;
 
     summary.innerHTML = [
-      `<span class="ok">${formatNumber(unique.size)} ready to import</span>`,
-      duplicates ? `<span class="warn">${formatNumber(duplicates)} duplicate rows merged</span>` : "",
+      `<span class="ok">${formatNumber(merged.length)} ready to import</span>`,
+      duplicates ? `<span class="warn">${formatNumber(duplicates)} duplicate rows merged — quantities added</span>` : "",
       zeroQuantity ? `<span class="warn">${formatNumber(zeroQuantity)} with quantity 0 → marked sold</span>` : "",
+      rounded ? `<span class="warn">${formatNumber(rounded)} decimal quantities rounded down</span>` : "",
       priceWarnings ? `<span class="warn">${formatNumber(priceWarnings)} with an unreadable price</span>` : "",
+      badQuantity ? `<span class="bad">${formatNumber(badQuantity)} with an unusable quantity</span>` : "",
       invalid.length ? `<span class="bad">${formatNumber(invalid.length)} skipped</span>` : ""
     ].filter(Boolean).join("");
 
@@ -759,11 +816,11 @@
     review.classList.toggle("hidden", !counts.total);
     review.textContent = counts.check
       ? `Check ${formatNumber(counts.check)} suggested matches`
-      : `Matched ${formatNumber(counts.strong + counts.manual)} of ${formatNumber(counts.total)}`;
+      : `Matched ${formatNumber(counts.matched + counts.manual)} of ${formatNumber(counts.total)}`;
     review.classList.toggle("danger-button", Boolean(counts.check));
     review.classList.toggle("secondary-button", !counts.check);
-    element("#importButton").disabled = unique.size === 0;
-    element("#importButton").textContent = `Import ${formatNumber(unique.size)} products`;
+    element("#importButton").disabled = merged.length === 0;
+    element("#importButton").textContent = `Import ${formatNumber(merged.length)} products`;
   }
 
   /* ---- the match review dialog ---------------------------------------------
@@ -771,39 +828,67 @@
      name settled on here is the one the catalogue publishes, and it carries the salt and
      the pack photo with it. Rows needing a look are listed first. */
 
-  function matchRowMarkup(name, list) {
-    const chosen = state.matches.get(name) || "";
-    const state_ = matchConfidence(name, list);
-    const label = {
-      strong: "Matched", manual: "Chosen by you", check: "Suggested — check it",
-      rejected: "Keeping the sheet name", none: "Nothing close in the catalogue"
-    }[state_];
+  function matchRowMarkup(key) {
+    const entry = state.suggestions.get(key);
+    if (!entry) return "";
+    const { name, company, result } = entry;
+    const chosen = state.matches.get(key) || "";
+    const status = matchState(key);
+    const label = MATCH_LABELS[status];
     const target = chosen ? masterByName(chosen) : null;
     const photo = chosen ? websitePhoto(chosen) : "";
-    const note = state.matchNotes.get(name) || "";
+    const note = state.matchNotes.get(key) || "";
+    const picked = result.suggestions.find((suggestion) => suggestion.name === chosen) || null;
+
+    /* The numbers behind the verdict, said plainly. The lead is the half operators do not
+       otherwise see, and it is the half that decides: a 94% top candidate one point ahead of
+       a 93% one is not a match, it is a question. */
+    const confidence = picked
+      ? `${Math.round(picked.score * 100)}% match${picked === result.top && result.runnerUp
+          ? `, ${Math.round(result.lead * 100)} points clear of the next` : ""}`
+      : result.top
+        ? `best candidate ${Math.round(result.top.score * 100)}%${result.runnerUp
+            ? `, only ${Math.round(result.lead * 100)} points clear of the next` : ""}`
+        : "";
+
+    /* A choice from another manufacturer stays possible - the operator may know something
+       the sheet does not say - but it never passes quietly. Both companies are named.
+
+       This is worked out from the master record rather than from the suggestion the pick
+       came from, because a cross-company product is never in that list: the gate removed it
+       before scoring, which is the only way to reach one at all. Reading the company off a
+       suggestion would mean the warning could never fire. */
+    const crossCompany = target && company && !window.SNTMatching.companiesCompatible(
+      window.SNTMatching.normalizeCompany(company), window.SNTMatching.normalizeCompany(target.company));
+
     /* The runners-up stay one click away and the field itself searches the whole catalogue,
        so a wrong suggestion is never a dead end. */
-    const others = list.filter((r) => r.item.name !== chosen).slice(0, 3);
+    const others = result.suggestions.filter((suggestion) => suggestion.name !== chosen).slice(0, 3);
     const chips = [
-      ...others.map((r) => `<button class="match-chip" type="button" data-pick-for="${escapeHtml(name)}" data-pick="${escapeHtml(r.item.name)}">${escapeHtml(r.item.name)} · ${Math.round(r.score * 100)}%</button>`),
-      chosen ? `<button class="match-chip match-chip--clear" type="button" data-pick-for="${escapeHtml(name)}" data-pick="">Keep the sheet name</button>` : ""
+      ...others.map((suggestion) => `<button class="match-chip" type="button" data-pick-for="${escapeHtml(key)}" data-pick="${escapeHtml(suggestion.name)}">${escapeHtml(suggestion.name)} · ${Math.round(suggestion.score * 100)}%</button>`),
+      chosen ? `<button class="match-chip match-chip--clear" type="button" data-pick-for="${escapeHtml(key)}" data-pick="">Keep the sheet name</button>` : ""
     ].filter(Boolean).join("");
 
-    return `<tr class="match-row match-row--${state_}" data-match-row="${escapeHtml(name)}">
+    return `<tr class="match-row match-row--${status}" data-match-row="${escapeHtml(key)}">
       <td class="match-cell-photo">${photo
         ? `<img class="table-photo" src="${escapeHtml(photo)}" alt="" loading="lazy">`
         : '<span class="table-photo table-photo--none">none</span>'}</td>
       <td>
         <strong>${escapeHtml(name)}</strong>
-        <span class="match-state ${state_}">${label}</span>
+        <small class="match-source">${escapeHtml(company || "no company on the sheet")}</small>
+        <span class="match-state ${status}">${label}</span>${confidence
+          ? `<span class="match-confidence">${escapeHtml(confidence)}</span>` : ""}
         <input class="match-input" type="text" list="productMasterNames" autocomplete="off" spellcheck="false"
-          data-match-for="${escapeHtml(name)}" value="${escapeHtml(chosen)}"
+          data-match-for="${escapeHtml(key)}" value="${escapeHtml(chosen)}"
           aria-label="Catalogue product for ${escapeHtml(name)}"
           placeholder="Type any SNT product — leave blank to keep the sheet name">
         ${note ? `<span class="match-warn">${escapeHtml(note)}</span>` : ""}
+        ${crossCompany ? `<span class="match-warn">The sheet says ${escapeHtml(company)}; ${escapeHtml(chosen)} is ${escapeHtml(target.company || "another company")}. Importing this publishes the stock under a company the sheet did not name.</span>` : ""}
         ${chips ? `<div class="match-chips">${chips}</div>` : ""}
       </td>
-      <td class="match-cell-salt">${escapeHtml(target?.salt || "") || '<span class="faint">No salt until a product is chosen</span>'}</td>
+      <td class="match-cell-salt">${target
+        ? `${escapeHtml(target.salt || "") || '<span class="faint">No composition in the master</span>'}<small class="match-target-company">${escapeHtml(target.company || "")}</small>`
+        : '<span class="faint">No salt until a product is chosen</span>'}</td>
     </tr>`;
   }
 
@@ -812,13 +897,13 @@
 
     /* Uncertain guesses first - those are the ones worth the operator's attention - then the
        products the catalogue simply does not have, then the matches needing no thought. */
-    const order = { check: 0, rejected: 1, none: 2, manual: 3, strong: 4 };
-    const rows = [...state.suggestions.entries()].sort((a, b) =>
-      order[matchConfidence(a[0], a[1])] - order[matchConfidence(b[0], b[1])] || a[0].localeCompare(b[0]));
-    element("#matchRows").innerHTML = rows.map(([name, list]) => matchRowMarkup(name, list)).join("");
+    const order = { check: 0, rejected: 1, none: 2, manual: 3, matched: 4 };
+    const rows = [...state.suggestions.values()].sort((a, b) =>
+      (order[matchState(a.key)] - order[matchState(b.key)]) || a.name.localeCompare(b.name));
+    element("#matchRows").innerHTML = rows.map((entry) => matchRowMarkup(entry.key)).join("");
     const counts = matchCounts();
     element("#matchNote").textContent = counts.none
-      ? `${formatNumber(counts.none)} products are not in the SNT catalogue — they import under the sheet's own name, without a salt or a photo.`
+      ? `${formatNumber(counts.none)} products are not in the SNT catalogue under the company the sheet names — they import under the sheet's own name, without a salt or a photo.`
       : "Every product was found in the SNT catalogue.";
   }
 
@@ -837,24 +922,24 @@
          character, so Gujarati and Hindi product names and the ₹ sign import as mojibake.
          Real .xlsx files are XML and already UTF-8, so both options leave them untouched. */
       const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", raw: true, codepage: 65001 });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      /* Row 1 is not the header often enough to matter: these sheets open with a company
+         banner, a date, a blank line and a "NEAR EXPIRY STOCK STATEMENT" title, and reading
+         the title as the header makes every column name wrong and every row a mismatch. So
+         the sheet is read once as a bare grid to find the row that really names product,
+         expiry and quantity, and only then read properly from there. */
+      const matrix = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false, blankrows: true });
+      const headerRow = window.SNTSheet.findHeaderRow(matrix);
       /* Two views of the same sheet: cells as they read on screen, and the underlying
          values, so a genuine date cell still resolves when its text is ambiguous. */
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false });
+      const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false, range: headerRow });
       if (!rows.length) throw new Error("The first worksheet has no data rows.");
       state.workbookRows = rows;
-      state.rawRows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: true });
+      state.rawRows = XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: true, range: headerRow });
+      state.headerRow = headerRow;
       /* Union of keys — the first row alone misses columns that start out blank. */
       state.headers = [...new Set(rows.flatMap((row) => Object.keys(row)))];
-      const selected = {
-        product: detectHeader([/^product( name)?s?$/, /^item( name)?$/, /^brand( name)?$/, /product/]),
-        salt: detectHeader([/salt/, /composition/, /generic/]),
-        expiry: detectHeader([/^exp$/, /expiry/, /expiration/, /^exp\b/]),
-        quantity: detectHeader([/^qty$/, /quantity/, /stock/, /^pcs$/]),
-        batch: detectHeader([/batch/, /^b\.?no\.?$/, /lot/]),
-        price: detectHeader([/^price$/, /^rate$/, /^mrp$/, /^ptr$/, /^pts$/, /price/, /rate/]),
-        company: detectHeader([/^company$/, /^companies$/, /^mfr$/, /manufacturer/, /^brand$/, /^division$/, /^supplier$/, /company/])
-      };
+      const selected = window.SNTSheet.detectColumns(state.headers);
       element("#mapProduct").innerHTML = columnOptions(selected.product);
       element("#mapSalt").innerHTML = columnOptions(selected.salt, true);
       element("#mapExpiry").innerHTML = columnOptions(selected.expiry);
@@ -862,9 +947,12 @@
       element("#mapBatch").innerHTML = columnOptions(selected.batch, true);
       element("#mapPrice").innerHTML = columnOptions(selected.price, true);
       element("#mapCompany").innerHTML = columnOptions(selected.company, true);
-      element("#excelFileStatus").textContent = `${file.name} · ${formatNumber(rows.length)} rows`;
+      element("#excelFileStatus").textContent = headerRow
+        ? `${file.name} · ${formatNumber(rows.length)} rows · header found on row ${headerRow + 1}`
+        : `${file.name} · ${formatNumber(rows.length)} rows`;
       state.matches = new Map();
       state.matchNotes = new Map();
+      state.decided = new Set();
       computeSuggestions();
       renderPreview();
       openMatchDialog();
@@ -895,11 +983,19 @@
   }
 
   async function importExcel() {
-    const parsed = state.parsed.filter((row) => !row.problems.length);
+    /* Merged before anything else, so a product listed twice reaches the database once with
+       both quantities added rather than once with the second line's alone. Merging on the
+       final name means it happens after matching, which is the only order that works: two
+       sheet spellings of one product become one row only once they are both the catalogue's
+       name. */
+    const parsed = mergedRows(state.parsed);
     if (!parsed.length) return toast("There are no valid rows to import.", "error");
     const mapping = currentMapping();
     const keepSold = element("#keepSoldStatus").checked;
-    const identify = (name, batch, expiry) => `${normalise(name)}|${normalise(batch)}|${expiry}`;
+    /* The same identity the merge uses, so a row's twin in the database is found by exactly
+       the rule that decided it was a twin in the sheet. */
+    const identify = (name, batch, expiry) =>
+      importKey({ name, batch, expiry });
     const existing = new Map(state.products.map((item) => [identify(item.product_name, item.batch_no, item.expiry_date), item]));
 
     /* A matched product publishes under the catalogue's name, but a row imported before the
@@ -1148,9 +1244,15 @@
   element("#confirmDeleteAll").addEventListener("click", deleteAllShown);
 
   element("#excelFile").addEventListener("change", (event) => { if (event.target.files[0]) readExcel(event.target.files[0]); });
-  ["#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice", "#mapCompany"].forEach((id) => element(id).addEventListener("change", renderPreview));
+  ["#mapSalt", "#mapExpiry", "#mapQuantity", "#mapBatch", "#mapPrice"].forEach((id) => element(id).addEventListener("change", renderPreview));
   /* Changing which column holds the name invalidates every match. */
-  element("#mapProduct").addEventListener("change", () => { state.matches = new Map(); state.matchNotes = new Map(); computeSuggestions(); renderPreview(); });
+  /* Changing which column holds the name or the company invalidates every match: both are
+     inputs to the decision, and a company read from the wrong column is exactly the mistake
+     the gate is there to catch. */
+  ["#mapProduct", "#mapCompany"].forEach((id) => element(id).addEventListener("change", () => {
+    state.matches = new Map(); state.matchNotes = new Map(); state.decided = new Set();
+    computeSuggestions(); renderPreview();
+  }));
 
   element("#reviewMatchesButton").addEventListener("click", openMatchDialog);
   element("#findOrphansButton").addEventListener("click", findOrphanPhotos);
@@ -1165,13 +1267,22 @@
     const chip = event.target.closest("[data-pick-for]");
     if (chip) chooseMatch(chip.dataset.pickFor, chip.dataset.pick);
   });
+  /* A deliberate bulk action, not the default: it takes every top candidate including the
+     ones the gate refused, which is a decision an operator is entitled to make in one go and
+     the matcher is not entitled to make for them. It is recorded as their decision - the
+     rows read "Chosen by you", not "Matched". */
   element("#acceptAllMatches").addEventListener("click", () => {
-    state.suggestions.forEach((list, name) => { if (list.length) state.matches.set(name, list[0].item.name); });
+    const check = matchCounts().check;
+    if (check && !window.confirm(`${check} of these did not clear the automatic check — most often a flavour, a strength or a pack the sheet does not name. Accept the best candidate for all of them anyway?`)) return;
+    state.suggestions.forEach((entry, key) => {
+      if (entry.result.top) state.matches.set(key, entry.result.top.name);
+      state.decided.add(key);
+    });
     state.matchNotes.clear();
     renderMatchDialog(); renderPreview();
   });
   element("#clearAllMatches").addEventListener("click", () => {
-    state.suggestions.forEach((_list, name) => state.matches.set(name, ""));
+    state.suggestions.forEach((_entry, key) => { state.matches.set(key, ""); state.decided.add(key); });
     state.matchNotes.clear();
     renderMatchDialog(); renderPreview();
   });
