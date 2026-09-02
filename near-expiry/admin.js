@@ -29,6 +29,7 @@
          decided     - keys a person has actually answered, so an unanswered row keeps
                        reading as "check it" rather than as a deliberate rejection */
     matches: new Map(), suggestions: new Map(), matchNotes: new Map(), decided: new Set(),
+    aliases: new Map(),
     matchIndex: null, headerRow: 0
   };
   const element = (selector) => document.querySelector(selector);
@@ -94,7 +95,7 @@
     elements.loginView.classList.add("hidden");
     elements.adminView.classList.remove("hidden");
     element("#signOutButton").classList.remove("hidden");
-    await Promise.all([loadProducts(), loadMaster()]);
+    await Promise.all([loadProducts(), loadMaster(), loadAliases()]);
   }
 
   /* Signing out must leave nothing on screen or in memory for the next person at the counter. */
@@ -106,6 +107,7 @@
     state.rawRows = [];
     state.headers = [];
     state.parsed = [];
+    state.aliases = new Map();
     state.editing = null;
     state.removing.clear();
     state.deletingAll = null;
@@ -156,15 +158,48 @@
 
   async function loadMaster() {
     if (state.master.length) return;
-    const response = await fetch("product-master.json");
-    if (!response.ok) throw new Error("Product master could not load.");
-    state.master = await response.json();
+    const { data: catalogue, error: catalogueError } = await client.from("catalogue_products")
+      .select("id,canonical_name,company,salt,pack,source_hash")
+      .eq("active", true)
+      .order("canonical_name");
+    if (!catalogueError && catalogue?.length) {
+      state.master = catalogue.map((item) => ({
+        product_id: item.id, name: item.canonical_name, company: item.company,
+        salt: item.salt, pack: item.pack, source_hash: item.source_hash
+      }));
+    } else if (!catalogueError || ["42P01", "PGRST205"].includes(catalogueError.code)) {
+      /* Staged rollout: the static file keeps the importer working until the catalogue seed
+         is installed. Stable alias learning remains disabled for those fallback records. */
+      const response = await fetch("product-master.json");
+      if (!response.ok) throw new Error("Product master could not load.");
+      state.master = await response.json();
+    } else {
+      throw catalogueError;
+    }
     element("#productMasterNames").innerHTML = state.master.map((item) => `<option value="${escapeHtml(item.name)}"></option>`).join("");
     /* The handful of companies the master actually carries, so the field is a pick rather
        than free text and "Alkem - Maxxio" cannot become three different spellings. */
     const companies = [...new Set(state.master.map((item) => item.company).filter(Boolean))].sort();
     element("#companyNames").innerHTML = companies.map((name) => `<option value="${escapeHtml(name)}"></option>`).join("");
     buildMatchIndex();
+  }
+
+  async function loadAliases() {
+    const { data, error } = await client.from("product_aliases")
+      .select("id,source_name_key,source_company_key,product_id,status,confidence,matcher_version,product_source_hash")
+      .eq("source_system", "MARG")
+      .in("status", ["approved_system", "approved_human"]);
+    if (error) {
+      /* The migration is optional during a staged deployment: matching remains available,
+         but it does not pretend an alias lookup happened. */
+      if (["42P01", "PGRST205"].includes(error.code)) {
+        console.warn("[SNT] product_aliases is not installed; reviewed MARG mappings will not be remembered.");
+        state.aliases = new Map();
+        return;
+      }
+      throw error;
+    }
+    state.aliases = window.SNTMatching.buildAliasIndex(data || []);
   }
 
   function filteredProducts() {
@@ -674,7 +709,7 @@
       const company = sheetCompanyOf(row, mapping);
       const key = matchKey(name, company);
       if (state.suggestions.has(key)) return;
-      const result = window.SNTMatching.suggestMatches(state.matchIndex, name, company);
+      const result = window.SNTMatching.suggestMatches(state.matchIndex, name, company, { aliases: state.aliases });
       state.suggestions.set(key, { key, name, company, result });
     });
 
@@ -749,10 +784,103 @@
         || state.master.find((item) => normalise(item.name) === normalise(typed));
       state.matches.set(key, exact ? exact.name : "");
       if (!exact) state.matchNotes.set(key, `“${typed}” is not in the SNT catalogue — keeping the sheet name.`);
+      else rememberAlias(state.suggestions.get(key), exact).catch((error) => {
+        console.error(error);
+        toast("The product was selected for this import, but its MARG mapping could not be remembered.", "error");
+      });
     }
     repaintMatchRow(key);
     element("#matchSummary").innerHTML = summaryMarkup();
     renderPreview();
+  }
+
+  async function rememberAlias(entry, product) {
+    if (!entry || !product || !["admin", "supervisor"].includes(state.role)) return;
+    if (!product.product_id) {
+      console.warn("[SNT] The static catalogue fallback has no stable product IDs; mapping was not persisted.");
+      return;
+    }
+    const sourceCompany = window.SNTMatching.normalizeCompany(entry.company);
+    const targetCompany = window.SNTMatching.normalizeCompany(product.company);
+    if (!window.SNTMatching.companiesCompatible(sourceCompany, targetCompany)) return;
+    const [source_name_key, source_company_key] = window.SNTMatching.aliasKey(entry.name, entry.company).split("|");
+    const record = {
+      source_system: "MARG",
+      source_product_name: entry.name,
+      source_company: entry.company || "",
+      source_unit: "",
+      source_name_key,
+      source_company_key,
+      product_id: product.product_id,
+      status: "approved_human",
+      confidence: 1,
+      matcher_version: window.SNTMatching.MATCHER_VERSION,
+      product_source_hash: product.source_hash || "",
+      decision_reasons: ["selected by supervisor in import review"],
+      reviewed_by: state.user.id,
+      reviewed_at: new Date().toISOString()
+    };
+    const { data, error } = await client.from("product_aliases").upsert(record, {
+      onConflict: "source_system,source_name_key,source_company_key"
+    }).select("source_name_key,source_company_key,product_id,status,confidence,matcher_version,product_source_hash").single();
+    if (error) throw error;
+    state.aliases.set(`${data.source_name_key}|${data.source_company_key}`, data);
+  }
+
+  async function rememberSafeAutomaticAliases() {
+    if (!["admin", "supervisor"].includes(state.role)) return true;
+    const records = [...state.suggestions.values()].flatMap((entry) => {
+      const match = entry.result.auto;
+      if (!match || match.alias || !match.item?.product_id) return [];
+      const [source_name_key, source_company_key] = window.SNTMatching.aliasKey(entry.name, entry.company).split("|");
+      return [{
+        source_system: "MARG",
+        source_product_name: entry.name,
+        source_company: entry.company || "",
+        source_unit: "",
+        source_name_key,
+        source_company_key,
+        product_id: match.item.product_id,
+        status: "approved_system",
+        confidence: match.score,
+        matcher_version: window.SNTMatching.MATCHER_VERSION,
+        product_source_hash: match.item.source_hash || "",
+        decision_reasons: match.reasons || [],
+        created_by: state.user.id
+      }];
+    });
+
+    /* A human-approved decision is stronger than any future automatic run and is never
+       overwritten. A previous system decision may be refreshed after a safe recomputation;
+       missing rows are inserted, while pending/rejected conflicts remain untouched. */
+    const inserts = [];
+    const refreshes = [];
+    records.forEach((record) => {
+      const key = `${record.source_name_key}|${record.source_company_key}`;
+      const existing = state.aliases.get(key);
+      if (existing?.status === "approved_human") return;
+      if (existing?.status === "approved_system" && existing.id) refreshes.push({ existing, record });
+      else inserts.push(record);
+    });
+    for (let start = 0; start < refreshes.length; start += 20) {
+      const results = await Promise.all(refreshes.slice(start, start + 20).map(({ existing, record }) => {
+        const { created_by: _originalCreator, ...changes } = record;
+        return client.from("product_aliases").update(changes).eq("id", existing.id).eq("status", "approved_system");
+      }));
+      const failed = results.find((result) => result.error);
+      if (failed) throw failed.error;
+    }
+    for (let start = 0; start < inserts.length; start += CHUNK) {
+      const { error } = await client.from("product_aliases").upsert(inserts.slice(start, start + CHUNK), {
+        onConflict: "source_system,source_name_key,source_company_key",
+        ignoreDuplicates: true
+      });
+      if (error) {
+        if (["42P01", "PGRST205"].includes(error.code)) return false;
+        throw error;
+      }
+    }
+    return true;
   }
 
   function repaintMatchRow(key) {
@@ -986,6 +1114,45 @@
     return renamed;
   }
 
+  async function recordMatchEvents() {
+    const events = [...state.suggestions.values()].map((entry) => {
+      const chosenName = state.matches.get(entry.key) || "";
+      const chosen = chosenName ? masterByName(chosenName) : null;
+      const confidence = matchConfidence(entry.key);
+      const picked = entry.result.suggestions.find((item) => item.name === chosenName) || null;
+      const decision = confidence === "matched" ? "automatic"
+        : confidence === "manual" ? "human_approved"
+          : entry.result.suggestions.length ? "kept_source" : "no_safe_match";
+      return {
+        source_system: "MARG",
+        source_product_name: entry.name,
+        source_company: entry.company || "",
+        source_unit: "",
+        product_id: chosen?.product_id || null,
+        decision,
+        score: picked?.score ?? entry.result.top?.score ?? null,
+        lead: entry.result.lead || 0,
+        blockers: entry.result.autoBlockedReasons || [],
+        candidates: entry.result.suggestions.map((item) => ({
+          product_id: item.item?.product_id || null,
+          name: item.name,
+          score: Number(item.score.toFixed(5)),
+          blockers: item.blockers || []
+        })),
+        matcher_version: window.SNTMatching.MATCHER_VERSION,
+        created_by: state.user.id
+      };
+    });
+    for (let start = 0; start < events.length; start += CHUNK) {
+      const { error } = await client.from("product_match_events").insert(events.slice(start, start + CHUNK));
+      if (error) {
+        if (["42P01", "PGRST205"].includes(error.code)) return false;
+        throw error;
+      }
+    }
+    return true;
+  }
+
   async function importExcel() {
     /* Merged before anything else, so a product listed twice reaches the database once with
        both quantities added rather than once with the second line's alone. Merging on the
@@ -1050,6 +1217,20 @@
         const { error } = await client.from("near_expiry_items").upsert(chunk, { onConflict: "import_key", ignoreDuplicates: false });
         if (error) throw error;
         element("#importProgress").style.width = `${Math.round(((start + chunk.length) / records.length) * 100)}%`;
+      }
+      try {
+        const learned = await rememberSafeAutomaticAliases();
+        if (!learned) console.warn("[SNT] product_aliases is not installed; safe automatic mappings were not remembered.");
+      } catch (learningError) {
+        console.error(learningError);
+        toast("Products imported, but safe automatic mappings could not be remembered.", "warning");
+      }
+      try {
+        const recorded = await recordMatchEvents();
+        if (!recorded) console.warn("[SNT] product_match_events is not installed; this import was not audited.");
+      } catch (auditError) {
+        console.error(auditError);
+        toast("Products imported, but the matching audit could not be saved.", "warning");
       }
       await loadProducts();
       toast(`${formatNumber(records.length)} products imported.`);

@@ -156,13 +156,14 @@ test("the automatic gate needs the score AND the lead", () => {
    carry a merely close candidate over any such threshold, which on a real sheet auto-selected
    CEFKEM 200 for CEFKEM CV-200 and the 30 ml ALMOX syrup for the 60 ml, both at a zero
    lead. */
-test("a near-miss inflated to a perfect score is not treated as exact", () => {
+test("an explicit CV qualifier safely separates CEFKEM CV from plain CEFKEM", () => {
   const result = suggest("CEFKEM CV -200 TAB 10S", "ALKEM-FUT");
   assert.equal(result.top.score, 1, "bonuses and the clamp do take it to 1.0");
   assert.equal(result.top.exact, false);
-  assert.equal(result.decision, "review", "which is exactly why 1.0 must not mean exact");
-  /* And the product the sheet actually names is there to be picked. */
-  assert.ok(names(result).includes("CEFKEM CV- 200 TABLETS"));
+  assert.equal(result.top.name, "CEFKEM CV- 200 TABLETS");
+  assert.equal(result.decision, "auto");
+  const plain = result.suggestions.find((item) => item.name === "CEFKEM 200 TABLETS (10'S)");
+  assert.ok(plain.blockers.includes("candidate omits formulation variant"));
 });
 
 test("an exact name is ranked above anything merely scoring 1.0, and is selected", () => {
@@ -485,6 +486,105 @@ test("meaningful +, WFI and NOVO variants map to their own catalogue records", (
   exactAuto("ALMOX-CV DRY SYRUP (30ML)", "ALKEM-FUT", "ALMOX-CV DRY SYRUP (30ML)");
   exactAuto("OFLOKEM-200 TABLETS (10S)", "ALKEM-FUT", "OFLOKEM-200 TABLETS (10S)");
   exactAuto("OFLOKEM NOVO 200 TABLETS (10'S)", "ALKEM-FUT", "OFLOKEM NOVO 200 TABLETS (10'S)");
+});
+
+test("pack arithmetic plus is noise but a plus between brand words is preserved", () => {
+  assert.equal(matching.tokenize("GLUCOSE-D(900g+100g free pet)").includes("plus"), false);
+  assert.equal(matching.tokenize("1+4 FREE").includes("plus"), false);
+  assert.equal(matching.tokenize("PAMAGIN + GEL").includes("plus"), true);
+});
+
+test("MARG safety regressions refuse flavour and formulation substitutions", () => {
+  const alox = suggest("ALOX ANTACID CARDAMOM 170ML", "TORQUE");
+  assert.equal(alox.auto, null);
+  assert.ok(alox.top.blockers.includes("flavour disagrees"));
+
+  const ors = suggest("ORS INSTA-(POW)21.8GM (40X1)", "ALKEM-NOV");
+  assert.equal(ors.decision, "review");
+  assert.ok(ors.top.blockers.includes("candidate adds flavour"));
+
+  const pantolup = suggest("PANTOLUP L CAP 10X1X10", "LUPIN");
+  assert.equal(pantolup.auto, null);
+  assert.notEqual(pantolup.top?.name, "PANTOLUP DSR CAPSULE (20x1x10C)");
+});
+
+test("MARG abbreviations select the correct CEFFOREN and PLAYGARD products", () => {
+  const cefforen = suggest("CEFFOREN 500 TAB 10X1X10", "LUPIN");
+  assert.equal(cefforen.auto?.name, "CEFFOREN 500MG (10X1X10T) MM");
+  assert.notEqual(cefforen.top.name, "CEFFOREN - CV TABLETS (10X1X10)");
+
+  const playgard = suggest("PLAYGARD [M.T] TABLET 4'S", "ALKEM-NOV");
+  assert.equal(playgard.auto?.name, "PLAYGARD MORE TIME TABLETS (4'S)");
+  assert.notEqual(playgard.top.name, "PLAYGARD 100 TABLETS (4'S)");
+});
+
+test("an approved MARG alias wins deterministically without bypassing company safety", () => {
+  const source = "ALMOX-CV WITH WFI";
+  const company = "ALKEM-FUT";
+  const [source_name_key, source_company_key] = matching.aliasKey(source, company).split("|");
+  const aliases = matching.buildAliasIndex([{
+    source_name_key, source_company_key, status: "approved",
+    canonical_product_name: "ALMOX-CV DRY SYRUP (WITH WFI) (30ML)"
+  }]);
+  const result = matching.suggestMatches(index, source, company, { aliases });
+  assert.equal(result.decision, "auto");
+  assert.equal(result.auto.name, "ALMOX-CV DRY SYRUP (WITH WFI) (30ML)");
+  assert.deepEqual(result.auto.reasons, ["approved MARG alias"]);
+
+  const refused = matching.suggestMatches(index, source, "LUPIN", { aliases });
+  assert.notEqual(refused.auto?.name, "ALMOX-CV DRY SYRUP (WITH WFI) (30ML)");
+});
+
+test("pending, rejected and stale aliases never auto-match", () => {
+  const [source_name_key, source_company_key] = matching.aliasKey("ALMOX-CV WITH WFI", "ALKEM-FUT").split("|");
+  for (const status of ["pending", "rejected"]) {
+    const aliases = matching.buildAliasIndex([{
+      source_name_key, source_company_key, status,
+      canonical_product_name: "ALMOX-CV DRY SYRUP (WITH WFI) (30ML)"
+    }]);
+    assert.equal(aliases.size, 0);
+  }
+  const stale = matching.buildAliasIndex([{
+    source_name_key, source_company_key, status: "approved", canonical_product_name: "REMOVED SKU"
+  }]);
+  const result = matching.suggestMatches(index, "ALMOX-CV WITH WFI", "ALKEM-FUT", { aliases: stale });
+  assert.equal(result.auto, null);
+});
+
+test("system learning is rechecked after matcher or catalogue changes", () => {
+  const built = matching.buildIndex([{
+    product_id: 77, source_hash: "catalogue-v2", name: "SAFE BRAND 50 TABLETS", company: "LUPIN"
+  }]);
+  const [source_name_key, source_company_key] = matching.aliasKey("SAFEBRAND 50 TAB", "LUPIN").split("|");
+  const alias = (overrides) => matching.buildAliasIndex([{
+    source_name_key, source_company_key, product_id: 77, status: "approved_system",
+    matcher_version: matching.MATCHER_VERSION, product_source_hash: "catalogue-v2", ...overrides
+  }]);
+
+  assert.equal(matching.suggestMatches(built, "SAFEBRAND 50 TAB", "LUPIN", { aliases: alias({}) }).auto?.alias, true);
+  assert.notEqual(matching.suggestMatches(built, "SAFEBRAND 50 TAB", "LUPIN", {
+    aliases: alias({ matcher_version: "older-matcher" })
+  }).auto?.alias, true);
+  assert.notEqual(matching.suggestMatches(built, "SAFEBRAND 50 TAB", "LUPIN", {
+    aliases: alias({ product_source_hash: "catalogue-v1" })
+  }).auto?.alias, true);
+});
+
+test("human approval survives matcher upgrades but not a changed product definition", () => {
+  const built = matching.buildIndex([{
+    product_id: 78, source_hash: "catalogue-v2", name: "HUMAN BRAND TABLETS", company: "LUPIN"
+  }]);
+  const [source_name_key, source_company_key] = matching.aliasKey("HUMANBRAND TAB", "LUPIN").split("|");
+  const rows = (hash) => matching.buildAliasIndex([{
+    source_name_key, source_company_key, product_id: 78, status: "approved_human",
+    matcher_version: "older-matcher", product_source_hash: hash
+  }]);
+  assert.equal(matching.suggestMatches(built, "HUMANBRAND TAB", "LUPIN", {
+    aliases: rows("catalogue-v2")
+  }).auto?.alias, true);
+  assert.notEqual(matching.suggestMatches(built, "HUMANBRAND TAB", "LUPIN", {
+    aliases: rows("catalogue-v1")
+  }).auto?.alias, true);
 });
 
 test("a rare word outweighs a common one", () => {

@@ -24,11 +24,14 @@
 
 (function (root, factory) {
   "use strict";
+
   const api = factory();
   if (typeof module === "object" && module && module.exports) module.exports = api;
   else root.SNTMatching = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
+
+  const MATCHER_VERSION = "2026-09-01.2";
 
   /* ---- thresholds ----------------------------------------------------------
      Every number the matcher leans on is named here rather than buried in the code, so the
@@ -64,6 +67,13 @@
     /* 125 mg is not 250 mg, and an injection is not a tablet. */
     DOSE_CONFLICT: 0.32,
     FORM_CONFLICT: 0.42,
+    /* A named flavour or formulation suffix is part of the medicine identity. These
+       multipliers keep an unsafe candidate visible for review when it is otherwise very
+       close, but prevent the disagreement from winning merely because it is the only row
+       under that company. */
+    FLAVOUR_CONFLICT: 0.55,
+    VARIANT_CONFLICT: 0.45,
+    SINGLE_CANDIDATE_AUTO_SCORE: 0.90,
     /* Same manufacturer is corroboration, not proof, so the nudge is small. */
     COMPANY_DIVISION_BONUS: 0.06,
     COMPANY_FAMILY_BONUS: 0.03,
@@ -144,6 +154,27 @@
   /* Common sheet/OCR spelling variants that are meaningful after correction. */
   const TOKEN_ALIASES = new Map(Object.entries({ wifi: "wfi" }));
 
+  /* Commercial suffixes and formulation qualifiers that distinguish products carrying the
+     same brand. This is intentionally conservative: disagreements block automatic matching
+     but do not prevent an operator from choosing the candidate. "MORE TIME" and the MARG
+     abbreviation "M.T" are reduced to the same token below. */
+  const VARIANT_ALIASES = new Map(Object.entries({
+    fort: "forte", forte: "forte", mt: "mt",
+    cv: "cv", dsr: "dsr", sr: "sr", cr: "cr", er: "er", xr: "xr", mr: "mr",
+    ds: "ds", dt: "dt", md: "md", od: "od", oz: "oz", tz: "tz", lb: "lb",
+    d: "d", l: "l", nf: "nf", novo: "novo", wfi: "wfi",
+    max: "max", gold: "gold"
+  }));
+
+  const FLAVOUR_ALIASES = new Map(Object.entries({
+    cardamom: "cardamom", elaichi: "cardamom", elachi: "cardamom",
+    orange: "orange", apple: "apple", guava: "guava", strawberry: "strawberry",
+    strawerry: "strawberry", mix: "mixed fruit", mixed: "mixed fruit",
+    fruit: "mixed fruit", fruite: "mixed fruit",
+    mango: "mango", lemon: "lemon", pineapple: "pineapple", cola: "cola",
+    chocolate: "chocolate", vanilla: "vanilla", banana: "banana"
+  }));
+
   /* Units that make a number mean something. A bare "10" is a pack size and proves little;
      "10 mg" is a dose and proves a great deal. */
   const UNITS = new Set(["mg", "mcg", "gm", "g", "ml", "iu", "percent"]);
@@ -165,8 +196,18 @@
      "w" and "c", neither of which means anything on its own. */
   const DECIMAL_MARK = "\u0001";
 
+  function semanticPlus(text) {
+    return text.replace(/\+/g, (_match, offset, whole) => {
+      const left = whole.slice(0, offset).match(/([a-z])\s*$/)?.[1] || "";
+      const right = whole.slice(offset + 1).match(/^\s*([a-z])/)?.[1] || "";
+      /* 900g+100g and 1+4 describe pack arithmetic. A plus between words (or a branded
+         trailing plus) distinguishes names such as PAMAGIN + GEL. */
+      return left && (right || !whole.slice(offset + 1).trim()) ? " plus " : " ";
+    });
+  }
+
   function tokenize(value) {
-    const text = String(value ?? "")
+    const text = semanticPlus(String(value ?? "")
       .normalize("NFKD")
       .toLowerCase()
       .replace(/['‘’ʼ]/g, "")
@@ -174,12 +215,16 @@
       .replace(/\./g, "")
       .split(DECIMAL_MARK).join(".")
       .replace(/%/g, " percent ")
-      .replace(/&/g, " plus ")
-      .replace(/\+/g, " plus ")
+      .replace(/&/g, " plus "))
       .replace(/[^a-z0-9.]+/g, " ");
     const raw = text.match(/\d+(?:\.\d+)?|[a-z]+/g) || [];
     const tokens = [];
-    for (const token of raw) {
+    for (let index = 0; index < raw.length; index += 1) {
+      let token = raw[index];
+      if (token === "more" && raw[index + 1] === "time") {
+        token = "mt";
+        index += 1;
+      }
       const canonical = FORM_ALIASES.get(token) || TOKEN_ALIASES.get(token) || token;
       if (NOISE_TOKENS.has(canonical)) continue;
       tokens.push(canonical);
@@ -291,6 +336,21 @@
     return company.supplied ? `${company.family}/${company.division}` : "";
   }
 
+  function aliasKey(name, companyValue) {
+    return `${normalizeName(name).compact}|${companyKey(normalizeCompany(companyValue))}`;
+  }
+
+  function buildAliasIndex(rows) {
+    const aliases = new Map();
+    (rows || []).forEach((row) => {
+      if (!String(row?.status || "").startsWith("approved")
+          || (!row.product_id && !row.canonical_product_name)) return;
+      const key = `${String(row.source_name_key || "")}|${String(row.source_company_key || "")}`;
+      if (key !== "|") aliases.set(key, row);
+    });
+    return aliases;
+  }
+
   /* The gate itself. Nothing but this decides whether a candidate is scored at all. */
   function companiesCompatible(source, candidate) {
     if (!source.supplied) return true;
@@ -349,6 +409,64 @@
     return ![...a].some((form) => families.has(formFamily(form)));
   }
 
+  /* Some masters omit the unit from a strength (ALKEM-POD 50/100). A number before the
+     dosage form is treated as identity unless it is visibly part of 10X1X10 pack arithmetic.
+     Unit-bearing strengths are harmlessly included here as well as in doseFigures. */
+  function strengthFigures(tokens) {
+    const firstForm = tokens.findIndex((token) => FORMS.has(token));
+    const limit = firstForm === -1 ? Math.min(tokens.length, 4) : firstForm;
+    const figures = new Set();
+    for (let index = 0; index < limit; index += 1) {
+      if (!/^\d+(?:\.\d+)?$/.test(tokens[index])) continue;
+      if (tokens[index - 1] === "x" || tokens[index + 1] === "x") continue;
+      figures.add(Number(tokens[index]));
+    }
+    return figures;
+  }
+
+  function strengthConflict(a, b) {
+    return Boolean(a.size && b.size && ![...a].some((value) => b.has(value)));
+  }
+
+  function canonicalSet(tokens, aliases) {
+    const values = new Set();
+    tokens.forEach((token) => {
+      const canonical = aliases.get(token);
+      if (canonical) values.add(canonical);
+    });
+    return values;
+  }
+
+  function flavourSet(tokens) {
+    return canonicalSet(tokens, FLAVOUR_ALIASES);
+  }
+
+  function variantSet(tokens) {
+    return canonicalSet(tokens, VARIANT_ALIASES);
+  }
+
+  function setsEqual(a, b) {
+    return a.size === b.size && [...a].every((value) => b.has(value));
+  }
+
+  /* Any explicit difference is review-only. In particular, a generic source may not be
+     auto-expanded into a flavoured or modified catalogue product, and a specific source may
+     not have that qualifier silently removed. */
+  function attributeConflicts(source, candidate) {
+    const blockers = [];
+    if (!setsEqual(source.flavours, candidate.flavours)) {
+      blockers.push(source.flavours.size && candidate.flavours.size
+        ? "flavour disagrees"
+        : source.flavours.size ? "candidate omits flavour" : "candidate adds flavour");
+    }
+    if (!setsEqual(source.variants, candidate.variants)) {
+      blockers.push(source.variants.size && candidate.variants.size
+        ? "formulation variant disagrees"
+        : source.variants.size ? "candidate omits formulation variant" : "candidate adds formulation variant");
+    }
+    return blockers;
+  }
+
   /* The brand: the first word that is not a number, a unit or a dosage form. */
   function firstMeaningfulToken(tokens) {
     return tokens.find((token) =>
@@ -375,7 +493,9 @@
       const entry = {
         item, name, tokens, compact, company,
         identityKey, identitySize: 1,
-        forms: formSet(tokens), doses: doseFigures(tokens), first: firstMeaningfulToken(tokens)
+        forms: formSet(tokens), doses: doseFigures(tokens), first: firstMeaningfulToken(tokens),
+        flavours: flavourSet(tokens), variants: variantSet(tokens),
+        strengths: strengthFigures(tokens)
       };
       entries.push(entry);
       if (!byIdentity.has(identityKey)) byIdentity.set(identityKey, []);
@@ -483,8 +603,16 @@
   function scoreCandidate(index, source, entry) {
     const reasons = [];
 
+    const blockers = attributeConflicts(source, entry);
+    const dosesDisagree = doseConflict(source.doses, entry.doses);
+    const formsDisagree = formConflict(source.forms, entry.forms);
+    const strengthsDisagree = strengthConflict(source.strengths, entry.strengths);
+    if (dosesDisagree) blockers.push("dose disagrees");
+    if (formsDisagree) blockers.push("dosage form disagrees");
+    if (strengthsDisagree) blockers.push("strength number disagrees");
+
     if (source.compact && source.compact === entry.compact) {
-      return { score: 1, reasons: ["exact name"], exact: true };
+      return { score: 1, reasons: ["exact name"], blockers, exact: true };
     }
 
     const tokenScore = weightedTokenScore(index, source.tokens, entry.tokens);
@@ -505,14 +633,29 @@
 
     /* The two penalties that keep this honest. 125 mg is not 250 mg however alike the rest
        of the name reads, and a brand shared with an injection does not make a tablet. */
-    if (doseConflict(source.doses, entry.doses)) {
+    if (dosesDisagree) {
       score *= THRESHOLDS.DOSE_CONFLICT;
       reasons.push("dose disagrees");
     }
-    if (formConflict(source.forms, entry.forms)) {
+    if (formsDisagree) {
       score *= THRESHOLDS.FORM_CONFLICT;
       reasons.push("dosage form disagrees");
     }
+    if (strengthsDisagree && !dosesDisagree) {
+      score *= THRESHOLDS.DOSE_CONFLICT;
+      reasons.push("strength number disagrees");
+    }
+
+    /* A generic source may still be shown all specific flavours for a person to choose;
+       it is the automatic gate, not the suggestion floor, that refuses that expansion. A
+       source that did name a flavour must rank a different/unspecified one lower. */
+    if (source.flavours.size && blockers.some((reason) => reason.includes("flavour"))) {
+      score *= THRESHOLDS.FLAVOUR_CONFLICT;
+    }
+    if (blockers.some((reason) => reason.includes("formulation variant"))) {
+      score *= THRESHOLDS.VARIANT_CONFLICT;
+    }
+    blockers.forEach((reason) => { if (!reasons.includes(reason)) reasons.push(reason); });
 
     const bonus = companyBonus(source.company, entry.company);
     if (bonus) {
@@ -520,7 +663,7 @@
       reasons.push(bonus === THRESHOLDS.COMPANY_DIVISION_BONUS ? "same division" : "same company");
     }
 
-    return { score: Math.min(1, Math.max(0, score)), reasons, exact: false };
+    return { score: Math.min(1, Math.max(0, score)), reasons, blockers, exact: false };
   }
 
   /* ---- candidate pool ------------------------------------------------------ */
@@ -575,7 +718,9 @@
     return {
       name: String(name ?? "").trim(), tokens, compact,
       company: normalizeCompany(company),
-      forms: formSet(tokens), doses: doseFigures(tokens), first: firstMeaningfulToken(tokens)
+      forms: formSet(tokens), doses: doseFigures(tokens), first: firstMeaningfulToken(tokens),
+      flavours: flavourSet(tokens), variants: variantSet(tokens),
+      strengths: strengthFigures(tokens)
     };
   }
 
@@ -587,6 +732,39 @@
       exactCount: 0, catalogueCollision: false, auto: null, decision: "none"
     };
     if (!index || !source.tokens.length) return empty;
+
+    /* An explicitly reviewed MARG mapping outranks fuzzy evidence, but it does not bypass
+       the company boundary or survive a catalogue rename silently. A stale or incompatible
+       alias simply falls through to the deterministic matcher. */
+    const approvedAlias = options?.aliases?.get(aliasKey(name, companyValue));
+    if (approvedAlias) {
+      const aliasedEntry = index.entries.find((entry) => {
+        const stableIdMatches = approvedAlias.product_id != null
+          && String(entry.item?.product_id) === String(approvedAlias.product_id);
+        const rolloutNameMatches = approvedAlias.product_id == null
+          && entry.name === approvedAlias.canonical_product_name;
+        const sameCatalogueVersion = !approvedAlias.product_source_hash
+          || !entry.item?.source_hash
+          || approvedAlias.product_source_hash === entry.item.source_hash;
+        const supportedMatcher = approvedAlias.status === "approved_human"
+          || !approvedAlias.matcher_version
+          || approvedAlias.matcher_version === MATCHER_VERSION;
+        return (stableIdMatches || rolloutNameMatches) && sameCatalogueVersion && supportedMatcher
+          && companiesCompatible(source.company, entry.company);
+      });
+      if (aliasedEntry) {
+        const aliased = {
+          name: aliasedEntry.name, item: aliasedEntry.item, company: aliasedEntry.company,
+          score: 1, reasons: ["approved MARG alias"], exact: false, alias: true, blockers: [],
+          identityKey: aliasedEntry.identityKey, identitySize: aliasedEntry.identitySize
+        };
+        return {
+          source, suggestions: [aliased], top: aliased, runnerUp: null, lead: 0,
+          exactCount: 0, catalogueCollision: false, autoBlockedReasons: [],
+          auto: aliased, decision: "auto", alias: approvedAlias
+        };
+      }
+    }
 
     /* The company gate. A manufacturer the master has never heard of leaves nothing to
        score, which is exactly the intended answer: no suggestions, sheet name retained. */
@@ -601,6 +779,7 @@
       scored.push({
         name: entry.name, item: entry.item, company: entry.company, score: result.score,
         reasons: result.reasons, exact: result.exact,
+        blockers: result.blockers, strongIdentity: source.first === entry.first,
         identityKey: entry.identityKey, identitySize: entry.identitySize
       });
     }
@@ -619,7 +798,7 @@
     /* The display limit is not a safety limit. The runner-up and lead always come from the
        complete ranked pool, otherwise limit:1 would hide the rival and manufacture a lead. */
     const runnerUp = scored[1] || null;
-    const lead = top.score - (runnerUp ? runnerUp.score : 0);
+    const lead = runnerUp ? top.score - runnerUp.score : 0;
 
     /* The whole point of the exercise. "Best" is not "safe": a top candidate its runner-up
        is breathing down the neck of is exactly the flavour/strength/pack ambiguity a person
@@ -637,8 +816,11 @@
     /* Count against the full scored pool, not the displayed slice. A caller asking for one
        suggestion must not turn a hidden second exact identity into an automatic match. */
     const uniquelyExact = top.exact && exactCount === 1;
-    const auto = uniquelyExact
-      || (top.score >= THRESHOLDS.AUTO_SCORE && lead >= THRESHOLDS.AUTO_LEAD);
+    const hasSafetyBlocker = Boolean(top.blockers?.length);
+    const competitiveAuto = runnerUp
+      ? top.score >= THRESHOLDS.AUTO_SCORE && lead >= THRESHOLDS.AUTO_LEAD
+      : top.strongIdentity && top.score >= THRESHOLDS.SINGLE_CANDIDATE_AUTO_SCORE;
+    const auto = (uniquelyExact || competitiveAuto) && !hasSafetyBlocker;
 
     /* A collision is a hard refusal even if score/lead would otherwise clear the fuzzy gate.
        All colliding catalogue records are retained, so this can never depend on master order. */
@@ -647,16 +829,21 @@
 
     return {
       source, suggestions, top, runnerUp, lead, exactCount, catalogueCollision,
+      autoBlockedReasons: top.blockers || [],
       auto: safeAuto ? top : null,
       decision: safeAuto ? "auto" : "review"
     };
   }
 
   return {
-    THRESHOLDS, FORM_ALIASES, TOKEN_ALIASES, NOISE_TOKENS, UNITS, COMPANY_ALIASES,
+    MATCHER_VERSION, THRESHOLDS, FORM_ALIASES, TOKEN_ALIASES, VARIANT_ALIASES, FLAVOUR_ALIASES,
+    NOISE_TOKENS, UNITS, COMPANY_ALIASES,
     FORM_FAMILIES, formFamily,
-    tokenize, normalizeName, normalizeCompany, companyKey, companiesCompatible, companyBonus,
-    bigrams, dice, doseFigures, doseConflict, formSet, formConflict, firstMeaningfulToken,
+    tokenize, normalizeName, normalizeCompany, companyKey, aliasKey, buildAliasIndex,
+    companiesCompatible, companyBonus,
+    bigrams, dice, doseFigures, doseConflict, strengthFigures, strengthConflict,
+    formSet, formConflict, flavourSet, variantSet,
+    attributeConflicts, firstMeaningfulToken,
     buildIndex, weightedTokenScore, scoreCandidate, prepareSource, candidatesFor, suggestMatches
   };
 });
