@@ -6,14 +6,15 @@
      a deploy problem, not a network one — but the importer is built entirely on them, and a
      page that silently imported without the company gate would be worse than one that says
      it cannot import. */
-  if (!window.SNTMatching || !window.SNTSheet) {
-    console.error("[SNT] matching.js or sheet.js did not load; the importer is disabled.");
-    window.SNT.toast("The matching module did not load — reload this page before importing.", "error");
+  if (!window.SNTMatching || !window.SNTSheet || !window.SNTPaginatedQuery) {
+    console.error("[SNT] matching.js, sheet.js or paginated-query.js did not load; the importer is disabled.");
+    window.SNT.toast("An import module did not load — reload this page before importing.", "error");
     return;
   }
   const { client, config, escapeHtml, normalise, searchable, queryTokens, matchesTokens, parseExpiry, formatExpiry,
     expiryForInput, expiryMeta, formatNumber, formatPrice, parsePrice, columnExists, photoUrl,
     websitePhoto, photoTableReady, toast } = window.SNT;
+  const { fetchAllRows } = window.SNTPaginatedQuery;
 
   const CHUNK = 100;
   const PREVIEW_ROWS = 60;
@@ -158,10 +159,18 @@
 
   async function loadMaster() {
     if (state.master.length) return;
-    const { data: catalogue, error: catalogueError } = await client.from("catalogue_products")
-      .select("id,canonical_name,company,salt,pack,source_hash")
-      .eq("active", true)
-      .order("canonical_name");
+    let catalogue;
+    let catalogueError = null;
+    try {
+      catalogue = await fetchAllRows((from, to) => client.from("catalogue_products")
+        .select("id,canonical_name,company,salt,pack,source_hash", { count: "exact" })
+        .eq("active", true)
+        .order("canonical_name")
+        .order("id")
+        .range(from, to), { key: (item) => item.id, label: "Product catalogue" });
+    } catch (error) {
+      catalogueError = error;
+    }
     if (!catalogueError && catalogue?.length) {
       state.master = catalogue.map((item) => ({
         product_id: item.id, name: item.canonical_name, company: item.company,
@@ -185,10 +194,18 @@
   }
 
   async function loadAliases() {
-    const { data, error } = await client.from("product_aliases")
-      .select("id,source_name_key,source_company_key,product_id,status,confidence,matcher_version,product_source_hash")
-      .eq("source_system", "MARG")
-      .in("status", ["approved_system", "approved_human"]);
+    let data;
+    let error = null;
+    try {
+      data = await fetchAllRows((from, to) => client.from("product_aliases")
+        .select("id,source_name_key,source_company_key,product_id,status,confidence,matcher_version,product_source_hash", { count: "exact" })
+        .eq("source_system", "MARG")
+        .in("status", ["approved_system", "approved_human"])
+        .order("id")
+        .range(from, to), { key: (item) => item.id, label: "Approved product aliases" });
+    } catch (caught) {
+      error = caught;
+    }
     if (error) {
       /* The migration is optional during a staged deployment: matching remains available,
          but it does not pretend an alias lookup happened. */
