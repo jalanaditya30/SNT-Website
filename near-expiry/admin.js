@@ -191,6 +191,7 @@
     const companies = [...new Set(state.master.map((item) => item.company).filter(Boolean))].sort();
     element("#companyNames").innerHTML = companies.map((name) => `<option value="${escapeHtml(name)}"></option>`).join("");
     buildMatchIndex();
+    element("#catalogueMeta").textContent = `${formatNumber(state.master.length)} matching products loaded.`;
   }
 
   async function loadAliases() {

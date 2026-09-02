@@ -18,7 +18,7 @@
   <script defer src="matching.js?v=c2868055"></script>
   <script defer src="sheet.js?v=2433aa35"></script>
   <script defer src="paginated-query.js?v=af5c7d95"></script>
-  <script defer src="admin.js?v=dedb19fb"></script>
+  <script defer src="admin.js?v=05c1494c"></script>
 </head>
 <body class="admin-body">
   <header class="site-header admin-topbar">
@@ -42,7 +42,7 @@
 
   <main id="adminView" class="admin-main hidden">
     <section class="admin-heading">
-      <div><h1>Catalog control</h1><p>Import the Excel master, attach the original WhatsApp photos, and publish straight to the public catalogue.</p></div>
+      <div><h1>Catalog control</h1><p>Import the Excel master, attach the original WhatsApp photos, and publish straight to the public catalogue.</p><p id="catalogueMeta">Matching catalogue loads after sign-in.</p></div>
     </section>
 
     <p id="priceNotice" class="notice hidden">Price is switched off because the <code>price</code> column does not exist yet in Supabase. Run <code>alter table public.near_expiry_items add column if not exists price numeric(10,2);</code> and reload — everything else keeps working in the meantime.</p>
