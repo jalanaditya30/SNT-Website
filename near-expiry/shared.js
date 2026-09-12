@@ -264,12 +264,22 @@
 
   const photoTable = { files: [], exact: {}, loose: {} };
 
-  /* Must stay in step with exact_key() in tools/build-photo-map.py: slashes become
-     the hyphen the photos were saved with, the rest of what a filename cannot hold
-     is dropped, and runs of whitespace collapse. Bracketed pack text stays, so the
-     30 ml and 60 ml bottles of a syrup keep their own photos. */
+  /* Must stay in step with exact_key() in tools/build-photo-map.py, and with
+     photo_key() in convert.py / sanitizePhotoName() in search.html / clean() in
+     photo-namer.html. What a filename cannot hold becomes a SPACE - that is what
+     photo-namer.html actually writes, not the hyphen this once assumed -
+     apostrophes are dropped, runs of whitespace collapse and trailing dots go.
+     Bracketed pack text stays, so the 30 ml and 60 ml bottles of a syrup keep
+     their own photos. Change one, change all five. */
   function photoKey(name) {
-    return String(name ?? "").toLowerCase().replace(/[/\\]/g, "-").replace(/[:*?"<>|]/g, "").replace(/\s+/g, " ").trim();
+    return String(name ?? "")
+      .normalize("NFKC")
+      .replace(/[/\\:*?"<>|]/g, " ")
+      .replace(/['\u2019\u2018`\u00B4]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/[.\s]+$/, "")
+      .toLowerCase();
   }
 
   function websitePhoto(name) {
