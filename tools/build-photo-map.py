@@ -23,6 +23,7 @@ import json
 import pathlib
 import re
 import sys
+import unicodedata
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "data.js"
@@ -47,18 +48,24 @@ def read_photo_map(text):
 
 
 def exact_key(name):
-    """Product name reduced to what a filename can hold, on both sides.
+    """Canonical key pairing a product name with its photo filename.
 
-    search.html's sanitizePhotoName simply deletes the characters Windows forbids,
-    which loses a match whenever whoever saved the photo substituted instead of
-    deleting - "125MG/5ML" was filed as "125MG-5ML", and one name carries a double
-    space. Slashes become the hyphen they were saved as, runs of whitespace
-    collapse, and the rest is dropped. Bracketed pack text is deliberately kept, so
-    the 30 ml and 60 ml bottles still key apart.
+    MUST stay identical to photo_key() in convert.py, sanitizePhotoName() in
+    search.html, clean() in photo-namer.html and photoKey() in
+    near-expiry/shared.js. Windows forbids  / \\ : * ? " < > |  in filenames, so
+    photo-namer.html writes them as SPACES; apostrophes are dropped, whitespace
+    collapses and trailing dots go. Bracketed pack text is deliberately kept, so
+    the 30 ml and 60 ml bottles still key apart. Change one, change all five.
+
+    PHOTO_MAP from convert.py is already keyed this way, so applying this to its
+    keys is a no-op - it stays here because the near-expiry pages key their own
+    product names through the same function.
     """
-    key = re.sub(r"[/\\]", "-", str(name or "").lower())
-    key = re.sub(r'[:*?"<>|]', "", key)
-    return re.sub(r"\s+", " ", key).strip()
+    key = unicodedata.normalize("NFKC", str(name or ""))
+    key = re.sub(r'[/\\:*?"<>|]', " ", key)
+    key = re.sub(r"['\u2019\u2018`\u00b4]", "", key)
+    key = re.sub(r"\s+", " ", key).strip()
+    return re.sub(r"[.\s]+$", "", key).lower()
 
 
 def loose_key(name):
