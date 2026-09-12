@@ -1411,15 +1411,39 @@ function buildTabs() {
 /* ══════════════════════════════════════════════════════
    PHOTO HELPERS
 ══════════════════════════════════════════════════════ */
+/* Canonical key pairing a product with its photo file.
+   MUST stay identical to photo_key() in convert.py, clean() in
+   photo-namer.html, exact_key() in tools/build-photo-map.py and photoKey()
+   in near-expiry/shared.js. Windows forbids  / \ : * ? " < > |  in filenames,
+   so those become SPACES (not nothing, and not hyphens), apostrophes are
+   dropped, whitespace collapses and trailing dots go — exactly what
+   photo-namer.html writes. Change one, change all five. */
 function sanitizePhotoName(name) {
-  return (name || '').replace(/[/\\:*?"<>|]/g, '').trim().toLowerCase();
+  return (name == null ? '' : String(name))
+    .normalize('NFKC')
+    .replace(/[/\\:*?"<>|]/g, ' ')
+    .replace(/['\u2019\u2018`\u00B4]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[.\s]+$/, '')
+    .toLowerCase();
 }
-function getPhotoFile(productName) {
+/* Accepts a product name or a whole catalogue row. Rows carry a `photo` field
+   written by convert.py; the PHOTO_MAP lookup is the fallback. */
+function getPhotoFile(product) {
+  if (product && typeof product === 'object') {
+    if (product.photo) return product.photo;
+    product = product.product;
+  }
   if (typeof PHOTO_MAP === 'undefined') return null;
-  return PHOTO_MAP[sanitizePhotoName(productName)] || null;
+  return PHOTO_MAP[sanitizePhotoName(product)] || null;
 }
-function hasPhoto(productName) {
-  return getPhotoFile(productName) !== null;
+function hasPhoto(product) {
+  return getPhotoFile(product) !== null;
+}
+/* Photo filenames carry spaces, %, & and + — encode before using as a URL. */
+function photoUrl(filename) {
+  return 'Photos/' + encodeURIComponent(filename);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1504,7 +1528,7 @@ function render() {
     const mrp  = p.mrp        != null ? fmtN(p.mrp)        : '—';
     const box  = p.inBoxes    != null ? fmtN(p.inBoxes)    : '—';
     const ship = p.shipperQty != null ? fmtN(p.shipperQty) : '—';
-    const cam  = hasPhoto(p.product)  ? `<span class="photo-dot" title="Photo available">📷</span>` : '';
+    const cam  = hasPhoto(p)  ? `<span class="photo-dot" title="Photo available">📷</span>` : '';
     const qty  = CART[p.sr] || 0;
     const inCartCls = qty > 0 ? ' in-cart' : '';
     const addCell = qty > 0
@@ -1680,20 +1704,28 @@ function loadModalPhoto(productName) {
   panel.classList.remove('has-photo');
   lbSrc = '';
 
-  const safeName = productName.replace(/[/\\:*?"<>|]/g, '').trim();
+  /* The filename photo-namer.html would give this product. */
+  const safeName = String(productName || '')
+    .normalize('NFKC')
+    .replace(/[/\\:*?"<>|]/g, ' ')
+    .replace(/['\u2019\u2018`\u00B4]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[.\s]+$/, '');
   hint.textContent = `${safeName}.jpg`;
 
   const knownFile = getPhotoFile(productName);
   if (knownFile) {
-    applyPhoto(`Photos/${knownFile}`, productName);
+    applyPhoto(photoUrl(knownFile), productName);
     return;
   }
 
+  /* Fallback for a photo dropped in after the last convert.py run. */
   const exts = ['jpg', 'jpeg', 'png', 'webp'];
   let i = 0;
   function next() {
     if (i >= exts.length) return;
-    const src = `Photos/${safeName}.${exts[i++]}`;
+    const src = photoUrl(`${safeName}.${exts[i++]}`);
     const probe = new Image();
     probe.onload  = () => applyPhoto(src, productName);
     probe.onerror = next;
@@ -2058,7 +2090,14 @@ function buildOrderText() {
   const norm = s => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
   let lineNo = 0;
-  Object.keys(byCo).sort().forEach(co => {
+  /* Same order as the tabs: the order the companies appear in Master_File.xlsx. */
+  const coOrder = (CATALOGUE_META.companies || []);
+  Object.keys(byCo)
+    .sort((a, b) => {
+      const ia = coOrder.indexOf(a), ib = coOrder.indexOf(b);
+      return (ia < 0 ? 1e9 : ia) - (ib < 0 ? 1e9 : ib) || a.localeCompare(b);
+    })
+    .forEach(co => {
     lines.push(`*${co}*`);
     lines.push('');
     byCo[co].forEach(({p, qty}) => {
