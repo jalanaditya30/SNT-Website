@@ -12,10 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Verify database activity on both projects
+      - name: Verify SNT database activity
         shell: bash
         env:
-          MR_OS_KEY: sb_publishable_zgHxLM-sL0-hF8BKFDrw-A_A3pPAS_-
           SNT_KEY: sb_publishable_nbPPdoNse5zY7_pr7HFxQQ_7jBaoKO0
         run: |
           set -Eeuo pipefail
@@ -35,6 +34,5 @@ jobs:
               failed=1
             fi
           }
-          ping "MR OS" "vapkcgxyznykskfyjyvq" "$MR_OS_KEY"
           ping "SNT Project" "sfrfjznzlrkofjddfzfh" "$SNT_KEY"
           exit "$failed"
