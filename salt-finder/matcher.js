@@ -352,7 +352,7 @@
   /* Multi-word names a single garbled word may still stand for. */
   const SINGLE_OK = /^(folic acid|clavulanic acid|mefenamic acid|tranexamic acid|ursodeoxycholic acid|salicylic acid|fusidic acid|valproic acid)$/;
 
-  function readSaltsFromText(index, rawText) {
+  function readSaltsFromText(index, rawText, ocrWords) {
     // Drop colouring/manufacturer lines, and "(as ... pellets)" asides, before reading.
     const lines = String(rawText || '').split(/\n/).map(l => l
       .replace(/\b(colou?rs?|flavou?rs?|excipients?|preservatives?|mfd|manufactured|marketed|mkt)\b.*$/i, ' ')
@@ -439,6 +439,8 @@
         fam.push(b);
       }
       if (!fam.length) continue;
+      // A salt name printed on the box ("Loratadine") is not our brand ("Lortadin").
+      if (!fam.includes(w) && index.salts.some(s => s.core.length >= 6 && Math.abs(s.core.length - w.length) <= 3 && sim(s.core.replace(/ /g, ''), w) >= 0.8)) continue;
       fam.sort((x, y) => (y === w) - (x === w) || x.length - y.length);
       const key = [...fam].sort().join('|');
       if (seenBrand.has(key)) continue;
@@ -474,7 +476,14 @@
         brandHits.push({ brand: b, exact: fam.includes(w), scores });
       }
     }
-    return { salts: out, brands: brandHits };
+    // The biggest print on the box: brand names live there.
+    let big = [];
+    if (ocrWords && ocrWords.length) {
+      const ok = ocrWords.filter(w => w.conf >= 50 && /[a-z]{3}/i.test(w.text));
+      const top = ok.reduce((m, w) => Math.max(m, w.h), 0);
+      big = ok.filter(w => w.h >= 0.55 * top).map(w => clean(w.text).replace(/[^a-z0-9]/g, '')).filter(w => w.length >= 4);
+    }
+    return { salts: out, brands: brandHits, big, words: [...wordSet], text };
   }
 
   function saltAgrees(a, b) {
@@ -498,6 +507,13 @@
         });
         return { from: 'brand', salts: out, brand };
       }
+    }
+    if (found.other) {
+      const out = found.other.salts.map(b => {
+        const r = salts.find(s => s.strength && saltAgrees(s.core, b.core));
+        return r ? { ...b, strength: r.strength } : b;
+      });
+      return { from: 'other', salts: out, other: found.other };
     }
     if (salts.length) return { from: 'photo', salts };
     return null;
@@ -534,7 +550,7 @@
   /* Combine several reads of the same photo. A loose guess must turn up in two reads to stay;
      a salt that is just part of another one read alongside it is dropped. */
   const SHARED_OK = new Set(['chloride', 'hydroxide', 'carbonate', 'oxide', 'acid', 'oil', 'extract', 'phosphate', 'citrate', 'sulphate', 'acetate', 'gluconate', 'lactate', 'vitamin', 'calcium', 'magnesium', 'sodium', 'potassium', 'zinc', 'ferrous']);
-  function mergeReads(reads, index) {
+  function mergeReads(reads, index, brandDB) {
     const byCore = new Map(), brandLists = new Map(), exact = new Map();
     for (const r of reads) {
       for (const s of r.salts) {
@@ -564,10 +580,76 @@
       const r = rankBrand(b, lists, salts);
       return r && { ...r, exact: exact.get(b), seen: lists.length };
     }).filter(Boolean).sort((a, b) => b.exact - a.exact || b.seen - a.seen || b.fit - a.fit).slice(0, 3);
-    return { salts, brands };
+    let other = null;
+    if (!brands.length && brandDB && index) {
+      const big = [...new Set(reads.flatMap(r => r.big || []))];
+      const words = [...new Set(reads.flatMap(r => r.words || []))];
+      other = findCompetitor(brandDB, index, big, words, salts);
+    }
+    return { salts, brands, other };
   }
 
-  const api = { photoQuery, saltAgrees, mergeReads, parseComposition, buildIndex, suggest, findProducts, readSaltsFromText, parseStrengthInput, strengthText, saltScore, coreOf, cleanName };
+  /* ── Brands we do not carry ─────────────────────────
+     A public list of Indian medicines (brand → composition), loaded only when a photo is
+     scanned. Only the biggest words on the box are tried, so small print cannot pick a brand. */
+  const BOX_WORDS = new Set(['tablets', 'tablet', 'capsules', 'capsule', 'composition', 'contains', 'each', 'store', 'protect', 'light', 'keep', 'reach', 'children', 'dosage', 'directed', 'physician', 'schedule', 'prescription', 'drug', 'warning', 'batch', 'expiry', 'price', 'taxes', 'retail', 'film', 'coated', 'uncoated', 'dispersible', 'sustained', 'release', 'oral', 'suspension', 'syrup', 'cream', 'injection', 'drops', 'strip', 'blister', 'pharma', 'limited', 'india', 'paediatric', 'pediatric', 'adult', 'sugar', 'free', 'flavour', 'orange', 'mango', 'strawberry', 'mint', 'plus', 'forte', 'junior', 'kids', 'advance', 'extra', 'active', 'relief', 'pain', 'cold', 'cough', 'fever', 'gold', 'care', 'health', 'life', 'cure', 'plus']);
+  function prepareBrandDB(raw) {
+    const keys = Object.keys(raw.b);
+    const byLen = new Map();
+    for (const k of keys) { const kk = k[0] + k.length; if (!byLen.has(kk)) byLen.set(kk, []); byLen.get(kk).push(k); }
+    return { raw, byLen };
+  }
+  function findCompetitor(db, index, big, words, salts) {
+    if (!db || !big.length) return null;
+    const wordSet = new Set(words);
+    const ownSalt = new Set(index.salts.map(s => s.core));
+    const tried = new Set(), hits = [];
+    for (const w of big) {
+      // Five letters at least, and never a piece of a salt name ("profen" in ibuprofen).
+      if (tried.has(w) || w.length < 4 || BOX_WORDS.has(w) || [...ownSalt].some(c => c.length > w.length && c.replace(/ /g, '').includes(w)) || OCR_STOP.has(w) || COMPANY_WORDS.has(w) || ownSalt.has(w) || /^\d/.test(w)) continue;
+      tried.add(w);
+      const cands = [];
+      if (db.raw.b[w] && w.length >= 4) cands.push({ key: w, exact: true });
+      if (w.length >= 7) for (const L of [w.length - 1, w.length, w.length + 1])
+        for (const k of db.byLen.get(w[0] + L) || []) if (k !== w && sim(k, w) >= 0.88) cands.push({ key: k, exact: false });
+      for (const c of cands) {
+        for (const [rest, ci, mi] of db.raw.b[c.key]) {
+          const comp = db.raw.c[ci];
+          const parsed = parseComposition(comp);
+          if (!parsed.length) continue;
+          let fit = c.exact ? 2 : 1;
+          for (const t of rest.split(' ').filter(Boolean)) {
+            if (wordSet.has(t)) fit += /\d/.test(t) ? 2 : 1;
+            else { const n = t.match(/^(\d+)(mg|ml|g)$/); if (n && wordSet.has(n[1])) fit += 2; else fit -= 0.5; }
+          }
+          // Salts read off the box must not contradict the brand's composition.
+          if (salts.length) {
+            const agree = salts.filter(s => parsed.some(p => saltAgrees(s.core, p.core))).length;
+            // Every salt read off the box must be in the brand's composition.
+            if (agree < salts.length) continue;
+            fit += agree * 2;
+            for (const s of salts) {
+              if (!s.strength) continue;
+              const p = parsed.find(p => saltAgrees(s.core, p.core));
+              if (p && p.strength && p.strength.unit === s.strength.unit) fit += Math.abs(p.strength.value - s.strength.value) < 1e-6 ? 2 : -3;
+            }
+          }
+          // A short brand word must be backed by something else on the box: four letters need a
+          // three-digit strength beside it ("DOLO 650"), five or six letters a matching detail.
+          if (w.length === 4 && !rest.split(' ').some(t => /^\d{3,}/.test(t) && (wordSet.has(t) || wordSet.has(t.replace(/\D+$/, ''))))) continue;
+          if (w.length <= 6 && fit < (c.exact ? 3 : 4)) continue;
+          hits.push({ name: (c.key + ' ' + rest).trim(), maker: db.raw.m[mi], composition: comp, salts: parsed, fit, exact: c.exact });
+        }
+      }
+    }
+    if (!hits.length) return null;
+    hits.sort((a, b) => b.fit - a.fit || a.name.length - b.name.length);
+    const best = hits[0];
+    if (best.fit < (best.exact ? 2 : 3)) return null;
+    return best;
+  }
+
+  const api = { prepareBrandDB, findCompetitor, photoQuery, saltAgrees, mergeReads, parseComposition, buildIndex, suggest, findProducts, readSaltsFromText, parseStrengthInput, strengthText, saltScore, coreOf, cleanName };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.SaltMatcher = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -65,3 +65,15 @@ test('strength on the box beats the brand pack, and brand spellings are one fami
   const q = M.photoQuery(m);
   assert.deepStrictEqual(q.salts.map(s => s.core + ' ' + M.strengthText(s.strength)), ['cefixime 200 mg']);
 });
+
+test('another company\'s brand in big print gives its composition (Dolo 650)', () => {
+  const db = M.prepareBrandDB(JSON.parse(fs.readFileSync(path.join(__dirname, '../brands.json'))));
+  const r = M.readSaltsFromText(idx, 'DOLO 650\nParacetamol Tablets IP', [{ text: 'DOLO', h: 60, conf: 60 }, { text: '650', h: 60, conf: 95 }, { text: 'Paracetamol', h: 14, conf: 80 }]);
+  const m = M.mergeReads([r], idx, db);
+  const q = M.photoQuery(m);
+  assert.strictEqual(q.from, 'other');
+  assert.deepStrictEqual(q.salts.map(s => s.core + ' ' + M.strengthText(s.strength)), ['paracetamol 650 mg']);
+  // A short everyday word in big print is not a brand.
+  const n = M.mergeReads([M.readSaltsFromText(idx, 'NEED SP', [{ text: 'NEED', h: 60, conf: 90 }, { text: 'SP', h: 60, conf: 90 }])], idx, db);
+  assert.strictEqual(n.other, null);
+});
