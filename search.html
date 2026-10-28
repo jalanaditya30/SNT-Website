@@ -121,6 +121,17 @@ header {
   font-size:12px; color:rgba(247,243,237,.75); white-space:nowrap;
 }
 .h-pill-kbd { gap:4px; }
+.h-ai {
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap; text-decoration:none;
+  background:linear-gradient(135deg,var(--terra-1),var(--terra-2)); color:#fff;
+  border:1px solid rgba(255,255,255,.18); border-radius:8px; padding:5px 10px;
+  font-size:12px; font-weight:600; box-shadow:0 2px 8px rgba(181,74,30,.35); transition:filter .15s;
+}
+.h-ai:hover { filter:brightness(1.08); }
+.h-ai-beta {
+  font-size:9px; font-weight:700; letter-spacing:.8px; text-transform:uppercase;
+  background:rgba(255,255,255,.22); border-radius:4px; padding:1px 4px;
+}
 .h-pill strong { color:var(--terra-3); font-family:'JetBrains Mono',monospace; font-size:12.5px; }
 .h-dot { width:7px; height:7px; border-radius:50%; background:#4ade80; flex-shrink:0;
   box-shadow:0 0 0 2px rgba(74,222,128,.25); animation:hpulse 2.5s ease-in-out infinite; }
@@ -891,6 +902,16 @@ td.c-pts.pts-locked:hover { background:var(--terra-xlt); color:var(--terra-2); }
   .logo-divider { width:18px; margin:3px 0 2px; }
   .logo-sub { font-size:8.5px; letter-spacing:1.4px; }
   .header-right .h-pill { display:none; }
+  .h-ai { padding:6px 8px; font-size:11.5px; }
+  .h-ai-beta, .h-ai-long, .h-home-txt { display:none; }
+  .h-home { padding:6px 8px !important; }
+}
+@media (max-width:380px) {
+  .header-inner { gap:8px; padding:0 10px; }
+  .logo-wrap { gap:8px; }
+  .logo-title { font-size:14px; }
+  .header-right { gap:4px; }
+  .h-ai { padding:6px 7px; font-size:11px; }
   .header-right { gap:6px; }
   .h-cart { padding:6px 10px; font-size:12px; }
   .h-gear { width:34px; height:34px; }
@@ -976,11 +997,12 @@ td.c-pts.pts-locked:hover { background:var(--terra-xlt); color:var(--terra-2); }
       </div>
     </a>
     <div class="header-right">
-      <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:500;color:rgba(247,243,237,.75);text-decoration:none;white-space:nowrap;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.15)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
+      <a href="index.html" class="h-home" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:500;color:rgba(247,243,237,.75);text-decoration:none;white-space:nowrap;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.15)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Home
+        <span class="h-home-txt">Home</span>
       </a>
-      <div class="h-pill"><span class="h-dot"></span>Updated:&nbsp;<strong id="updAt">—</strong></div>
+      <a class="h-ai" href="salt-finder/" title="Find products by salt or by scanning a box">✨ AI <span class="h-ai-long">Salt </span>Search <span class="h-ai-beta">Beta</span></a>
+      <div class="h-pill"><span class="h-dot"></span>Updated&nbsp;<strong id="updAt">—</strong></div>
       <div class="h-pill"><strong id="hdTot">—</strong>&nbsp;products</div>
       <div class="h-pill h-pill-kbd">
         <kbd>Ctrl</kbd><kbd>K</kbd>&nbsp;search
@@ -1332,7 +1354,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   DATA = CATALOGUE_DATA;
 
-  document.getElementById('updAt').textContent = CATALOGUE_META.updatedAt;
+  /* Header shows just the day: "09 Oct 2026, 05:42 PM" → "9 Oct". */
+  document.getElementById('updAt').textContent =
+    String(CATALOGUE_META.updatedAt).split(',')[0].replace(/^0/, '').replace(/\s+\d{4}$/, '');
   document.getElementById('hdTot').textContent = DATA.length.toLocaleString('en-IN');
   document.getElementById('pMeta').textContent =
     `Printed ${new Date().toLocaleDateString('en-IN')} · ${DATA.length} products · Updated ${CATALOGUE_META.updatedAt}`;
