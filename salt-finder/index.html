@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XTD50DQ56S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XTD50DQ56S');
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salt Finder — Shree Narayani Traders</title>
+<meta name="description" content="Find products in the Shree Narayani Traders range by salt composition — type the salts or scan a medicine box.">
+<link rel="icon" href="../logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="../data.js"></script>
+<script src="matcher.js"></script>
+<style>
+:root {
+  --charcoal:#2f2d28; --charcoal-2:#4a4640;
+  --terra-1:#b54a1e; --terra-2:#c4622a; --terra-3:#c89a6e; --terra-lt:#f5e8dc; --terra-xlt:#faf3ec;
+  --bg:#f0ece4; --surface:#ffffff; --surface2:#faf8f5; --surface3:#f2ede5;
+  --border:#e0d8cc; --border2:#cec4b4;
+  --text:#2f2d28; --text-2:#4a4640; --text-3:#7a7268; --text-4:#a89e94;
+  --salt-bg:#fff8ee; --salt-border:#e8b87a; --salt-text:#7a4200;
+  --ok:#2f7d4f; --ok-bg:#e8f4ec; --warn:#9a5b00; --warn-bg:#fdf1dc;
+  --sh1:0 1px 3px rgba(47,45,40,.07),0 1px 2px rgba(47,45,40,.04);
+  --sh2:0 4px 14px rgba(47,45,40,.09),0 1px 4px rgba(47,45,40,.05);
+  --r:10px; --r2:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,-apple-system,sans-serif;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+a{color:inherit}
+
+/* Header */
+header{background:var(--charcoal);position:sticky;top:0;z-index:50;box-shadow:0 2px 20px rgba(0,0,0,.25)}
+.hdr{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px;min-height:64px}
+.logo{width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid rgba(200,154,110,.4);background:#f7f3ed;flex-shrink:0}
+.logo img{width:100%;height:100%;object-fit:cover;display:block}
+.brand{line-height:1.15;min-width:0}
+.brand b{font-family:'Playfair Display',Georgia,serif;font-weight:800;font-size:18px;color:#f7f3ed;display:block}
+.brand span{font-size:10px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--terra-3)}
+.hdr-link{margin-left:auto;font-size:13px;color:rgba(247,243,237,.8);text-decoration:none;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 10px;white-space:nowrap}
+.hdr-link:hover{background:rgba(255,255,255,.08)}
+
+main{max-width:980px;margin:0 auto;padding:18px 16px 60px}
+.intro h1{font-family:'Playfair Display',Georgia,serif;font-size:26px;font-weight:800;line-height:1.2}
+.intro p{color:var(--text-3);margin-top:4px;font-size:14px}
+
+.grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px}
+@media(min-width:820px){.grid{grid-template-columns:1fr 1fr}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--sh1);padding:16px}
+.card h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card h2 .n{width:22px;height:22px;border-radius:50%;background:var(--terra-lt);color:var(--terra-1);font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.card .sub{font-size:12.5px;color:var(--text-3);margin:4px 0 12px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border2);background:var(--surface);border-radius:var(--r);padding:10px 14px;font-weight:600;font-size:14px;cursor:pointer;min-height:44px}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--terra-1);border-color:var(--terra-1);color:#fff}
+.btn.primary:hover{background:var(--terra-2)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--terra-1);padding:8px 6px;min-height:36px}
+.btn:disabled{opacity:.5;cursor:default}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+.row-btns .btn{flex:1 1 140px}
+
+/* Photo */
+.shot{display:none;margin-top:12px;gap:12px;align-items:flex-start}
+.shot.show{display:flex}
+.shot-img{width:96px;height:96px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface3);overflow:hidden;flex-shrink:0;position:relative}
+.shot-img img{width:100%;height:100%;object-fit:cover;display:block}
+.shot-body{flex:1;min-width:0}
+.status{font-size:13px;color:var(--text-2)}
+.bar{height:6px;border-radius:4px;background:var(--surface3);overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--terra-1),var(--terra-3));transition:width .2s}
+.found{margin-top:10px}
+.found h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);font-weight:700;margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--salt-border);background:var(--salt-bg);color:var(--salt-text);border-radius:999px;padding:5px 6px 5px 11px;font-size:13px;font-weight:600}
+.fchip small{font-weight:500;color:var(--text-3)}
+.fchip button{border:0;background:rgba(0,0,0,.06);width:22px;height:22px;border-radius:50%;cursor:pointer;line-height:1}
+.ours{margin-top:10px;font-size:13px;background:var(--ok-bg);color:var(--ok);border-radius:var(--r);padding:8px 10px}
+.ours button{border:0;background:none;color:var(--ok);font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
+details.raw{margin-top:10px;font-size:12px;color:var(--text-3)}
+details.raw pre{white-space:pre-wrap;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:6px;max-height:180px;overflow:auto;font-family:ui-monospace,Menlo,monospace}
+.tip{font-size:12px;color:var(--text-3);margin-top:10px;line-height:1.5}
+
+/* Salt boxes */
+.salts{display:flex;flex-direction:column;gap:8px}
+.srow{display:grid;grid-template-columns:1fr 92px 36px;gap:6px;align-items:center;position:relative}
+.srow input{width:100%;border:1px solid var(--border2);background:var(--surface2);border-radius:var(--r);padding:10px 12px;font-size:15px;min-height:44px}
+.srow input:focus{outline:2px solid var(--terra-3);outline-offset:0;background:#fff}
+.srow .x{border:0;background:none;color:var(--text-4);font-size:20px;cursor:pointer;height:44px}
+.srow .x:hover{color:var(--terra-1)}
+.ac{position:absolute;left:0;right:134px;top:100%;margin-top:4px;background:#fff;border:1px solid var(--border2);border-radius:var(--r);box-shadow:var(--sh2);z-index:20;display:none;max-height:260px;overflow:auto}
+.ac.show{display:block}
+.ac button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;border:0;background:none;padding:10px 12px;font-size:14px;cursor:pointer;text-transform:capitalize}
+.ac button small{color:var(--text-4);text-transform:none;white-space:nowrap}
+.ac button.on,.ac button:hover{background:var(--terra-xlt)}
+.opts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.opts select{border:1px solid var(--border2);background:var(--surface2);border-radius:var(--r);padding:9px 10px;min-height:42px;flex:1 1 180px}
+
+/* Results */
+#results{margin-top:20px}
+.summary{font-size:14px;color:var(--text-2);margin-bottom:10px}
+.summary b{color:var(--text)}
+.tier{margin-top:16px}
+.tier-h{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tier-h h3{font-size:15px;font-weight:700}
+.tier-h .cnt{font-size:12px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--surface3);color:var(--text-2)}
+.tier-h p{font-size:12px;color:var(--text-3)}
+.tier.exact .tier-h .cnt{background:var(--ok-bg);color:var(--ok)}
+.tier.strength .tier-h .cnt{background:var(--warn-bg);color:var(--warn)}
+.list{display:grid;grid-template-columns:1fr;gap:8px}
+@media(min-width:820px){.list{grid-template-columns:1fr 1fr}}
+.pc{display:flex;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:10px;box-shadow:var(--sh1)}
+.pc .ph{width:64px;height:64px;border-radius:8px;background:var(--surface3);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--text-4);font-size:22px}
+.pc .ph img{width:100%;height:100%;object-fit:contain;background:#fff}
+.pc .bd{flex:1;min-width:0}
+.pc .nm{font-weight:700;font-size:14px;line-height:1.3}
+.pc .meta{font-size:12px;color:var(--text-3);margin-top:2px}
+.pc .meta b{color:var(--text-2);font-weight:600}
+.pc .sl{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.sc{font-size:11.5px;border-radius:6px;padding:2px 7px;background:var(--surface3);color:var(--text-3);text-transform:capitalize}
+.sc.hit{background:var(--salt-bg);color:var(--salt-text);border:1px solid var(--salt-border)}
+.sc.diff{background:var(--warn-bg);color:var(--warn);border:1px solid #efcf98}
+.pc .comp{font-size:11.5px;color:var(--text-4);margin-top:5px;line-height:1.4}
+.more-btn{margin-top:8px}
+.empty{text-align:center;color:var(--text-3);padding:28px 10px;font-size:14px}
+.note{font-size:12px;color:var(--text-4);margin-top:24px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <div class="hdr">
+    <div class="logo"><img src="../logo.png" alt="SNT"></div>
+    <div class="brand"><b>Salt Finder</b><span>Shree Narayani Traders</span></div>
+    <a class="hdr-link" href="../search.html">← Product search</a>
+  </div>
+</header>
+
+<main>
+  <div class="intro">
+    <h1>Find a product by its salts</h1>
+    <p>Scan the back of any medicine box, or type the salts, and see what we carry with the same composition.</p>
+  </div>
+
+  <div class="grid">
+    <!-- Photo -->
+    <section class="card">
+      <h2><span class="n">1</span>Scan a box</h2>
+      <p class="sub">Photograph the side where the composition is printed.</p>
+      <div class="row-btns">
+        <button class="btn primary" id="camBtn">📷 Take photo</button>
+        <button class="btn" id="upBtn">🖼️ Upload image</button>
+      </div>
+      <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
+      <input type="file" id="upIn" accept="image/*" hidden>
+
+      <div class="shot" id="shot">
+        <div class="shot-img"><img id="shotImg" alt="Your photo"></div>
+        <div class="shot-body">
+          <div class="status" id="ocrStatus">Getting ready…</div>
+          <div class="bar"><i id="ocrBar"></i></div>
+          <div class="row-btns" style="gap:6px">
+            <button class="btn ghost" id="rotBtn" disabled>↻ Rotate &amp; read again</button>
+          </div>
+        </div>
+      </div>
+      <div id="foundBox"></div>
+      <p class="tip">Tips: hold the phone flat over the box, fill the frame with the composition text, and avoid glare. The first scan downloads the reader (about 10 MB); later scans are quicker.</p>
+    </section>
+
+    <!-- Salt boxes -->
+    <section class="card">
+      <h2><span class="n">2</span>Search by salt</h2>
+      <p class="sub">Start typing a salt and pick it from the list. Strength is optional.</p>
+      <div class="salts" id="salts"></div>
+      <div class="opts">
+        <button class="btn ghost" id="addBtn">＋ Add another salt</button>
+        <select id="company" aria-label="Company"><option value="">All companies</option></select>
+      </div>
+      <div class="row-btns" style="margin-top:10px">
+        <button class="btn primary" id="findBtn">Find products</button>
+        <button class="btn" id="clearBtn">Clear</button>
+      </div>
+    </section>
+  </div>
+
+  <section id="results"></section>
+
+  <p class="note">Matching reads the compositions in our product list and allows for small spelling differences, so check the composition on each result before you order. Products without a composition on file cannot be matched.</p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  const M = window.SaltMatcher;
+  const DATA = (typeof CATALOGUE_DATA !== 'undefined') ? CATALOGUE_DATA : [];
+  const index = M.buildIndex(DATA);
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const MAX_ROWS = 6;
+
+  /* ── Companies ───────────────────────────── */
+  [...new Set(DATA.map(p => p.company))].sort().forEach(c => {
+    const o = document.createElement('option'); o.value = c; o.textContent = c; $('company').appendChild(o);
+  });
+
+  /* ── Salt rows ───────────────────────────── */
+  function addRow(salt, strength, focus) {
+    const box = $('salts');
+    if (box.children.length >= MAX_ROWS) return null;
+    const row = document.createElement('div');
+    row.className = 'srow';
+    row.innerHTML = `
+      <input class="salt" type="text" placeholder="Salt, e.g. Paracetamol" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Salt name">
+      <input class="str" type="text" placeholder="mg" inputmode="decimal" autocomplete="off" aria-label="Strength">
+      <button class="x" title="Remove" aria-label="Remove salt">×</button>
+      <div class="ac"></div>`;
+    const si = row.querySelector('.salt'), st = row.querySelector('.str'), ac = row.querySelector('.ac');
+    si.value = salt || ''; st.value = strength || '';
+    let sel = -1, opts = [];
+    function close() { ac.classList.remove('show'); sel = -1; }
+    function open() {
+      opts = M.suggest(index, si.value, 8);
+      if (!opts.length || !si.value.trim()) return close();
+      ac.innerHTML = opts.map((o, i) => `<button type="button" data-i="${i}" class="${i === sel ? 'on' : ''}">${esc(o.label)}<small>${o.count} product${o.count > 1 ? 's' : ''}</small></button>`).join('');
+      ac.classList.add('show');
+    }
+    function pick(i) {
+      if (!opts[i]) return;
+      si.value = opts[i].label; close();
+      st.focus();
+    }
+    si.addEventListener('input', () => { sel = -1; open(); });
+    si.addEventListener('focus', open);
+    si.addEventListener('blur', () => setTimeout(close, 150));
+    si.addEventListener('keydown', e => {
+      if (!ac.classList.contains('show')) { if (e.key === 'Enter') { e.preventDefault(); search(); } return; }
+      if (e.key === 'ArrowDown') { sel = Math.min(sel + 1, opts.length - 1); open(); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { sel = Math.max(sel - 1, 0); open(); e.preventDefault(); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (sel >= 0) pick(sel); else { close(); search(); } }
+      else if (e.key === 'Escape') close();
+    });
+    st.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); search(); } });
+    ac.addEventListener('mousedown', e => { const b = e.target.closest('button'); if (b) { e.preventDefault(); pick(+b.dataset.i); } });
+    row.querySelector('.x').addEventListener('click', () => {
+      if (box.children.length > 1) row.remove(); else { si.value = ''; st.value = ''; }
+      syncAdd();
+    });
+    box.appendChild(row);
+    syncAdd();
+    if (focus) si.focus();
+    return row;
+  }
+  function syncAdd() { $('addBtn').disabled = $('salts').children.length >= MAX_ROWS; }
+  function readRows() {
+    return [...$('salts').children].map(r => ({ text: r.querySelector('.salt').value.trim(), strength: r.querySelector('.str').value.trim() }))
+      .filter(q => q.text.length >= 2);
+  }
+  function setRows(list) {
+    $('salts').innerHTML = '';
+    (list.length ? list : [{}, {}]).forEach(q => addRow(q.text, q.strength));
+    if ($('salts').children.length < 2) addRow();
+  }
+
+  $('addBtn').addEventListener('click', () => addRow('', '', true));
+  $('findBtn').addEventListener('click', () => search());
+  $('company').addEventListener('change', () => { if (readRows().length) search(); });
+  $('clearBtn').addEventListener('click', () => { setRows([]); $('results').innerHTML = ''; history.replaceState(null, '', location.pathname); });
+
+  /* ── Search + results ────────────────────── */
+  const TIERS = [
+    ['exact', 'Same composition', 'Same salts and strength'],
+    ['strength', 'Same salts, different strength', 'Check the strength before suggesting'],
+    ['more', 'Has these salts plus others', 'Contains everything you asked for, and more'],
+    ['partial', 'Close matches', 'Has some of these salts'],
+  ];
+  const SHOW = 12;
+
+  function search(scroll) {
+    const q = readRows();
+    const res = $('results');
+    if (!q.length) { res.innerHTML = '<div class="empty">Type at least one salt to search.</div>'; return; }
+    const tiers = M.findProducts(index, q, { company: $('company').value });
+    const total = TIERS.reduce((n, [k]) => n + tiers[k].length, 0);
+    const qtxt = q.map(x => x.text + (x.strength ? ' ' + x.strength : '')).join(' + ');
+    let h = `<div class="summary">${total ? `<b>${total}</b> product${total > 1 ? 's' : ''} for` : 'No products found for'} <b>${esc(qtxt)}</b>${$('company').value ? ' in ' + esc($('company').value) : ''}</div>`;
+    if (!total) h += '<div class="empty">Nothing in our range has these salts. Try fewer salts, or check the spelling with the suggestions list.</div>';
+    for (const [k, title, sub] of TIERS) {
+      const rows = tiers[k];
+      if (!rows.length) continue;
+      h += `<div class="tier ${k}"><div class="tier-h"><h3>${title}</h3><span class="cnt">${rows.length}</span></div><p class="sub" style="font-size:12px;color:var(--text-3);margin:-4px 0 8px">${sub}</p>`;
+      h += `<div class="list">${rows.slice(0, SHOW).map(r => card(r, q)).join('')}</div>`;
+      if (rows.length > SHOW) h += `<button class="btn ghost more-btn" data-tier="${k}">Show all ${rows.length}</button>`;
+      h += '</div>';
+    }
+    res.innerHTML = h;
+    res.querySelectorAll('.more-btn').forEach(b => b.addEventListener('click', () => {
+      const k = b.dataset.tier;
+      b.previousElementSibling.innerHTML = tiers[k].map(r => card(r, q)).join('');
+      b.remove();
+    }));
+    // Shareable link
+    const s = q.map(x => encodeURIComponent(x.text) + (x.strength ? ':' + encodeURIComponent(x.strength) : '')).join(',');
+    history.replaceState(null, '', location.pathname + '?s=' + s + ($('company').value ? '&c=' + encodeURIComponent($('company').value) : ''));
+    if (scroll !== false && window.innerWidth < 820) res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function card(r, q) {
+    const p = r.item.p;
+    const hit = new Set(r.hits);
+    const qStr = new Map();
+    r.pairs.forEach(([n, k]) => { const st = M.parseStrengthInput(q[n] && q[n].strength); if (st) qStr.set(k, st); });
+    const chips = r.item.salts.map((s, k) => {
+      const st = s.strength ? ' ' + M.strengthText(s.strength) : '';
+      let cls = 'sc';
+      if (hit.has(k)) {
+        cls += ' hit';
+        const want = qStr.get(k);
+        if (want && s.strength && Math.abs(want.value - s.strength.value) > 1e-6) cls += ' diff';
+      }
+      return `<span class="${cls}">${esc(s.name)}${esc(st)}</span>`;
+    }).join('');
+    const photo = p.photo ? `<img loading="lazy" src="../Photos/${encodeURIComponent(p.photo)}" alt="" onerror="this.parentNode.textContent='💊'">` : '💊';
+    const price = [p.mrp ? `MRP <b>₹${esc(p.mrp)}</b>` : '', p.pts ? `PTS <b>₹${esc(p.pts)}</b>` : ''].filter(Boolean).join(' · ');
+    return `<div class="pc"><div class="ph">${photo}</div><div class="bd">
+      <div class="nm">${esc(p.product)}</div>
+      <div class="meta"><b>${esc(p.company)}</b>${p.pack ? ' · ' + esc(p.pack) : ''}${price ? ' · ' + price : ''}</div>
+      <div class="sl">${chips}</div>
+      <div class="comp">${esc(p.composition)}</div>
+    </div></div>`;
+  }
+
+  /* ── Photo reading ───────────────────────── */
+  let worker = null, workerReady = null, currentImg = null, rotation = 0, busy = false;
+
+  function loadScript(src) {
+    return new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => fail(new Error('load')); document.head.appendChild(s); });
+  }
+  function setStatus(t, pct) {
+    $('ocrStatus').textContent = t;
+    if (pct != null) $('ocrBar').style.width = Math.round(pct * 100) + '%';
+  }
+  async function getWorker() {
+    if (workerReady) return workerReady;
+    workerReady = (async () => {
+      setStatus('Downloading the reader…', 0.05);
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+      worker = await Tesseract.createWorker('eng', 1, {
+        logger: m => {
+          if (m.status === 'recognizing text') setStatus('Reading the text…', 0.4 + m.progress * 0.6);
+          else if (m.progress != null) setStatus('Getting the reader ready…', 0.05 + m.progress * 0.35);
+        }
+      });
+      return worker;
+    })();
+    workerReady.catch(() => { workerReady = null; });
+    return workerReady;
+  }
+
+  /* Phone photos are large; scale down and rotate on a canvas before reading. */
+  function prepare(img, deg, gray) {
+    const maxSide = 2000;
+    const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.round(img.naturalWidth * scale), h = Math.round(img.naturalHeight * scale);
+    const swap = deg % 180 !== 0;
+    const c = document.createElement('canvas');
+    c.width = swap ? h : w; c.height = swap ? w : h;
+    const g = c.getContext('2d');
+    g.translate(c.width / 2, c.height / 2);
+    g.rotate(deg * Math.PI / 180);
+    if (gray) g.filter = 'grayscale(1)';
+    g.drawImage(img, -w / 2, -h / 2, w, h);
+    return c;
+  }
+
+  async function readPhoto() {
+    if (!currentImg || busy) return;
+    busy = true;
+    $('rotBtn').disabled = true;
+    $('foundBox').innerHTML = '';
+    try {
+      const w = await getWorker();
+      let best = null;
+      // First pass straightens slight tilt; if it finds little, try a plain and a grey pass.
+      const passes = [{ rotateAuto: true, gray: false }, { rotateAuto: false, gray: false }, { rotateAuto: true, gray: true }];
+      for (let i = 0; i < passes.length; i++) {
+        if (i > 0) setStatus(`Trying again (${i + 1} of ${passes.length})…`, 0.4);
+        const { data } = await w.recognize(prepare(currentImg, rotation, passes[i].gray), { rotateAuto: passes[i].rotateAuto });
+        const found = M.readSaltsFromText(index, data.text);
+        if (!best || found.salts.length > best.found.salts.length) best = { found, text: data.text };
+        if (found.salts.length >= 2) break;
+      }
+      showFound(best.found, best.text);
+    } catch (e) {
+      setStatus('Could not load the reader. Check the internet connection and try again.', 0);
+    } finally {
+      busy = false;
+      $('rotBtn').disabled = false;
+    }
+  }
+
+  function showFound(found, text) {
+    const salts = found.salts;
+    setStatus(salts.length ? `Read ${salts.length} salt${salts.length > 1 ? 's' : ''} from the photo.` : 'Could not find any salts in this photo.', 1);
+    let h = '';
+    if (salts.length) {
+      h += `<div class="found"><h3>Found in photo — remove any that are wrong</h3><div class="chips" id="fchips">` +
+        salts.map((s, i) => `<span class="fchip" data-i="${i}">${esc(s.label)}${s.strength ? ` <small>${esc(M.strengthText(s.strength))}</small>` : ''}<button aria-label="Remove">×</button></span>`).join('') +
+        `</div><div class="row-btns" style="margin-top:10px"><button class="btn primary" id="useBtn">Search these salts</button></div></div>`;
+    } else {
+      h += `<p class="tip" style="color:var(--text-2)">Try a closer, sharper photo of the composition, tap “Rotate &amp; read again” if the photo is sideways, or type the salts in step 2.</p>`;
+    }
+    if (found.brands.length) {
+      h += `<div class="ours">This looks like our own product: ` + found.brands.map((b, i) =>
+        `<button data-b="${i}">${esc(b.items[0].p.product)}</button>`).join(', ') + '</div>';
+    }
+    if (text && text.trim()) h += `<details class="raw"><summary>What the camera read</summary><pre>${esc(text.trim())}</pre></details>`;
+    $('foundBox').innerHTML = h;
+    let keep = salts.slice();
+    const chipBox = $('fchips');
+    if (chipBox) chipBox.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const chip = b.parentNode; keep[+chip.dataset.i] = null; chip.remove();
+    });
+    const use = $('useBtn');
+    if (use) use.addEventListener('click', () => {
+      const list = keep.filter(Boolean).slice(0, MAX_ROWS).map(s => ({ text: s.label, strength: s.strength ? M.strengthText(s.strength) : '' }));
+      if (!list.length) return;
+      setRows(list);
+      search();
+    });
+    $('foundBox').querySelectorAll('.ours button').forEach(b => b.addEventListener('click', () => {
+      const it = found.brands[+b.dataset.b].items[0];
+      setRows(it.salts.slice(0, MAX_ROWS).map(s => ({ text: s.name, strength: s.strength ? M.strengthText(s.strength) : '' })));
+      search();
+    }));
+    // A clear read goes straight to results.
+    if (salts.length >= 2 && salts.every(s => s.score >= 0.9)) {
+      setRows(salts.slice(0, MAX_ROWS).map(s => ({ text: s.label, strength: s.strength ? M.strengthText(s.strength) : '' })));
+      search();
+    }
+  }
+
+  function takeFile(file) {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      currentImg = img; rotation = 0;
+      $('shotImg').src = url; $('shotImg').style.transform = '';
+      $('shot').classList.add('show');
+      readPhoto();
+    };
+    img.onerror = () => { $('shot').classList.add('show'); setStatus('That file could not be opened as an image.', 0); };
+    img.src = url;
+  }
+  $('camBtn').addEventListener('click', () => $('camIn').click());
+  $('upBtn').addEventListener('click', () => $('upIn').click());
+  $('camIn').addEventListener('change', e => { takeFile(e.target.files[0]); e.target.value = ''; });
+  $('upIn').addEventListener('change', e => { takeFile(e.target.files[0]); e.target.value = ''; });
+  $('rotBtn').addEventListener('click', () => {
+    rotation = (rotation + 90) % 360;
+    $('shotImg').style.transform = `rotate(${rotation}deg)`;
+    readPhoto();
+  });
+
+  /* ── Start: restore a shared search ──────── */
+  const params = new URLSearchParams(location.search);
+  if (params.get('c')) $('company').value = params.get('c');
+  const pre = (params.get('s') || '').split(',').filter(Boolean).map(x => {
+    const [t, s] = x.split(':'); return { text: decodeURIComponent(t || ''), strength: decodeURIComponent(s || '') };
+  });
+  setRows(pre);
+  if (pre.length) search(false);
+})();
+</script>
+</body>
+</html>
