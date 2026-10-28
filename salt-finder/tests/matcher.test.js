@@ -58,3 +58,10 @@ test('company names, generic words and salt names are not brands', () => {
   const m = read('ALKEM\nFor Paediatric Use\nDexamethasone Injection');
   assert.ok(!m.brands.some(b => /ALKEM PARA|DEXAMETHASONE INJECTION/.test(b.best.p.product)));
 });
+
+test('strength on the box beats the brand pack, and brand spellings are one family (Lupicef-O 200)', () => {
+  const m = read('20 x 10 Tablets / Cefixime Dispersible / Tablets IP 200 mg / LUPICEF"- 0 200 / Cefixime IP (as Trihydrate) equivlent 0 Cofime 200mg / Expiry Date: DEC.27');
+  assert.strictEqual(m.brands[0].best.p.product, 'LUPICEFF - O 200 20X10');
+  const q = M.photoQuery(m);
+  assert.deepStrictEqual(q.salts.map(s => s.core + ' ' + M.strengthText(s.strength)), ['cefixime 200 mg']);
+});

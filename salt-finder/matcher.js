@@ -105,7 +105,7 @@
 
   /* ── Composition → salts ────────────────────────────── */
   const DROP_AFTER = /\b(colou?rs?|preservatives?|flavou?rs?|excipients?)\s*:.*$/i;
-  const NOT_A_SALT = /^(water\b.*|per|excipients?|q s|qs|water|water for injection|purified water|sterile water|colou?rs?|flavou?rs?|sugar|sucrose base|base|propellant|gel|cream|in|each|ml|tablet|capsule|contains|sorbitol solution|alcohol|wfi|with)$/;
+  const NOT_A_SALT = /^(water\b.*|per|tab|tabs|cap|caps|dt|syp|inj|dry|root|leaf|oil|soap|aqua|carb|excipients?|q s|qs|water|water for injection|purified water|sterile water|colou?rs?|flavou?rs?|sugar|sucrose base|base|propellant|gel|cream|in|each|ml|tablet|capsule|contains|sorbitol solution|alcohol|wfi|with)$/;
 
   function parseComposition(comp) {
     let text = String(comp || '').normalize('NFKC').replace(DROP_AFTER, '');
@@ -429,15 +429,29 @@
     const boxForms = new Set([...wordSet].map(t => FORM_OF[t]).filter(Boolean));
     for (const w of wordSet) {
       if (w.length < 4 || OCR_STOP.has(w) || COMPANY_WORDS.has(w)) continue;
-      for (const [b, its] of index.brands) {
-        if (seenBrand.has(b) || COMPANY_WORDS.has(b)) continue;
+      // Every catalogue brand spelled like this word is one family: the box says LUPICEF,
+      // the list has both LUPICEF and LUPICEFF.
+      const fam = [];
+      for (const [b] of index.brands) {
+        if (COMPANY_WORDS.has(b)) continue;
         if (Math.min(w.length, b.length) < 6) { if (w !== b) continue; }
         else if (sim(w, b) < 0.86) continue;
-        seenBrand.add(b);
+        fam.push(b);
+      }
+      if (!fam.length) continue;
+      fam.sort((x, y) => (y === w) - (x === w) || x.length - y.length);
+      const key = [...fam].sort().join('|');
+      if (seenBrand.has(key)) continue;
+      seenBrand.add(key);
+      {
+        const b = fam[0];
+        const its = [...new Set(fam.flatMap(f => index.brands.get(f)))];
         // Score every pack of this brand on what else the box shows.
-        const near = new RegExp(b.split('').join('[\\s\\-]?') + "[\\s\\-'’®]*([a-z0-9]{1,4})\\b", 'g');
         const after = new Set(); let mm;
-        while ((mm = near.exec(text))) after.add(mm[1]);
+        for (const f of fam) {
+          const near = new RegExp(f.split('').join('[\\s\\-]?') + "[\\s\\-'’®\"]*([a-z0-9]{1,4})\\b", 'g');
+          while ((mm = near.exec(text))) after.add(mm[1] === '0' ? 'o' : mm[1]);
+        }
         const scores = its.map(it => {
           const rest = clean(it.p.product).split(/[^a-z0-9]+/).filter(t => t && t !== b && !(t.length >= 3 && b.includes(t)));
           let sc = 0, miss = 0;
@@ -457,7 +471,7 @@
           if (pf.size && boxForms.size) sc += [...pf].some(f => boxForms.has(f)) ? 1.5 : -2;
           return { it, sc: sc - 0.75 * miss };
         });
-        brandHits.push({ brand: b, exact: w === b, scores });
+        brandHits.push({ brand: b, exact: fam.includes(w), scores });
       }
     }
     return { salts: out, brands: brandHits };
@@ -476,7 +490,14 @@
     const salts = found.salts;
     if (brand && brand.best.salts.length) {
       const agree = salts.filter(s => brand.best.salts.some(b => saltAgrees(s.core, b.core))).length;
-      if (!salts.length || agree >= Math.max(1, salts.length - 1)) return { from: 'brand', salts: brand.best.salts, brand };
+      if (!salts.length || agree >= Math.max(1, salts.length - 1)) {
+        // Use the brand's salts, but a strength read off the box wins over the pack's.
+        const out = brand.best.salts.map(b => {
+          const r = salts.find(s => s.strength && saltAgrees(s.core, b.core));
+          return r ? { ...b, strength: r.strength } : b;
+        });
+        return { from: 'brand', salts: out, brand };
+      }
     }
     if (salts.length) return { from: 'photo', salts };
     return null;
@@ -495,6 +516,12 @@
       let bonus = 0;
       for (const s of sure) bonus += it.salts.some(x => saltAgrees(s.core, x.core)) ? 1.5 : -1;
       if (sure.length) for (const x of it.salts) if (!sure.some(s => saltAgrees(s.core, x.core))) bonus -= 1;
+      // A strength read off the box decides between packs: 200 mg on the box is never the 100 mg pack.
+      for (const s of sure) {
+        if (!s.strength) continue;
+        const x = it.salts.find(x => saltAgrees(s.core, x.core));
+        if (x && x.strength && x.strength.unit === s.strength.unit) bonus += Math.abs(x.strength.value - s.strength.value) < 1e-6 ? 2 : -3;
+      }
       return { it, sc: sc / n + bonus };
     }).sort((a, b) => b.sc - a.sc || a.it.p.product.length - b.it.p.product.length);
     // Short brand words ("cold", "cach") turn up by chance; trust them only with a matching pack detail.
