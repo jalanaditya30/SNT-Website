@@ -401,7 +401,7 @@ details.raw pre{white-space:pre-wrap;background:var(--surface2);border:1px solid
         reads.push(M.readSaltsFromText(index, data.text));
         texts.push(data.text.trim());
       }
-      showFound(M.mergeReads(reads), texts.filter(Boolean).join('\n\n— next read —\n\n'));
+      showFound(M.mergeReads(reads, index), texts.filter(Boolean).join('\n\n— next read —\n\n'));
     } catch (e) {
       setStatus('Could not load the reader. Check the internet connection and try again.', 0);
     } finally {
@@ -452,14 +452,11 @@ details.raw pre{white-space:pre-wrap;background:var(--surface2);border:1px solid
     });
     const useBrand = () => { if (brand && brand.best.salts.length) { setRows(rowsOf(brand.best.salts)); search(); } };
     if ($('brandBtn')) $('brandBtn').addEventListener('click', useBrand);
-    // Go straight to results when the read is trustworthy.
-    if (sure.length >= 2 && sure.length === salts.length && salts.every(s => s.score >= 0.9)) {
-      setRows(rowsOf(salts));
-      search();
-    } else if (brand && brand.best.salts.length && (!salts.length ||
-               brand.best.salts.some(b => salts.some(s => s.core === b.core)))) {
-      useBrand();
-    }
+    // Go straight to results: the recognised brand's composition when the box agrees with it,
+    // otherwise the salts read, when they read cleanly.
+    const pq = M.photoQuery(found);
+    if (pq && pq.from === 'brand') useBrand();
+    else if (pq && salts.every(s => s.score >= 0.88)) { setRows(rowsOf(salts)); search(); }
   }
 
   function takeFile(file) {

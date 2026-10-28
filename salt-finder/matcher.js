@@ -72,7 +72,7 @@
     s = s.replace(/[^a-z0-9\- ]/g, ' ').replace(/-/g, ' ');
     s = s.replace(/\b\d+(\.\d+)?\b/g, ' ');
     s = alias(s.replace(/\s+/g, ' ').trim());
-    s = s.replace(/^(each|contains|of|and|with|to|the|a)\s+/, '');
+    s = s.replace(/^(each|contains|of|and|with|to|the|a|anhydrous|dried|purified)\s+(?=[a-z]{5})/, '');
     s = s.replace(/\s+(each|and|with|of|to)$/, '');
     return s.trim();
   }
@@ -80,6 +80,7 @@
   const SAME_AS = { 'potassium clavulanate': 'clavulanic acid', 'clavulanate potassium': 'clavulanic acid', 'clavulanate': 'clavulanic acid' };
   function coreOf(name) {
     if (SAME_AS[name]) return SAME_AS[name];
+    if (/\b(clav|calv)[a-z]*\b/.test(name) && /potassium|(clav|calv)[a-z]*(nate|nic)\b/.test(name)) return 'clavulanic acid';
     const words = name.split(' ').filter(Boolean);
     if (!words.length) return '';
     if (MINERALS.has(words[0])) return words.join(' ');
@@ -163,7 +164,9 @@
     return 1 - lev(a, b) / L;
   }
   /* How closely a typed/read salt matches a catalogue salt core (0..1). */
-  function saltScore(q, core) {
+  /* strict: reading a photo. Every word must be accounted for, short names must be exact,
+     and a cheap length check skips names that cannot possibly be close. */
+  function saltScore(q, core, strict) {
     if (!q || !core) return 0;
     if (q === core) return 1;
     const qs = q.replace(/ /g, ''), cs = core.replace(/ /g, '');
@@ -172,8 +175,12 @@
     const codes = t => t.split(' ').filter(w => w.length <= 3 || /\d/.test(w)).sort().join(' ');
     if (codes(q) !== codes(core)) return 0;
     // Short names must match exactly — "zinc" must not match "zincovit".
-    if (Math.min(qs.length, cs.length) <= 4) return 0;
+    if (Math.min(qs.length, cs.length) <= (strict ? 5 : 4)) return 0;
+    if (Math.abs(qs.length - cs.length) > 0.2 * Math.max(qs.length, cs.length) + (strict ? 0 : 3)) {
+      if (strict) return 0;
+    }
     let best = sim(qs, cs);
+    if (strict) return best;
     // "levosalbutamol" vs "levosalbutamol sulphate": compare against the first word too.
     const qw = q.split(' '), cw = core.split(' ');
     if (cw.length > 1 && qw.length === 1 && cw[0].length >= 6 && !MINERALS.has(cw[0])) best = Math.max(best, sim(qs, cw[0]) - 0.02);
@@ -208,13 +215,22 @@
     salts.sort((a, b) => b.count - a.count);
     // Brand words: the first word of each product name, for spotting our own products in a photo.
     const brands = new Map();
+    const saltWords = new Set(salts.flatMap(s => [s.core, ...s.variants]).filter(c => !c.includes(' ')));
+    const addBrand = (w, it) => {
+      if (!w || w.length < 4 || !/[a-z]/.test(w) || saltWords.has(w)) return;
+      if (!brands.has(w)) brands.set(w, []);
+      if (!brands.get(w).includes(it)) brands.get(w).push(it);
+    };
     items.forEach(it => {
-      const w = clean(it.p.product).split(/[^a-z0-9]+/).filter(Boolean)[0];
-      if (w && w.length >= 4 && /[a-z]/.test(w)) {
-        if (!brands.has(w)) brands.set(w, []);
-        brands.get(w).push(it);
-      }
+      const ws = clean(it.p.product).replace(/^lupin['’]?s\s+/, '').split(/[^a-z0-9]+/).filter(Boolean);
+      addBrand(ws[0], it);
+      // "XONE CEFF" is also printed "XONECEFF": index the joined form too.
+      if (ws[0] && ws[1] && ws[0].length <= 5 && /^[a-z]{3,}$/.test(ws[1])) addBrand(ws[0] + ws[1], it);
     });
+    // Packs named "XONECEFF - S" belong with "XONE CEFF" for ranking.
+    for (const [w, its] of brands) {
+      for (const [w2, its2] of brands) if (w2 !== w && w2.replace(/\s/g, '') === w) its2.forEach(it => { if (!its.includes(it)) its.push(it); });
+    }
     return { items, salts, brands };
   }
 
@@ -322,7 +338,19 @@
   const COMPANY_WORDS = new Set(['alkem', 'lupin', 'torque', 'novita', 'ranbaxy', 'shivayur', 'silver', 'cross', 'futura', 'nexx', 'maxxio', 'novokem', 'healthcare', 'cipla', 'pharma', 'laboratories', 'limited', 'sun', 'mankind', 'cadila', 'zydus', 'abbott', 'pfizer', 'glaxo', 'intas', 'macleods', 'alembic', 'torrent', 'micro', 'labs']);
 
   /* Salts in the list that are really packaging or form words — never reported from a photo. */
-  const OCR_JUNK = /^(sodium|potassium|calcium|magnesium|titanium dioxide|sustained release|extended release|enteric coated|film coated|sugar|sucrose|lactose|starch|talc|purified talc|colloidal silicon dioxide|iron oxide|red iron oxide|yellow iron oxide|sunset yellow|tartrazine|brilliant blue|water|alcohol|ethanol|glycerin|sorbitol|methyl paraben|propyl paraben|benzyl alcohol|benzalkonium chloride|flavour|colour|paediatric|pediatric|paediatric drops|suspension|oral suspension)$/;
+  const OCR_JUNK = /^(sodium|potassium|calcium|magnesium|titanium dioxide|sustained release|extended release|enteric coated|film coated|sugar|sucrose|lactose|starch|talc|purified talc|colloidal silicon dioxide|iron oxide|red iron oxide|yellow iron oxide|sunset yellow|tartrazine|brilliant blue|water|alcohol|ethanol|glycerin|sorbitol|methyl paraben|propyl paraben|benzyl alcohol|benzalkonium chloride|flavour|colour|paediatric|pediatric|paediatric drops|suspension|oral suspension|syrupy|flavoured|flavoured syrupy|vitamins|minerals|multivitamins|reconstitute|aqueous|aqueous vehicle|sterile aqueous buffered vehicle|spores|enzyme|enzymes|shampoo|soap noodles|mouth paint|ayurvedic|honey|vaginal|aluminium|energy|preservative|preservatives|propellent|propellant|carbohydrate|carbohydrates|protein|dispersible|disersible|pain oil|elemental zinc|absolute alcohol|propylene glycol|chlorocresol|propylparaben|propyl paraben|methylparaben|sodium propyl paraben|plastic tray.*|pregnancy.*|derived.*|colour.*|.*\bkit\b.*|.*\btest\b.*|.*\bcard\b.*)$/;
+
+  /* Pack-name words that say what kind of product it is. */
+  const FORM_OF = {
+    tab: 'tab', tabs: 'tab', tablet: 'tab', tablets: 'tab', cap: 'cap', caps: 'cap', capsule: 'cap', capsules: 'cap',
+    syrup: 'syrup', syp: 'syrup', suspension: 'syrup', susp: 'syrup', sus: 'syrup', drops: 'drops', drop: 'drops',
+    cream: 'cream', ointment: 'oint', oint: 'oint', gel: 'gel', lotion: 'lotion', spray: 'spray', soap: 'soap',
+    injection: 'inj', inj: 'inj', infusion: 'inj', vial: 'inj', ampoule: 'inj', gargle: 'gargle', wash: 'wash', powder: 'powder', sachet: 'powder', shampoo: 'shampoo',
+  };
+  const PACK_WORDS = new Set(['s', 'x', 'ml', 'gm', 'gms', 'mg', 'g', 'with', 'wfi', 'alu', 'box', 'pack', 'strip', 'the', 'of', 'and', 'new', 'iv', 'i', 'v', 'pet', 'glass', 'bottle', 'loose', 'tray']);
+
+  /* Multi-word names a single garbled word may still stand for. */
+  const SINGLE_OK = /^(folic acid|clavulanic acid|mefenamic acid|tranexamic acid|ursodeoxycholic acid|salicylic acid|fusidic acid|valproic acid)$/;
 
   function readSaltsFromText(index, rawText) {
     // Drop colouring/manufacturer lines, and "(as ... pellets)" asides, before reading.
@@ -348,7 +376,7 @@
         // Only the single best salt for each stretch of text.
         let best = null;
         for (const s of saltList) {
-          const sc = Math.max(saltScore(phrase, s.core), saltScore(phrase, s.label));
+          const sc = Math.max(saltScore(phrase, s.core, true), saltScore(phrase, s.label, true));
           if (sc >= 0.8 && (!best || sc > best.sc || (sc === best.sc && s.count > best.s.count))) best = { i, n, s, sc, phrase };
         }
         if (best) cands.push(best);
@@ -358,7 +386,9 @@
           let b1 = null, b2 = 0;
           for (const s of saltList) {
             const w = s.core.split(' ')[0];
-            if (w.length < 7) continue;
+            if (w.length < 7 || s.core.includes(' ') && !SINGLE_OK.test(s.core)) continue;
+            const r = Math.min(w.length, phrase.length) / Math.max(w.length, phrase.length);
+            if (r < 0.64) continue;
             const sc = looseScore(phrase, w);
             if (!b1 || sc > b1.sc) { if (b1) b2 = Math.max(b2, b1.sc); b1 = { i, n, s, sc: sc, phrase, loose: true }; }
             else if (sc > b2) b2 = sc;
@@ -396,6 +426,7 @@
     const brandHits = [];
     const seenBrand = new Set();
     const wordSet = new Set([...words, ...text.split(/[^a-z0-9]+/).filter(Boolean)]);
+    const boxForms = new Set([...wordSet].map(t => FORM_OF[t]).filter(Boolean));
     for (const w of wordSet) {
       if (w.length < 4 || OCR_STOP.has(w) || COMPANY_WORDS.has(w)) continue;
       for (const [b, its] of index.brands) {
@@ -403,28 +434,81 @@
         if (Math.min(w.length, b.length) < 6) { if (w !== b) continue; }
         else if (sim(w, b) < 0.86) continue;
         seenBrand.add(b);
-        const scored = its.map(it => {
-          const rest = clean(it.p.product).split(/[^a-z0-9]+/).filter(t => t && t !== b);
-          let sc = 0;
+        // Score every pack of this brand on what else the box shows.
+        const near = new RegExp(b.split('').join('[\\s\\-]?') + "[\\s\\-'’®]*([a-z0-9]{1,4})\\b", 'g');
+        const after = new Set(); let mm;
+        while ((mm = near.exec(text))) after.add(mm[1]);
+        const scores = its.map(it => {
+          const rest = clean(it.p.product).split(/[^a-z0-9]+/).filter(t => t && t !== b && !(t.length >= 3 && b.includes(t)));
+          let sc = 0, miss = 0;
           for (const t of rest) {
-            if (wordSet.has(t)) sc += /\d/.test(t) ? 2 : 1;
-            else { const num = t.match(/^(\d+)(mg|ml|g)$/); if (num && wordSet.has(num[1])) sc += 2; }
+            // One- and two-letter variants (CANAZOLE-B, OFLUP-O) only count right after the brand,
+            // because stray single letters are everywhere in photo text.
+            const seen = t.length <= 2 && /^[a-z]+$/.test(t) ? after.has(t) : wordSet.has(t);
+            if (seen) sc += /^\d{1,2}$/.test(t) ? 0.5 : /\d/.test(t) ? 2 : 1;
+            else {
+              const num = t.match(/^(\d+)(mg|ml|g|gm|gms)$/);
+              if (num && wordSet.has(num[1])) sc += 2;
+              else if (/^[a-z]{1,5}$/.test(t) && !PACK_WORDS.has(t) && !FORM_OF[t]) miss++;
+            }
           }
-          return { it, sc };
-        }).sort((a, b2) => b2.sc - a.sc);
-        // Short brand words ("cold", "cach") turn up by chance; trust them only with a matching pack detail.
-        const need = b.length >= 6 ? 0 : b.length === 5 ? 1 : 2;
-        if (scored[0].sc < need) continue;
-        brandHits.push({ brand: b, items: scored.map(x => x.it), best: scored[0].it, fit: scored[0].sc, exact: w === b });
+          // Dosage form: cream vs lotion vs tablets is decisive.
+          const pf = new Set(rest.map(t => FORM_OF[t]).filter(Boolean));
+          if (pf.size && boxForms.size) sc += [...pf].some(f => boxForms.has(f)) ? 1.5 : -2;
+          return { it, sc: sc - 0.75 * miss };
+        });
+        brandHits.push({ brand: b, exact: w === b, scores });
       }
     }
-    brandHits.sort((a, b) => b.exact - a.exact || b.fit - a.fit);
-    return { salts: out, brands: brandHits.slice(0, 5) };
+    return { salts: out, brands: brandHits };
   }
 
-  /* Combine several reads of the same photo: a salt guessed loosely in two reads counts as sure. */
-  function mergeReads(reads) {
-    const byCore = new Map(), brands = new Map();
+  function saltAgrees(a, b) {
+    if (a === b || saltScore(a, b) >= MATCH_AT) return true;
+    const wa = a.split(' '), wb = b.split(' ');
+    return wa.some(w => w.length >= 5 && wb.includes(w));
+  }
+
+  /* What to search for after reading a photo. The brand's own composition wins when a brand
+     was recognised and nothing read from the box contradicts it; otherwise the salts read. */
+  function photoQuery(found) {
+    const brand = found.brands[0];
+    const salts = found.salts;
+    if (brand && brand.best.salts.length) {
+      const agree = salts.filter(s => brand.best.salts.some(b => saltAgrees(s.core, b.core))).length;
+      if (!salts.length || agree >= Math.max(1, salts.length - 1)) return { from: 'brand', salts: brand.best.salts, brand };
+    }
+    if (salts.length) return { from: 'photo', salts };
+    return null;
+  }
+
+  /* Pick the pack: what the box shows, plus agreement with the salts that were read. */
+  function rankBrand(brand, scoreLists, salts) {
+    const sum = new Map();
+    for (const list of scoreLists) for (const x of list) {
+      const p = sum.get(x.it);
+      sum.set(x.it, (p == null ? 0 : p) + x.sc);
+    }
+    const n = scoreLists.length || 1;
+    const sure = salts.filter(s => s.sure);
+    const ranked = [...sum].map(([it, sc]) => {
+      let bonus = 0;
+      for (const s of sure) bonus += it.salts.some(x => saltAgrees(s.core, x.core)) ? 1.5 : -1;
+      if (sure.length) for (const x of it.salts) if (!sure.some(s => saltAgrees(s.core, x.core))) bonus -= 1;
+      return { it, sc: sc / n + bonus };
+    }).sort((a, b) => b.sc - a.sc || a.it.p.product.length - b.it.p.product.length);
+    // Short brand words ("cold", "cach") turn up by chance; trust them only with a matching pack detail.
+    const need = brand.length >= 6 ? 0 : brand.length === 5 ? 1 : 2;
+    if (!ranked.length || ranked[0].sc < need) return null;
+    return { brand, items: ranked.map(x => x.it), best: ranked[0].it, fit: ranked[0].sc };
+  }
+
+
+  /* Combine several reads of the same photo. A loose guess must turn up in two reads to stay;
+     a salt that is just part of another one read alongside it is dropped. */
+  const SHARED_OK = new Set(['chloride', 'hydroxide', 'carbonate', 'oxide', 'acid', 'oil', 'extract', 'phosphate', 'citrate', 'sulphate', 'acetate', 'gluconate', 'lactate', 'vitamin', 'calcium', 'magnesium', 'sodium', 'potassium', 'zinc', 'ferrous']);
+  function mergeReads(reads, index) {
+    const byCore = new Map(), brandLists = new Map(), exact = new Map();
     for (const r of reads) {
       for (const s of r.salts) {
         const p = byCore.get(s.core);
@@ -432,20 +516,31 @@
         else {
           p.seen++;
           if (s.score > p.score) { p.score = s.score; p.read = s.read; }
-          p.sure = p.sure || s.sure || p.seen >= 2;
+          p.sure = p.sure || s.sure;
           if (!p.strength && s.strength) p.strength = s.strength;
         }
       }
       for (const b of r.brands) {
-        const p = brands.get(b.brand);
-        if (!p || b.fit > p.fit) brands.set(b.brand, b);
+        if (!brandLists.has(b.brand)) brandLists.set(b.brand, []);
+        brandLists.get(b.brand).push(b.scores);
+        exact.set(b.brand, exact.get(b.brand) || b.exact);
       }
     }
-    const salts = [...byCore.values()].sort((a, b) => a.pos - b.pos);
-    return { salts, brands: [...brands.values()].sort((a, b) => b.exact - a.exact || b.fit - a.fit).slice(0, 3) };
+    let salts = [...byCore.values()].filter(s => s.sure || s.seen >= 2).map(s => ({ ...s, sure: true }));
+    const count = c => { const d = index && index.salts.find(x => x.core === c); return d ? d.count : 0; };
+    salts = salts.filter(s => !salts.some(o => o !== s &&
+      o.core.split(' ').some(w => w.length >= 6 && !SHARED_OK.has(w) && s.core.split(' ').includes(w)) &&
+      (count(o.core) > count(s.core) || (count(o.core) === count(s.core) && o.core < s.core))));
+    salts = salts.filter(s => !salts.some(o => o !== s && o.core.length > s.core.length + 1 && !o.core.includes(' ') && o.core.endsWith(s.core)));
+    salts.sort((a, b) => a.pos - b.pos);
+    const brands = [...brandLists].map(([b, lists]) => {
+      const r = rankBrand(b, lists, salts);
+      return r && { ...r, exact: exact.get(b), seen: lists.length };
+    }).filter(Boolean).sort((a, b) => b.exact - a.exact || b.seen - a.seen || b.fit - a.fit).slice(0, 3);
+    return { salts, brands };
   }
 
-  const api = { mergeReads, parseComposition, buildIndex, suggest, findProducts, readSaltsFromText, parseStrengthInput, strengthText, saltScore, coreOf, cleanName };
+  const api = { photoQuery, saltAgrees, mergeReads, parseComposition, buildIndex, suggest, findProducts, readSaltsFromText, parseStrengthInput, strengthText, saltScore, coreOf, cleanName };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.SaltMatcher = api;
 })(typeof window !== 'undefined' ? window : globalThis);

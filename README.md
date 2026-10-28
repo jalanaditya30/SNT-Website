@@ -10,7 +10,7 @@ The company website, served by GitHub Pages from `main` at
 | `index.html` | Landing page. |
 | `search.html` | Product search across the full catalogue. |
 | `catalogues.html` | Company-wise product catalogues. |
-| `salt-finder/` | Find products by salt composition — type salts or scan a medicine box (photo text read in the browser, no server). Reads `data.js`; matching lives in `salt-finder/matcher.js`. |
+| `salt-finder/` | Find products by salt composition — type salts or scan a medicine box (photo text read in the browser, no server). Reads `data.js`; matching lives in `salt-finder/matcher.js`, tested with `node --test "salt-finder/tests/*.test.js"`. |
 | `near-expiry/` | Near-expiry offers catalogue and its admin. **Not linked from anywhere on this site** — see below. |
 
 ## Near-expiry
