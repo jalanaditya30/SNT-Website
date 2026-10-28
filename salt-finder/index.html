@@ -82,6 +82,8 @@ main{max-width:980px;margin:0 auto;padding:18px 16px 60px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .fchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--salt-border);background:var(--salt-bg);color:var(--salt-text);border-radius:999px;padding:5px 6px 5px 11px;font-size:13px;font-weight:600}
 .fchip small{font-weight:500;color:var(--text-3)}
+.fchip.maybe{border-style:dashed;background:#fff}
+.ours-comp{display:block;color:var(--text-2);font-size:12px;margin-top:2px}
 .fchip button{border:0;background:rgba(0,0,0,.06);width:22px;height:22px;border-radius:50%;cursor:pointer;line-height:1}
 .ours{margin-top:10px;font-size:13px;background:var(--ok-bg);color:var(--ok);border-radius:var(--r);padding:8px 10px}
 .ours button{border:0;background:none;color:var(--ok);font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
@@ -364,8 +366,9 @@ details.raw pre{white-space:pre-wrap;background:var(--surface2);border:1px solid
     return workerReady;
   }
 
-  /* Phone photos are large; scale down and rotate on a canvas before reading. */
-  function prepare(img, deg, gray) {
+  /* Phone photos are large; scale down and rotate on a canvas before reading.
+     mode 'grey' lifts faint grey print by boosting contrast. */
+  function prepare(img, deg, mode) {
     const maxSide = 2000;
     const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.round(img.naturalWidth * scale), h = Math.round(img.naturalHeight * scale);
@@ -375,7 +378,7 @@ details.raw pre{white-space:pre-wrap;background:var(--surface2);border:1px solid
     const g = c.getContext('2d');
     g.translate(c.width / 2, c.height / 2);
     g.rotate(deg * Math.PI / 180);
-    if (gray) g.filter = 'grayscale(1)';
+    if (mode === 'grey') g.filter = 'grayscale(1) contrast(1.8)';
     g.drawImage(img, -w / 2, -h / 2, w, h);
     return c;
   }
@@ -387,17 +390,18 @@ details.raw pre{white-space:pre-wrap;background:var(--surface2);border:1px solid
     $('foundBox').innerHTML = '';
     try {
       const w = await getWorker();
-      let best = null;
-      // First pass straightens slight tilt; if it finds little, try a plain and a grey pass.
-      const passes = [{ rotateAuto: true, gray: false }, { rotateAuto: false, gray: false }, { rotateAuto: true, gray: true }];
+      // Two reads of every photo (as taken, and with faint print darkened), a third only if
+      // neither found anything. Results are combined: a salt seen twice counts as sure.
+      const passes = [{ rotateAuto: true, mode: '' }, { rotateAuto: true, mode: 'grey' }, { rotateAuto: false, mode: '' }];
+      const reads = [], texts = [];
       for (let i = 0; i < passes.length; i++) {
-        if (i > 0) setStatus(`Trying again (${i + 1} of ${passes.length})…`, 0.4);
-        const { data } = await w.recognize(prepare(currentImg, rotation, passes[i].gray), { rotateAuto: passes[i].rotateAuto });
-        const found = M.readSaltsFromText(index, data.text);
-        if (!best || found.salts.length > best.found.salts.length) best = { found, text: data.text };
-        if (found.salts.length >= 2) break;
+        if (i === 2 && reads.some(r => r.salts.length || r.brands.length)) break;
+        if (i > 0) setStatus(`Reading again (${i + 1} of ${i === 2 ? 3 : 2})…`, 0.4);
+        const { data } = await w.recognize(prepare(currentImg, rotation, passes[i].mode), { rotateAuto: passes[i].rotateAuto });
+        reads.push(M.readSaltsFromText(index, data.text));
+        texts.push(data.text.trim());
       }
-      showFound(best.found, best.text);
+      showFound(M.mergeReads(reads), texts.filter(Boolean).join('\n\n— next read —\n\n'));
     } catch (e) {
       setStatus('Could not load the reader. Check the internet connection and try again.', 0);
     } finally {
@@ -406,20 +410,30 @@ details.raw pre{white-space:pre-wrap;background:var(--surface2);border:1px solid
     }
   }
 
+  const rowsOf = salts => salts.slice(0, MAX_ROWS).map(s => ({ text: s.label || s.name, strength: s.strength ? M.strengthText(s.strength) : '' }));
+
   function showFound(found, text) {
     const salts = found.salts;
-    setStatus(salts.length ? `Read ${salts.length} salt${salts.length > 1 ? 's' : ''} from the photo.` : 'Could not find any salts in this photo.', 1);
+    const brand = found.brands[0];
+    const sure = salts.filter(s => s.sure);
+    let msg;
+    if (salts.length) msg = `Read ${salts.length} salt${salts.length > 1 ? 's' : ''} from the photo.`;
+    else if (brand) msg = 'Could not read the salts, but recognised the brand.';
+    else msg = 'Could not find any salts in this photo.';
+    setStatus(msg, 1);
     let h = '';
     if (salts.length) {
       h += `<div class="found"><h3>Found in photo — remove any that are wrong</h3><div class="chips" id="fchips">` +
-        salts.map((s, i) => `<span class="fchip" data-i="${i}">${esc(s.label)}${s.strength ? ` <small>${esc(M.strengthText(s.strength))}</small>` : ''}<button aria-label="Remove">×</button></span>`).join('') +
+        salts.map((s, i) => `<span class="fchip${s.sure ? '' : ' maybe'}" data-i="${i}">${esc(s.label)}${s.sure ? '' : ' <small>(guess)</small>'}${s.strength ? ` <small>${esc(M.strengthText(s.strength))}</small>` : ''}<button aria-label="Remove">×</button></span>`).join('') +
         `</div><div class="row-btns" style="margin-top:10px"><button class="btn primary" id="useBtn">Search these salts</button></div></div>`;
-    } else {
+    } else if (!brand) {
       h += `<p class="tip" style="color:var(--text-2)">Try a closer, sharper photo of the composition, tap “Rotate &amp; read again” if the photo is sideways, or type the salts in step 2.</p>`;
     }
-    if (found.brands.length) {
-      h += `<div class="ours">This looks like our own product: ` + found.brands.map((b, i) =>
-        `<button data-b="${i}">${esc(b.items[0].p.product)}</button>`).join(', ') + '</div>';
+    if (brand) {
+      const p = brand.best.p;
+      h += `<div class="ours">Brand on the box matches our product <b>${esc(p.product)}</b>` +
+        (p.composition ? ` <span class="ours-comp">${esc(p.composition)}</span>` : '') +
+        `<div style="margin-top:6px"><button id="brandBtn">Find products with this composition</button></div></div>`;
     }
     if (text && text.trim()) h += `<details class="raw"><summary>What the camera read</summary><pre>${esc(text.trim())}</pre></details>`;
     $('foundBox').innerHTML = h;
@@ -431,20 +445,20 @@ details.raw pre{white-space:pre-wrap;background:var(--surface2);border:1px solid
     });
     const use = $('useBtn');
     if (use) use.addEventListener('click', () => {
-      const list = keep.filter(Boolean).slice(0, MAX_ROWS).map(s => ({ text: s.label, strength: s.strength ? M.strengthText(s.strength) : '' }));
+      const list = rowsOf(keep.filter(Boolean));
       if (!list.length) return;
       setRows(list);
       search();
     });
-    $('foundBox').querySelectorAll('.ours button').forEach(b => b.addEventListener('click', () => {
-      const it = found.brands[+b.dataset.b].items[0];
-      setRows(it.salts.slice(0, MAX_ROWS).map(s => ({ text: s.name, strength: s.strength ? M.strengthText(s.strength) : '' })));
+    const useBrand = () => { if (brand && brand.best.salts.length) { setRows(rowsOf(brand.best.salts)); search(); } };
+    if ($('brandBtn')) $('brandBtn').addEventListener('click', useBrand);
+    // Go straight to results when the read is trustworthy.
+    if (sure.length >= 2 && sure.length === salts.length && salts.every(s => s.score >= 0.9)) {
+      setRows(rowsOf(salts));
       search();
-    }));
-    // A clear read goes straight to results.
-    if (salts.length >= 2 && salts.every(s => s.score >= 0.9)) {
-      setRows(salts.slice(0, MAX_ROWS).map(s => ({ text: s.label, strength: s.strength ? M.strengthText(s.strength) : '' })));
-      search();
+    } else if (brand && brand.best.salts.length && (!salts.length ||
+               brand.best.salts.some(b => salts.some(s => s.core === b.core)))) {
+      useBrand();
     }
   }
 
