@@ -12,6 +12,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SNT — Shree Narayani Traders</title>
 <script src="data.js"></script>
+<script src="pdc.js"></script>
 <!-- Fonts: preconnect first, then load async so they never block render -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -194,6 +195,24 @@ kbd { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); bo
   background:var(--surface3); color:var(--text-3); transition:all .15s;
 }
 .tab.active .tab-ct { background:var(--terra-1); color:#fff; }
+
+/* PDC companies: one tab, then a company picker under it */
+.pdc-bar {
+  display:none; align-items:center; gap:10px; flex-wrap:wrap;
+  background:var(--surface2); border-bottom:1px solid var(--border);
+  padding:9px 28px; font-size:12.5px; color:var(--text-3);
+}
+.pdc-bar.show { display:flex; }
+.pdc-bar label { font-weight:600; color:var(--text-2); }
+.pdc-bar select {
+  font-family:'Inter',sans-serif; font-size:13px; color:var(--text);
+  background:var(--surface); border:1.5px solid var(--border2); border-radius:8px;
+  padding:6px 30px 6px 10px; min-width:220px; max-width:100%; cursor:pointer;
+  appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a7268' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center;
+}
+.pdc-bar select:focus { outline:none; border-color:var(--terra-2); }
 
 /* ═══════════════════════════════════════════════════════
    TOOLBAR
@@ -501,6 +520,7 @@ tbody tr:hover .photo-dot { opacity:1; }
 .pts-lock-btn:hover { background:var(--terra-1); }
 .pts-lock-cancel { display:block; margin-top:10px; font-size:12px; color:var(--text-4); cursor:pointer; }
 .pts-lock-cancel:hover { color:var(--text-2); text-decoration:underline; }
+td.c-pts.pts-na { color:var(--text-4); font-weight:600; }
 td.c-pts.pts-locked { cursor:pointer; color:var(--text-4); font-size:16px; text-align:center; }
 td.c-pts.pts-locked:hover { background:var(--terra-xlt); color:var(--terra-2); }
 .ph-pts.locked { cursor:pointer; font-size:15px; color:var(--text-3); font-weight:500; font-family:'Inter',sans-serif; }
@@ -892,7 +912,8 @@ td.c-pts.pts-locked:hover { background:var(--terra-xlt); color:var(--terra-2); }
 }
 @media (max-width:768px) {
   .header-inner { padding:0 14px; height:62px; gap:12px; }
-  .tab-bar,.toolbar { padding-left:14px; padding-right:14px; }
+  .tab-bar,.toolbar,.pdc-bar { padding-left:14px; padding-right:14px; }
+  .pdc-bar select { flex:1; min-width:0; }
   .summary { margin-left:14px; margin-right:14px; }
   .tbl-wrap { margin:14px 8px 48px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .m-kv { grid-template-columns:1fr 1fr; }
@@ -1031,6 +1052,12 @@ td.c-pts.pts-locked:hover { background:var(--terra-xlt); color:var(--terra-2); }
   <button class="tab active" data-co="" onclick="setTab(this,'')">
     All <span class="tab-ct" id="tc-all">—</span>
   </button>
+</div>
+
+<!-- ═══════ PDC COMPANY PICKER (shown with the PDC Companies tab) ═══════ -->
+<div class="pdc-bar" id="pdcBar">
+  <label for="pdcSelect">Company</label>
+  <select id="pdcSelect" onchange="setPdcCompany(this.value)"></select>
 </div>
 
 <!-- ═══════ TOOLBAR ═══════ -->
@@ -1288,6 +1315,11 @@ td.c-pts.pts-locked:hover { background:var(--terra-xlt); color:var(--terra-2); }
 let DATA = [], filtered = [];
 let sF = 'sr', sA = true;
 let qT = '', qC = '';
+/* PDC companies — supplied on demand, loaded from pdc.js. They all sit
+   under one tab (qC === PDC_TAB); qPdc narrows that tab to one company. */
+const PDC_TAB = '__pdc__';
+let PDC_COS = [];
+let qPdc = '';
 let curP = null;
 let lbSrc = '';
 
@@ -1352,7 +1384,16 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('logoImg').src = LOGO_B64;
   }
 
-  DATA = CATALOGUE_DATA;
+  DATA = CATALOGUE_DATA.slice();
+  /* PDC rows follow the catalogue: numbered on from it, so in "All" they
+     come after the stocked products and every row keeps a unique sr. */
+  if (typeof PDC_DATA !== 'undefined' && PDC_DATA.length) {
+    let next = DATA.reduce((m, d) => Math.max(m, d.sr), 0);
+    PDC_DATA.forEach(d => DATA.push(Object.assign({}, d, { sr: ++next, pdc: true })));
+    PDC_COS = (typeof PDC_META !== 'undefined' && PDC_META.companies)
+      ? PDC_META.companies.slice()
+      : [...new Set(PDC_DATA.map(d => d.company))];
+  }
 
   /* Header shows just the day: "09 Oct 2026, 05:42 PM" → "9 Oct". */
   document.getElementById('updAt').textContent =
@@ -1390,7 +1431,7 @@ window.addEventListener('DOMContentLoaded', () => {
 ══════════════════════════════════════════════════════ */
 function initCompanies() {
   const styleEl = document.createElement('style');
-  CATALOGUE_META.companies.forEach((co, i) => {
+  CATALOGUE_META.companies.concat(PDC_COS).forEach((co, i) => {
     const pal = CO_PALETTE[i % CO_PALETTE.length];
     const cls = `co-dyn-${i}`;
     CO_CLASS[co]  = cls;
@@ -1430,6 +1471,32 @@ function buildTabs() {
     btn.onclick    = () => setTab(btn, co);
     bar.appendChild(btn);
   });
+  if (PDC_COS.length) {
+    const cnt = DATA.filter(d => d.pdc).length;
+    const btn = document.createElement('button');
+    btn.className  = 'tab';
+    btn.dataset.co = PDC_TAB;
+    btn.innerHTML  = `PDC Companies <span class="tab-ct">${PDC_COS.length}</span>`;
+    btn.title      = `${cnt.toLocaleString('en-IN')} products from ${PDC_COS.length} PDC companies`;
+    btn.onclick    = () => setTab(btn, PDC_TAB);
+    bar.appendChild(btn);
+    buildPdcSelect();
+  }
+}
+/* A–Z list, so a long list of PDC companies stays easy to find in. */
+function buildPdcSelect() {
+  const sel = document.getElementById('pdcSelect');
+  const total = DATA.filter(d => d.pdc).length;
+  const opts = [`<option value="">All PDC companies (${total.toLocaleString('en-IN')})</option>`];
+  PDC_COS.slice().sort((a, b) => a.localeCompare(b)).forEach(co => {
+    const n = DATA.filter(d => d.pdc && d.company === co).length;
+    opts.push(`<option value="${esc(co)}">${esc(co)} (${n.toLocaleString('en-IN')})</option>`);
+  });
+  sel.innerHTML = opts.join('');
+}
+function setPdcCompany(co) {
+  qPdc = co; curPage = 0;
+  render();
 }
 
 /* ══════════════════════════════════════════════════════
@@ -1476,7 +1543,10 @@ function photoUrl(filename) {
 function applyFilters() {
   const q = qT.trim().toLowerCase();
   filtered = DATA.filter(p => {
-    if (qC && p.company !== qC) return false;
+    if (qC === PDC_TAB) {
+      if (!p.pdc) return false;
+      if (qPdc && p.company !== qPdc) return false;
+    } else if (qC && p.company !== qC) return false;
     if (!q) return true;
     return (
       p.product.toLowerCase().includes(q) ||
@@ -1548,7 +1618,8 @@ function render() {
   tmp.innerHTML = slice.map(p => {
     const cls  = CO_CLASS[p.company]  || 'co-dyn-0';
     const sh   = CO_SHORT[p.company]  || p.company;
-    const pts  = ptsUnlocked ? (p.pts != null ? fmtN(p.pts) : '—') : '🔒';
+    const ptsOpen = ptsUnlocked || p.pdc;   // PDC rates are NA, nothing to lock
+    const pts  = p.pdc ? 'NA' : ptsUnlocked ? (p.pts != null ? fmtN(p.pts) : '—') : '🔒';
     const mrp  = p.mrp        != null ? fmtN(p.mrp)        : '—';
     const box  = p.inBoxes    != null ? fmtN(p.inBoxes)    : '—';
     const ship = p.shipperQty != null ? fmtN(p.shipperQty) : '—';
@@ -1575,7 +1646,7 @@ function render() {
       <td class="c-prod"><div class="prod-main">${q ? hi(p.product,q) : esc(p.product)}${cam}</div>${meta}</td>
       <td class="c-co col-co"><span class="co-badge ${cls}">${esc(sh)}</span></td>
       <td class="c-pack col-pack"><span class="pack-tag">${q ? hi(p.pack,q) : esc(p.pack)}</span></td>
-      <td class="c-pts${ptsUnlocked ? '' : ' pts-locked'}" ${ptsUnlocked ? '' : 'onclick="event.stopPropagation();openPtsLock()"'}>${pts}</td>
+      <td class="c-pts${p.pdc ? ' pts-na' : ptsOpen ? '' : ' pts-locked'}" ${ptsOpen ? '' : 'onclick="event.stopPropagation();openPtsLock()"'}>${pts}</td>
       <td class="c-mrp col-mrp">${mrp}</td>
       <td class="c-num col-inbox">${box}</td>
       <td class="c-num col-ship">${ship}</td>
@@ -1605,7 +1676,15 @@ function render() {
 function updateSummary() {
   const all = filtered.length;
   let h = '';
-  CATALOGUE_META.companies.forEach((co, i) => {
+  /* In the PDC tab the strip lists the PDC companies in view (there can be
+     many, so only those with results); elsewhere it lists the stocked
+     divisions plus one PDC total. */
+  const inPdc = qC === PDC_TAB;
+  const strip = inPdc
+    ? PDC_COS.filter(co => filtered.some(d => d.company === co))
+    : CATALOGUE_META.companies;
+  const MAX_PDC_PILLS = 12;
+  strip.slice(0, inPdc ? MAX_PDC_PILLS : strip.length).forEach((co, i) => {
     const cnt = filtered.filter(d => d.company === co).length;
     const col = CO_COLORS[co] || { bg:'#f0ece4', text:'#4a4640' };
     const sh  = CO_SHORT[co]  || co;
@@ -1615,6 +1694,17 @@ function updateSummary() {
       <span style="color:${col.text};font-size:12px">${esc(sh)}</span>
     </div>`;
   });
+  if (inPdc && strip.length > MAX_PDC_PILLS) {
+    h += `<div class="s-sep"></div><span style="font-size:12px;color:var(--text-3)">+${strip.length - MAX_PDC_PILLS} more</span>`;
+  }
+  if (PDC_COS.length && !inPdc) {
+    const cnt = filtered.filter(d => d.pdc).length;
+    h += '<div class="s-sep"></div>';
+    h += `<div class="sco" style="background:var(--surface3)">
+      <span class="sco-num" style="color:var(--text-2)">${cnt.toLocaleString('en-IN')}</span>
+      <span style="color:var(--text-2);font-size:12px">PDC</span>
+    </div>`;
+  }
 
   const q = qT.trim();
   h += `<div class="s-right"><span>${q||qC
@@ -1642,7 +1732,12 @@ function openModal(sr) {
 
   // Pricing hero
   const mPtsEl = document.getElementById('mPTS');
-  if (ptsUnlocked) {
+  mPtsEl.style.color = p.pdc ? 'var(--text-4)' : '';
+  if (p.pdc) {
+    mPtsEl.textContent = 'NA';
+    mPtsEl.classList.remove('locked');
+    mPtsEl.onclick = null;
+  } else if (ptsUnlocked) {
     mPtsEl.textContent = p.pts != null ? `₹${fmtN(p.pts)}` : '—';
     mPtsEl.classList.remove('locked');
     mPtsEl.onclick = null;
@@ -1738,7 +1833,7 @@ function loadModalPhoto(productName) {
     .replace(/[.\s]+$/, '');
   hint.textContent = `${safeName}.jpg`;
 
-  const knownFile = getPhotoFile(productName);
+  const knownFile = getPhotoFile(curP && curP.product === productName ? curP : productName);
   if (knownFile) {
     applyPhoto(photoUrl(knownFile), productName);
     return;
@@ -1879,7 +1974,13 @@ function setTab(btn, co) {
   qC = co; curPage = 0;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
+  showPdcBar(co === PDC_TAB);
   render();
+}
+function showPdcBar(on) {
+  const bar = document.getElementById('pdcBar');
+  bar.classList.toggle('show', on);
+  if (!on) { qPdc = ''; document.getElementById('pdcSelect').value = ''; }
 }
 function clearPills() {
   document.querySelectorAll('.pill').forEach(p => p.classList.remove('on'));
@@ -1896,6 +1997,7 @@ function resetAll() {
   clearPills();
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelector('.tab[data-co=""]').classList.add('active');
+  showPdcBar(false);
   refreshArrows(); render();
 }
 function sortBy(f) {
@@ -2122,7 +2224,7 @@ function buildOrderText() {
       return (ia < 0 ? 1e9 : ia) - (ib < 0 ? 1e9 : ib) || a.localeCompare(b);
     })
     .forEach(co => {
-    lines.push(`*${co}*`);
+    lines.push(byCo[co][0].p.pdc ? `*${co}* (PDC)` : `*${co}*`);
     lines.push('');
     byCo[co].forEach(({p, qty}) => {
       lineNo++;
@@ -2232,7 +2334,7 @@ function submitPtsPassword() {
     render();
     if (curP) {
       const mPtsEl = document.getElementById('mPTS');
-      mPtsEl.textContent = curP.pts != null ? `₹${fmtN(curP.pts)}` : '—';
+      mPtsEl.textContent = curP.pdc ? 'NA' : curP.pts != null ? `₹${fmtN(curP.pts)}` : '—';
       mPtsEl.classList.remove('locked');
       mPtsEl.onclick = null;
     }
