@@ -17,6 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="../data.js"></script>
+<script src="../pdc.js"></script>
 <script src="matcher.js"></script>
 <style>
 :root {
@@ -211,7 +212,8 @@ details.raw pre{white-space:pre-wrap;background:var(--surface2);border:1px solid
 (function () {
   'use strict';
   const M = window.SaltMatcher;
-  const DATA = (typeof CATALOGUE_DATA !== 'undefined') ? CATALOGUE_DATA : [];
+  const DATA = ((typeof CATALOGUE_DATA !== 'undefined') ? CATALOGUE_DATA : [])
+    .concat(typeof PDC_DATA !== 'undefined' ? PDC_DATA : []);
   const index = M.buildIndex(DATA);
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
