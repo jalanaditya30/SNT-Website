@@ -62,6 +62,13 @@ def main():
     for r in records:
         r["photo"] = photo_map.get(photo_key(r["product"]))
 
+    # A-Z by product within each company (companies keep sheet order).
+    # Numbers sort by value, so "MAXTOL-5" comes before "MAXTOL-10".
+    def natural(name):
+        return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", name.lower())]
+    co_order = {c: i for i, c in enumerate(dict.fromkeys(r["company"] for r in records))}
+    records.sort(key=lambda r: (co_order[r["company"]], natural(r["product"])))
+
     companies = list(dict.fromkeys(r["company"] for r in records))
     payload = [{
         "company": r["company"], "product": r["product"], "pack": r["pack"],
