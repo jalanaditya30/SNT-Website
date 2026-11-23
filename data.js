@@ -16443,7 +16443,7 @@ const CATALOGUE_DATA = [
     "composition": "Vitamin A (as Palmitate) I.P. 1600 I.U. Vitamin D3 I.P. 200 I.U. Thiamine Hydrochloride I.P. 1.5 mg (Vitamin B1) Riboflavine I.P. 1.5 mg (Vitamin B2) Pyridoxine Hydrochloride I.P. 1 mg (Vitamin B6) Cyanocobalamin I.P. 1 mcg (Vitamin B12) Nicotinamide I.P. 10 mg D-Panthenol I.P. 2.5 mg Ferrous Gluconate I.P. 26 mg (Eq. to Elemental Iron 3 mg.) Zinc Sulphate I.P. 44 mg (Eq. to Elemental Zinc 10 mg.) In a flavoured syrup base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 21.0,
+    "pts": 23.65,
     "mrp": 87.0,
     "remark": "",
     "photo": null
@@ -16456,7 +16456,7 @@ const CATALOGUE_DATA = [
     "composition": "Vitamin A (as Palmitate) I.P. 1600 I.U. Vitamin D3 I.P. 200 I.U. Thiamine Hydrochloride I.P. 1.5 mg (Vitamin B1) Riboflavine I.P. 1.5 mg (Vitamin B2) Pyridoxine Hydrochloride I.P. 1 mg (Vitamin B6) Cyanocobalamin I.P. 1 mcg (Vitamin B12) Nicotinamide I.P. 10 mg D-Panthenol I.P. 2.5 mg Ferrous Gluconate I.P. 26 mg (Eq. to Elemental Iron 3 mg.) Zinc Sulphate I.P. 44 mg (Eq. to Elemental Zinc 10 mg.) In a flavoured syrup base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 36.0,
+    "pts": 40.7,
     "mrp": 169.0,
     "remark": "",
     "photo": null
@@ -16469,7 +16469,7 @@ const CATALOGUE_DATA = [
     "composition": "Aceclofenac I.P. 100 mg Paracetamol I.P. 325 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 6.0,
+    "pts": 6.93,
     "mrp": 61.0,
     "remark": "",
     "photo": null
@@ -16482,7 +16482,7 @@ const CATALOGUE_DATA = [
     "composition": "Aceclofenac I.P. 100 mg Paracetamol I.P. 325 mg Serratiopeptidase I.P. 15 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 14.0,
+    "pts": 15.4,
     "mrp": 137.0,
     "remark": "",
     "photo": null
@@ -16495,7 +16495,7 @@ const CATALOGUE_DATA = [
     "composition": "Piperazine Citrate I.P. Eq. to Piperazine Hexahydrate 500mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 17.0,
+    "pts": 18.7,
     "mrp": 37.0,
     "remark": "",
     "photo": null
@@ -16508,7 +16508,7 @@ const CATALOGUE_DATA = [
     "composition": "Disodium Hydrogen Citrate B.P. 1.25 g In a flavoured syrupy base",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 18.0,
+    "pts": 20.9,
     "mrp": 121.0,
     "remark": "",
     "photo": null
@@ -16573,7 +16573,7 @@ const CATALOGUE_DATA = [
     "composition": "Each 1.5 ml (Part I) contains: Vitamin C I.P. 150 mg Water for Injection I.P. q.s. Each 1 ml (Part II) contains: Vitamin B12 I.P. 2500 mcg Folic Acid I.P. 0.7 mg Niacinamide I.P. 12 mg Water for Injection I.P. q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 5.5,
+    "pts": 6.05,
     "mrp": 29.0,
     "remark": "",
     "photo": null
@@ -16586,7 +16586,7 @@ const CATALOGUE_DATA = [
     "composition": "Vitamin B1 I.P. 10 mg Vitamin B2 I.P. 10 mg Vitamin B6 I.P. 3 mg Nicotinamide I.P. 50 mg Folic Acid I.P. 1000 mcg Calcium Pantothenate I.P. 20 mg L-Lysine Mono Hydrochloride I.P. 150 mg Vitamin B12 I.P. 5 mcg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 20.0,
+    "pts": 23.1,
     "mrp": 70.0,
     "remark": "",
     "photo": null
@@ -16599,7 +16599,7 @@ const CATALOGUE_DATA = [
     "composition": "Vitamin B1 I.P. 5 mg Vitamin B2 5-Phosphate Sodium I.P. Eq. to Vitamin B2 I.P. 2.5 mg Vitamin B6 I.P. 1.5 mg Vitamin B12 I.P. 2.5 mcg Nicotinamide I.P. 25 mg D-Panthenol I.P. 2.5 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 35.0,
+    "pts": 39.6,
     "mrp": 144.0,
     "remark": "",
     "photo": null
@@ -16625,7 +16625,7 @@ const CATALOGUE_DATA = [
     "composition": "Vitamin B1 I.P. 5.0 mg Vitamin B2 I.P. 2.5 mg Vitamin B6 I.P. 1.5 mg Nicotinamide I.P. 50.0 mg D-Panthenol I.P. 5 mg Vitamin B12 I.P. 5 mcg In a pleasantly flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 30.0,
+    "pts": 33.0,
     "mrp": 135.0,
     "remark": "",
     "photo": null
@@ -16638,7 +16638,7 @@ const CATALOGUE_DATA = [
     "composition": "Thiamine Mononitrate I.P. 10 mg Riboflavin I.P. 5 mg Pyridoxine Hydrochloride I.P. 1.5 mg Cyanocobalamin I.P. 5 mcg Niacinamide I.P. 45 mg Calcium Pantothenate I.P. 5 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.0,
+    "pts": 9.08,
     "mrp": 43.0,
     "remark": "",
     "photo": null
@@ -16651,7 +16651,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.0,
+    "pts": 8.8,
     "mrp": 42.0,
     "remark": "",
     "photo": null
@@ -16664,7 +16664,7 @@ const CATALOGUE_DATA = [
     "composition": "Vitamin B1 I.P. 10 mg Vitamin B2-5 Phosphate I.P. 2 mg Vitamin B6 I.P. 2 mg Vitamin B12 I.P. 10 mcg Niacinamide I.P. 50 mg D-Panthenol I.P. 2 mg Benzyl Alcohol (As Preservative) I.P. 1.5% v/v Phenol (As Preservative) I.P. 0.5% v/v Water for Injection I.P. q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 9.5,
+    "pts": 10.73,
     "mrp": 17.0,
     "remark": "",
     "photo": null
@@ -16677,7 +16677,7 @@ const CATALOGUE_DATA = [
     "composition": "Vitamin B1 I.P. 10 mg Vitamin B2-5 Phosphate I.P. 2 mg Vitamin B6 I.P. 2 mg Vitamin B12 I.P. 10 mcg Niacinamide I.P. 50 mg D-Panthenol I.P. 2 mg Benzyl Alcohol (As Preservative) I.P. 1.5% v/v Phenol (As Preservative) I.P. 0.5% v/v Water for Injection I.P. q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.0,
+    "pts": 18.15,
     "mrp": 46.0,
     "remark": "",
     "photo": null
@@ -16690,7 +16690,7 @@ const CATALOGUE_DATA = [
     "composition": "Betamethasone Sodium Phosphate I.P. 0.1% w/v Neomycin Sulphate I.P. 0.5% w/v Benzalkonium Chloride Solution I.P. 0.02% v/v (As Preservative) Sterile aqueous buffered vehicle q.s",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.5,
+    "pts": 9.35,
     "mrp": 32.0,
     "remark": "",
     "photo": null
@@ -16703,7 +16703,7 @@ const CATALOGUE_DATA = [
     "composition": "Ferrous Gluconate I.P. 300 mg Calcium Gluconate I.P. 125 mg Folic Acid I.P. 2 mg Cyanocobalamin I.P. 10 mcg Sorbitol Solution (70%) I.P. q.s. In a flavoured syrup base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 25.0,
+    "pts": 27.5,
     "mrp": 116.0,
     "remark": "",
     "photo": null
@@ -16716,7 +16716,7 @@ const CATALOGUE_DATA = [
     "composition": "Calamine I.P. 8% w/v Diphenhydramine Hydrochloride I.P. 1% w/v Camphor I.P. 0.1% w/v Specially Denatured Spirit 2.37% w/v with Glycerine Aqueous base",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 34.0,
+    "pts": 39.6,
     "mrp": 152.0,
     "remark": "",
     "photo": null
@@ -16729,7 +16729,7 @@ const CATALOGUE_DATA = [
     "composition": "Ceftriaxone Sodium (Sterile) I.P. Eq. to Anhydrous Ceftriaxone 1000 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 17.0,
+    "pts": 18.7,
     "mrp": 67.0,
     "remark": "",
     "photo": null
@@ -16742,7 +16742,7 @@ const CATALOGUE_DATA = [
     "composition": "Ceftriaxone Sodium (Sterile) I.P. Eq. to Anhydrous Ceftriaxone 1000 mg Sulbactam Sodium (Sterile) I.P. Eq. to Anhydrous Sulbactam 500 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 28.0,
+    "pts": 30.8,
     "mrp": 244.0,
     "remark": "",
     "photo": null
@@ -16755,7 +16755,7 @@ const CATALOGUE_DATA = [
     "composition": "Ceftriaxone Sodium (Sterile) I.P. Eq. to Anhydrous Ceftriaxone 250 mg Sulbactam Sodium (Sterile) I.P. Eq. to Anhydrous Sulbactam 125 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 10.5,
+    "pts": 11.55,
     "mrp": 82.0,
     "remark": "",
     "photo": null
@@ -16768,7 +16768,7 @@ const CATALOGUE_DATA = [
     "composition": "Ceftriaxone Sodium (Sterile) I.P. Eq. to Anhydrous Ceftriaxone 1000 mg Tazobactum Sodium (Sterile) I.P. Eq. to Anhydrous Tazobactum 125 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 39.0,
+    "pts": 42.9,
     "mrp": 242.0,
     "remark": "",
     "photo": null
@@ -16781,7 +16781,7 @@ const CATALOGUE_DATA = [
     "composition": "Cetirizine Hydrochloride I.P. 5 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 11.5,
+    "pts": 13.2,
     "mrp": 42.21,
     "remark": "",
     "photo": null
@@ -16794,7 +16794,7 @@ const CATALOGUE_DATA = [
     "composition": "Cetirizine Hydrochloride I.P. 10 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 2.0,
+    "pts": 2.2,
     "mrp": 20.16,
     "remark": "",
     "photo": null
@@ -16807,7 +16807,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 9.5,
+    "pts": 10.45,
     "mrp": 23.62,
     "remark": "",
     "photo": null
@@ -16820,7 +16820,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.0,
+    "pts": 8.8,
     "mrp": 23.62,
     "remark": "",
     "photo": null
@@ -16833,7 +16833,7 @@ const CATALOGUE_DATA = [
     "composition": "Ciprofloxacin Hydrochloride I.P. Eq. to Ciprofloxacin 500 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.5,
+    "pts": 18.15,
     "mrp": 45.67,
     "remark": "",
     "photo": null
@@ -16846,7 +16846,7 @@ const CATALOGUE_DATA = [
     "composition": "Ciprofloxacin Hydrochloride I.P. Eq. to Ciprofloxacin 500 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 17.5,
+    "pts": 19.25,
     "mrp": 45.67,
     "remark": "",
     "photo": null
@@ -16859,7 +16859,7 @@ const CATALOGUE_DATA = [
     "composition": "Ciprofloxacin Hydrochloride I.P. Eq. to Ciprofloxacin 0.3% w/v Dexamethasone I.P. 0.1% w/v Benzalkonium Chloride Solution I.P. 0.02% v/v (As Preservative) Sterile aqueous buffered vehicle q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.5,
+    "pts": 9.35,
     "mrp": 47.0,
     "remark": "",
     "photo": null
@@ -16885,7 +16885,7 @@ const CATALOGUE_DATA = [
     "composition": "Paracetamol I.P. 125 mg Phenylephrine Hydrochloride I.P. 2.5 mg Chlorpheniramine Maleate I.P. 1 mg Flavoured non syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.0,
+    "pts": 16.5,
     "mrp": 53.0,
     "remark": "",
     "photo": null
@@ -16898,7 +16898,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.5,
+    "pts": 9.35,
     "mrp": 64.0,
     "remark": "",
     "photo": null
@@ -16924,7 +16924,7 @@ const CATALOGUE_DATA = [
     "composition": "Paracetamol I.P. 125 mg Phenylephrine Hydrochloride I.P. 5 mg Chlorpheniramine Maleate I.P. 1 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.0,
+    "pts": 18.15,
     "mrp": 59.0,
     "remark": "",
     "photo": null
@@ -16950,7 +16950,7 @@ const CATALOGUE_DATA = [
     "composition": "Cyproheptadine Hydrochloride I.P. 1.5mg, Tricholine Citrate 55mg, In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 14.0,
+    "pts": 15.4,
     "mrp": 44.0,
     "remark": "",
     "photo": null
@@ -16963,7 +16963,7 @@ const CATALOGUE_DATA = [
     "composition": "Cyproheptadine Hydrochloride (Anhydrous) I.P. 2 mg Tricholine Citrate 0.275 mg Flavoured non syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 28.0,
+    "pts": 33.0,
     "mrp": 148.0,
     "remark": "",
     "photo": null
@@ -16976,7 +16976,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 28.0,
+    "pts": 33.0,
     "mrp": 148.0,
     "remark": "",
     "photo": null
@@ -16989,8 +16989,8 @@ const CATALOGUE_DATA = [
     "composition": "Cyproheptadine Hydrochloride (Anhydrous) I.P. 2 mg Tricholine Citrate 65 % 0.275 g Flavoured Sorbitol base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 32.0,
-    "mrp": 0.0,
+    "pts": 33.0,
+    "mrp": 148.0,
     "remark": "",
     "photo": null
   },
@@ -17015,7 +17015,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 28.0,
+    "pts": 33.0,
     "mrp": 148.0,
     "remark": "",
     "photo": null
@@ -17028,7 +17028,7 @@ const CATALOGUE_DATA = [
     "composition": "Dexamethasone Sodium Phosphate I.P. Eq. to Dexamethasone Phosphate 0.1% w/v Chloramphenicol I.P. 1.0% w/v Phenylmercuric Nitrate I.P. 0.002% w/v (As Preservative) Sterile Aqueous Buffered Vehicle q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.0,
+    "pts": 8.8,
     "mrp": 39.0,
     "remark": "",
     "photo": null
@@ -17054,7 +17054,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.0,
+    "pts": 19.8,
     "mrp": 154.0,
     "remark": "",
     "photo": null
@@ -17080,8 +17080,8 @@ const CATALOGUE_DATA = [
     "composition": "Ketoconazole I.P. 2% w/w, Beclomethasone Dipropionate I.P. 0.025% w/w, Neomycin Sulphate I.P. eq. to Neomycin 0.5% w/w, Cream base q.s",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.5,
-    "mrp": 0.0,
+    "pts": 19.8,
+    "mrp": 154.0,
     "remark": "",
     "photo": null
   },
@@ -17093,7 +17093,7 @@ const CATALOGUE_DATA = [
     "composition": "Dexamethasone Sodium Phosphate I.P. Eq. to Dexamethasone Phosphate 4 mg Methylparaben I.P. 0.15% w/v Propylparaben I.P. 0.02% w/v (As Preservative)",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 17.0,
+    "pts": 19.25,
     "mrp": 28.98,
     "remark": "",
     "photo": null
@@ -17106,7 +17106,7 @@ const CATALOGUE_DATA = [
     "composition": "Dexamethasone Sodium Phosphate I.P. Eq. to Dexamethasone Phosphate 4 mg Methylparaben I.P. 0.15% w/v Propylparaben I.P. 0.02% w/v (As Preservative)",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 23.0,
+    "pts": 26.4,
     "mrp": 29.29,
     "remark": "",
     "photo": null
@@ -17132,7 +17132,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 30.0,
+    "pts": 33.0,
     "mrp": 182.0,
     "remark": "",
     "photo": null
@@ -17145,7 +17145,7 @@ const CATALOGUE_DATA = [
     "composition": "Clotrimazole I.P. 1% w/v Lignocaine Hydrochloride I.P. 2% w/v Glycerin I.P. and Propylene Glycol I.P. base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 19.0,
+    "pts": 20.9,
     "mrp": 108.0,
     "remark": "",
     "photo": null
@@ -17210,7 +17210,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.7,
+    "pts": 15.07,
     "mrp": 111.0,
     "remark": "",
     "photo": null
@@ -17223,7 +17223,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.0,
+    "pts": 17.6,
     "mrp": 153.0,
     "remark": "",
     "photo": null
@@ -17236,7 +17236,7 @@ const CATALOGUE_DATA = [
     "composition": "Cefixime (as Trihydrate) I.P. Eq. to Cefixime 200 mg Ofloxacin I.P. 200 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 45.0,
+    "pts": 54.45,
     "mrp": 257.0,
     "remark": "",
     "photo": null
@@ -17249,7 +17249,7 @@ const CATALOGUE_DATA = [
     "composition": "Cefixime (as Trihydrate) I.P. Eq. to Anhydrous Cefixime 100 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 29.5,
+    "pts": 33.0,
     "mrp": 82.0,
     "remark": "",
     "photo": null
@@ -17262,8 +17262,8 @@ const CATALOGUE_DATA = [
     "composition": "Cefixime (as Trihydrate) I.P. Eq. to Cefixime 200 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 36.0,
-    "mrp": 112.0,
+    "pts": 42.9,
+    "mrp": 104.0,
     "remark": "",
     "photo": null
   },
@@ -17275,7 +17275,7 @@ const CATALOGUE_DATA = [
     "composition": "Cefixime (as Trihydrate) I.P. Eq. to Anhydrous Cefixime 50 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 21.5,
+    "pts": 24.2,
     "mrp": 55.0,
     "remark": "",
     "photo": null
@@ -17288,7 +17288,7 @@ const CATALOGUE_DATA = [
     "composition": "Cefixime IP (as Trihydrate) Eq. to Anhydrous Cefixime 200 mg Potassium Clavulanate Diluted I.P. Eq. to Clavulanic Acid 125 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 82.0,
+    "pts": 90.2,
     "mrp": 345.0,
     "remark": "",
     "photo": null
@@ -17301,7 +17301,7 @@ const CATALOGUE_DATA = [
     "composition": "PEG-4000, PEG-400, Urea, Lactic Acid, Propylene Glycol, Liquid Paraffin, Cetocetyl Alcohol, Ceto Margolol-1000, Methyl Paraben, Propyl Paraben, Perfume.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 24.0,
+    "pts": 26.4,
     "mrp": 118.0,
     "remark": "",
     "photo": null
@@ -17314,7 +17314,7 @@ const CATALOGUE_DATA = [
     "composition": "Clotrimazole I.P. 1% w/w Talc I.P. & Starch I.P. base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 29.0,
+    "pts": 35.2,
     "mrp": 107.0,
     "remark": "",
     "photo": null
@@ -17327,7 +17327,7 @@ const CATALOGUE_DATA = [
     "composition": "Clotrimazole I.P. 1% w/w Beclomethasone Dipropionate I.P. 0.025% w/w",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.0,
+    "pts": 19.8,
     "mrp": 107.0,
     "remark": "",
     "photo": null
@@ -17340,7 +17340,7 @@ const CATALOGUE_DATA = [
     "composition": "Calcitriol I.P. 0.25 mcg Calcium Carbonate I.P. 500 mg eq. to Elemental Calcium 200 mg Zinc Sulphate Monohydrate I.P. 20.6 mg eq. to Elemental Zinc 7.5 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.0,
+    "pts": 16.5,
     "mrp": 315.0,
     "remark": "",
     "photo": null
@@ -17353,7 +17353,7 @@ const CATALOGUE_DATA = [
     "composition": "Clotrimazole I.P. 1% w/v Lignocaine Hydrochloride I.P. 2% w/v Glycerin IP and Propylene Glycol IP base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 18.0,
+    "pts": 19.8,
     "mrp": 111.0,
     "remark": "",
     "photo": null
@@ -17366,7 +17366,7 @@ const CATALOGUE_DATA = [
     "composition": "Ferric Hydroxide in Complex with Sucrose equivalent to elemental Iron 100 mg Water for Injections IP q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 28.0,
+    "pts": 30.8,
     "mrp": 330.0,
     "remark": "",
     "photo": null
@@ -17392,7 +17392,7 @@ const CATALOGUE_DATA = [
     "composition": "Iron (III) Hydroxide Polymaltose Complex eq. to Elemental Iron 50 mg, Folic Acid I.P. 0.5 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 66.0,
+    "pts": 74.8,
     "mrp": 222.0,
     "remark": "",
     "photo": null
@@ -17405,7 +17405,7 @@ const CATALOGUE_DATA = [
     "composition": "Iron (III) Hydroxide Polymaltose Complex eq. to Elemental Iron 50 mg, Folic Acid I.P. 0.5 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 78.5,
+    "pts": 88.0,
     "mrp": 328.0,
     "remark": "",
     "photo": null
@@ -17431,7 +17431,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 19.0,
+    "pts": 20.9,
     "mrp": 231.0,
     "remark": "",
     "photo": null
@@ -17444,7 +17444,7 @@ const CATALOGUE_DATA = [
     "composition": "Protein Powder 175 mg Ferrous Fumarate I.P. 150 mg Cupric Sulfate U.S.P. 2.5 mg Manganese Sulfate B.P. 2.5 mg Zinc Sulphate I.P. 15 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 10.0,
+    "pts": 11.0,
     "mrp": 46.0,
     "remark": "",
     "photo": null
@@ -17457,7 +17457,7 @@ const CATALOGUE_DATA = [
     "composition": "Ferric Ammonium Citrate (Eq. to Elemental Iron 41mg) I.P. 200 mg, Cyanocobalamin I.P. 7.5 mcg, Folic Acid I.P. 0.5 mg, Zinc Sulphate I.P. 7 mg, Pyridoxine HCl I.P. 1.5 mg, Sorbitol Solution (70%) I.P. 750 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 36.0,
+    "pts": 41.8,
     "mrp": 144.0,
     "remark": "",
     "photo": null
@@ -17483,7 +17483,7 @@ const CATALOGUE_DATA = [
     "composition": "Ferric Ammonium Citrate (Eq. to Elemental Iron 41mg) I.P. 200 mg, Cyanocobalamin I.P. 7.5 mcg, Folic Acid I.P. 0.5 mg, Zinc Sulphate I.P. 7 mg, Pyridoxine HCl I.P. 1.5 mg, Sorbitol Solution (70%) I.P. 750 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 68.0,
+    "pts": 77.0,
     "mrp": 294.0,
     "remark": "",
     "photo": null
@@ -17496,7 +17496,7 @@ const CATALOGUE_DATA = [
     "composition": "Itraconazole Pellets Eq. to Itraconazole I.P. 100 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 30.0,
+    "pts": 33.0,
     "mrp": 179.23,
     "remark": "",
     "photo": null
@@ -17509,7 +17509,7 @@ const CATALOGUE_DATA = [
     "composition": "Itraconazole Pellets Eq. to Itraconazole I.P. 200 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 52.0,
+    "pts": 57.2,
     "mrp": 237.82,
     "remark": "",
     "photo": null
@@ -17522,7 +17522,7 @@ const CATALOGUE_DATA = [
     "composition": "Amla (3G), Brahmi (2G), Bhringraj (3G), Shikakai (2G), Neem (0.5G), Neeli (3G), Kola (0.5G), Kalonji (0.2G), Methi (0.2G), Mulethi (0.5G), Lodhra (0.2G),Manjistha (0.2G), Jatamansi (0.2G), Harad (1G), Behada (1G), Daruharidra (1G), Curry Patta (0.5G), Japa Kusum (0.2G), Mehandi (0.5G), Loki (0.5G), Karanj (0.2G), Badam (2ml),Godugha (Cow Milk) (8ml), Sesame Oil (88ml)",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 90.0,
+    "pts": 99.0,
     "mrp": 158.0,
     "remark": "",
     "photo": null
@@ -17535,7 +17535,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 46.0,
+    "pts": 50.6,
     "mrp": 165.0,
     "remark": "",
     "photo": null
@@ -17548,7 +17548,7 @@ const CATALOGUE_DATA = [
     "composition": "Ketoconazole I.P. 2.0% w/w Soap Noodle Base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 30.0,
+    "pts": 36.3,
     "mrp": 117.0,
     "remark": "",
     "photo": null
@@ -17561,7 +17561,7 @@ const CATALOGUE_DATA = [
     "composition": "Amla (Embilca Officinalis) Ft.Per. 3G, Brahmi (Bacopa Monnieri) Eh.Pl. 2G, Bhringraj (Ecllipta Alba) Eh.Pl. 3G, Dhiksksi (Acacia Cocinna) Frl 2G, Neem (Azzadirachtaindica) Lf. 0.5 G, Neelli ( Indigofera Tinctoria) Lf. 3G, Kola (Ziizyphus Mauritiana) Fr. 0.5G, Kaloji (Nigella Sativa) Sd. 0.2G, Muelthi (Glycyrrhiza Glabra Linn) Rt. 0.5G, Lodhra (Symplocos Racemosa) St. Bk, O.2G, Manjistha (Rubia Cordiifolia) Ft. 0.2G, Jatamansi (Ndardostachys Jatamansi) Rz. 0.2G, Harad (Terminalia Belerica) Ft. Per 1G, Behada (Terminalia Balerica) Ft.Per.1G, Daruharidra (Breberis Aristata) St. 1G, Curry Patta (Murraya Koenigii) Lf. 0.5G, Japa Kusum (Hibiscus Rosasinensis) Fl. 0.2G, Mehandi (Lawssonia Inermis Linn) Lf. 0.5G, Loki (Lagenaria Sicerarira) Fr. 0.5G, Karanj (Pongamia Pinnata) Sd. 0.2G, Badam (Prunnus Amygdalus) Fr. Oil 2ml, Ipm (Isopropyl Myristate) 2ml, Godugdha (Cow Milk) 8ml, Bht. 0.05Gm, Sugandhit Dracya 3ml, Coconut (Cocos Nucifera) 5ml, Sesame Oil ( Seasmum Indicum) 88ml, Colour-Quinizarine Green (C.I.No.61565)Q.S.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 80.0,
+    "pts": 88.0,
     "mrp": 158.0,
     "remark": "",
     "photo": null
@@ -17587,7 +17587,7 @@ const CATALOGUE_DATA = [
     "composition": "Ketoconazole I.P. 2% w/w Cream base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 38.0,
+    "pts": 41.8,
     "mrp": 162.0,
     "remark": "",
     "photo": null
@@ -17600,7 +17600,7 @@ const CATALOGUE_DATA = [
     "composition": "Ketoconazole I.P. 2.0% w/w Cetrimide I.P. 0.5% w/w Soap Noodle Base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 32.0,
+    "pts": 37.4,
     "mrp": 127.0,
     "remark": "",
     "photo": null
@@ -17626,7 +17626,7 @@ const CATALOGUE_DATA = [
     "composition": "Ketoconazole I.P. 2% w/v Lotion base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 54.0,
+    "pts": 59.4,
     "mrp": 330.0,
     "remark": "",
     "photo": null
@@ -17652,7 +17652,7 @@ const CATALOGUE_DATA = [
     "composition": "Ketoconazole I.P. 2% w/v Zinc Pyrithione 1% w/v In a conditioning base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 153.0,
+    "pts": 168.3,
     "mrp": 380.0,
     "remark": "",
     "photo": null
@@ -17665,7 +17665,7 @@ const CATALOGUE_DATA = [
     "composition": "Ketoconazole I.P. 2% w/w Suitable shampoo base q.s",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 110.0,
+    "pts": 121.0,
     "mrp": 247.0,
     "remark": "",
     "photo": null
@@ -17691,7 +17691,7 @@ const CATALOGUE_DATA = [
     "composition": "Ketoconazole I.P. 200 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 20.0,
+    "pts": 22.0,
     "mrp": 213.0,
     "remark": "",
     "photo": null
@@ -17704,7 +17704,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 145.0,
+    "pts": 159.5,
     "mrp": 350.0,
     "remark": "",
     "photo": null
@@ -17717,8 +17717,8 @@ const CATALOGUE_DATA = [
     "composition": "Selenium Sulfide, Cocamidopropyl Betaine and Glycerin and Caprylyl/Capryl Glucoside and Sodium Methyl Cocoyl Taurate, Purified Water, Polysorbate 80, PEG-120 Methyl Glucose Dioleate, Ethylene Glycol Monostearate, Dimethicone & Cocamidopropyl Betaine & C12-15 Alketh & Guar Hydroxpropyltrimonium Chloride, Acrylate/C-10-30 Alkyl Acrylate Crosspolymer, Phenoxyethanol, Perfume, Polyquaternium 10, Citric acid, Xanthan gum, Sodium Hydroxide, Ethylenediaminetetraacetic acid, Imidazolidinyl urea, Sodium Citrate, Calcium Aluminium Borosilicate & Silica & Titanium Dioxide (CI 77891) & Tin Oxide",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 25.0,
-    "mrp": 0.0,
+    "pts": 159.5,
+    "mrp": 350.0,
     "remark": "",
     "photo": null
   },
@@ -17743,7 +17743,7 @@ const CATALOGUE_DATA = [
     "composition": "Dextromethorphan Hydrobromide I.P. 10 mg Phenylephrine Hydrochloride I.P. 5 mg Chlorpheniramine Maleate I.P. 2 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 25.0,
+    "pts": 27.5,
     "mrp": 101.0,
     "remark": "",
     "photo": null
@@ -17756,7 +17756,7 @@ const CATALOGUE_DATA = [
     "composition": "Dextromethorphan Hydrobromide I.P. 10 mg Phenylephrine Hydrochloride I.P. 5 mg Chlorpheniramine Maleate I.P. 2 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 17.0,
+    "pts": 18.7,
     "mrp": 66.0,
     "remark": "",
     "photo": null
@@ -17769,7 +17769,7 @@ const CATALOGUE_DATA = [
     "composition": "Reetha extract, Shikakai extract, Ambushfog, Canada balsam, Citric acid",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 32.0,
+    "pts": 35.2,
     "mrp": 64.0,
     "remark": "",
     "photo": null
@@ -17782,7 +17782,7 @@ const CATALOGUE_DATA = [
     "composition": "Lactulose concentrate Eq. to Lactulose 66% I.P. 10 g In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 60.0,
+    "pts": 69.3,
     "mrp": 158.76,
     "remark": "",
     "photo": null
@@ -17795,7 +17795,7 @@ const CATALOGUE_DATA = [
     "composition": "Lactulose concentrate Eq. to Lactulose 66% I.P. 10 g In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 95.0,
+    "pts": 121.0,
     "mrp": 317.52,
     "remark": "",
     "photo": null
@@ -17808,7 +17808,7 @@ const CATALOGUE_DATA = [
     "composition": "Levocetirizine Hydrochloride I.P. 2.5mg, In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 11.5,
+    "pts": 12.65,
     "mrp": 47.0,
     "remark": "",
     "photo": null
@@ -17821,7 +17821,7 @@ const CATALOGUE_DATA = [
     "composition": "Levocetirizine Dihydrochloride I.P. 5 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 3.5,
+    "pts": 3.85,
     "mrp": 70.0,
     "remark": "",
     "photo": null
@@ -17834,7 +17834,7 @@ const CATALOGUE_DATA = [
     "composition": "Luliconazole I.P. 1% w/w Cream base q.s",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.0,
+    "pts": 14.3,
     "mrp": 144.0,
     "remark": "",
     "photo": null
@@ -17873,7 +17873,7 @@ const CATALOGUE_DATA = [
     "composition": "Clobetasol Propionate I.P. 0.05% w/w, Salicylic acid I.P. 3.00% w/w, Added Butylated Hydroxytoluene (as preservative) I.P. 0.01% w/w, Ointment base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 53.0,
+    "pts": 58.3,
     "mrp": 169.0,
     "remark": "",
     "photo": null
@@ -17886,7 +17886,7 @@ const CATALOGUE_DATA = [
     "composition": "Soap Noodles, Purified Talc Powder, Perfume, Glycerin, Light Liquid Paraffin, Propylene Glycol, Disodium EDTA, Titanium Dioxide, Almond Oil, Coconut Oil, Silicon Oil, Butylated Hydroxytoluene, Aloe Vera Extract, Pentaerythrityl Tetra-Di-T Butyl Hydroxyhydrocinnamate & Purified Water",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 26.0,
+    "pts": 28.6,
     "mrp": 75.0,
     "remark": "",
     "photo": null
@@ -17899,7 +17899,7 @@ const CATALOGUE_DATA = [
     "composition": "Mefenamic Acid I.P. 250 mg Dicyclomine Hydrochloride I.P. 10 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 6.0,
+    "pts": 6.6,
     "mrp": 58.0,
     "remark": "",
     "photo": null
@@ -17912,7 +17912,7 @@ const CATALOGUE_DATA = [
     "composition": "Meropenem (Sterile) I.P. Eq. to Meropenem (Anhydrous) 1000 mg Sodium (As Sodium Carbonate) 90.2 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 85.0,
+    "pts": 93.5,
     "mrp": 1024.0,
     "remark": "",
     "photo": null
@@ -17925,7 +17925,7 @@ const CATALOGUE_DATA = [
     "composition": "Metronidazole I.P. 200 mg Loperamide Hydrochloride I.P. 1.5 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 10.0,
+    "pts": 11.0,
     "mrp": 53.0,
     "remark": "",
     "photo": null
@@ -17938,7 +17938,7 @@ const CATALOGUE_DATA = [
     "composition": "Montelukast Sodium I.P. Eq. to Montelukast 10 mg Levocetirizine Hydrochloride I.P. 5 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.5,
+    "pts": 18.15,
     "mrp": 223.0,
     "remark": "",
     "photo": null
@@ -17951,7 +17951,7 @@ const CATALOGUE_DATA = [
     "composition": "Montelukast Sodium I.P. Eq. to Montelukast 4mg, Levocetirizine Dihydrochloride I.P. 2.5mg, In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 23.0,
+    "pts": 25.85,
     "mrp": 126.0,
     "remark": "",
     "photo": null
@@ -17964,7 +17964,7 @@ const CATALOGUE_DATA = [
     "composition": "Montelukast Sodium I.P. Eq. to Montelukast 10 mg Levocetirizine Dihydrochloride I.P. 5 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 12.0,
+    "pts": 14.03,
     "mrp": 161.0,
     "remark": "",
     "photo": null
@@ -17977,7 +17977,7 @@ const CATALOGUE_DATA = [
     "composition": "Moxifloxacin HCI I.P. Eq. to Moxifloxacin 0.5% w/v Aqueous Vehicle q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 10.5,
+    "pts": 11.55,
     "mrp": 151.0,
     "remark": "",
     "photo": null
@@ -17990,7 +17990,7 @@ const CATALOGUE_DATA = [
     "composition": "Moxifloxacin HCI I.P. Eq. to Moxifloxacin 0.5% w/v Dexamethasone Sodium Phosphate I.P. Eq. to Dexamethasone Phosphate 0.1% w/v Benzalkonium Chloride Solution I.P. 0.02% v/v (As Preservative)",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 12.5,
+    "pts": 13.75,
     "mrp": 165.0,
     "remark": "",
     "photo": null
@@ -18003,7 +18003,7 @@ const CATALOGUE_DATA = [
     "composition": "Ginseng Extract (Panax Ginseng) 212.50 mg, Vitamin A (Retinyl Palmitate) 450.00 mcg, Vitamin B1 1.00 mg, Vitamin B2 (Ribo avin) 1.40 mg, Vitamin B6 0.80 mg, Vitamin B12 (Cyanocobalamin) 0.80 mcg, Vitamin C (Ascorbic Acid) 33.00 mg, Cholecalciferol-animal source 5.00 mcg, Vitamin E 7.50 mg, Folic Acid 80.00 mcg, Vitamin B3 (Nicotinamide) 10.00 mg, Calcium (Calcium Carbonate) 90.00 mg, Copper (Copper Sulphate) 0.52 mg, Iodine (Potassium Iodide) 100.00 mcg, Iron (Ferrous Fumarate) 10.00 mg, Manganese (Manganese Citrate) 0.60 mg, Zinc (Zinc Sulphate) 10.29 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 24.0,
+    "pts": 26.95,
     "mrp": 117.0,
     "remark": "",
     "photo": null
@@ -18016,7 +18016,7 @@ const CATALOGUE_DATA = [
     "composition": "Mecobalamin I.P. 1500 mcg Alpha Lipoic Acid I.P. 100 mg Thiamine Mononitrate I.P. 10 mg Pyridoxine HCl I.P. 3 mg Folic Acid I.P. 1.5 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 31.0,
+    "pts": 34.1,
     "mrp": 203.0,
     "remark": "",
     "photo": null
@@ -18029,7 +18029,7 @@ const CATALOGUE_DATA = [
     "composition": "Pregabalin I.P. 75 mg Methylcobalamin I.P. 750 mcg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 20.0,
+    "pts": 22.0,
     "mrp": 174.0,
     "remark": "",
     "photo": null
@@ -18042,7 +18042,7 @@ const CATALOGUE_DATA = [
     "composition": "Methylcobalamin I.P. 500 mcg Cholecalciferol (Vitamin D) I.P. 200 I.U. 3 Zinc Gluconate U.S.P. Eq. to Elemental Zinc 5 mg Lysine Hydrochloride I.P. 150 mg Niacinamide I.P. 15 mg Biotin I.P. 20 mcg Folic Acid I.P. 140 mcg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 60.0,
+    "pts": 67.1,
     "mrp": 203.0,
     "remark": "",
     "photo": null
@@ -18055,7 +18055,7 @@ const CATALOGUE_DATA = [
     "composition": "Diclofenac Sodium I.P. 50 mg Paracetamol I.P. 325 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 4.0,
+    "pts": 4.4,
     "mrp": 30.0,
     "remark": "",
     "photo": null
@@ -18107,7 +18107,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 7.0,
+    "pts": 7.7,
     "mrp": 66.0,
     "remark": "",
     "photo": null
@@ -18120,7 +18120,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 7.0,
+    "pts": 7.7,
     "mrp": 66.0,
     "remark": "",
     "photo": null
@@ -18133,7 +18133,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 4.25,
+    "pts": 5.5,
     "mrp": 58.0,
     "remark": "",
     "photo": null
@@ -18146,7 +18146,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 4.25,
+    "pts": 5.5,
     "mrp": 58.0,
     "remark": "",
     "photo": null
@@ -18159,7 +18159,7 @@ const CATALOGUE_DATA = [
     "composition": "Nimesulide B.P. 100 mg Paracetamol I.P. 325 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 4.25,
+    "pts": 5.5,
     "mrp": 64.0,
     "remark": "",
     "photo": null
@@ -18172,7 +18172,7 @@ const CATALOGUE_DATA = [
     "composition": "Nimesulide B.P. 100 mg Paracetamol I.P. 325 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 4.25,
+    "pts": 5.5,
     "mrp": 64.0,
     "remark": "",
     "photo": null
@@ -18185,7 +18185,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 4.25,
+    "pts": 5.5,
     "mrp": 64.0,
     "remark": "",
     "photo": null
@@ -18198,7 +18198,7 @@ const CATALOGUE_DATA = [
     "composition": "Nimesulide B.P. 100 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 3.3,
+    "pts": 3.8,
     "mrp": 47.0,
     "remark": "",
     "photo": null
@@ -18211,7 +18211,7 @@ const CATALOGUE_DATA = [
     "composition": "Nimesulide B.P. 100 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 3.3,
+    "pts": 3.8,
     "mrp": 47.0,
     "remark": "",
     "photo": null
@@ -18224,7 +18224,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 7.0,
+    "pts": 7.7,
     "mrp": 48.0,
     "remark": "",
     "photo": null
@@ -18250,7 +18250,7 @@ const CATALOGUE_DATA = [
     "composition": "Norfloxacin I.P. 200 mg Loperamide Hydrochloride I.P. 2 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 23.0,
+    "pts": 25.3,
     "mrp": 61.0,
     "remark": "",
     "photo": null
@@ -18263,7 +18263,7 @@ const CATALOGUE_DATA = [
     "composition": "Hydroquinone U.S.P. 2% w/w Tretinoin B.P. 0.025% w/w Mometasone Furoate I.P. 0.10% w/w In a cream base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 145.0,
+    "pts": 159.5,
     "mrp": 278.0,
     "remark": "",
     "photo": null
@@ -18276,7 +18276,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 175.0,
+    "pts": 192.5,
     "mrp": 438.0,
     "remark": "",
     "photo": null
@@ -18289,7 +18289,7 @@ const CATALOGUE_DATA = [
     "composition": "Purified Water, Sodium Lauryl Sulphate, Cocamidopropyl Betaine, Glycerin, Sodium Cocoyl Glutamate, Sodium Lauryl Ethyl Sulphate, Decyl Glucoside, Sodium Lauryl Sarcocinate, Carbomer, Salicylic Acid, Sodium Methyl Cocoyl Taurate, Dm Dm Hydantion, Acrylates/C10-30 Alkyl Acrylate Crosspolymer, Neem Extract, Polysorbate 20, Sodium Hydroxide, Peg-12 Dimethicone, Hydroxyethyl Urea, Olive Oil Peg-7 Esters, Ethylenediaminetetraacetic Acid, Polyquaternium 10, Peg-150 Distearate, Perfume.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 60.0,
+    "pts": 66.0,
     "mrp": 181.0,
     "remark": "",
     "photo": null
@@ -18302,7 +18302,7 @@ const CATALOGUE_DATA = [
     "composition": "Purified Water, Sodium Lauryl Sulphate, Cocamidopropyl Betaine, Glycerin, Sodium Cocoyl Glutamate, Sodium Lauryl Ethyl Sulphate, Decyl Glucoside, Sodium Lauryl Sarcocinate, Carbomer, Salicylic Acid, Sodium Methyl Cocoyl Taurate, Dm Dm Hydantion, Acrylates/C10-30 Alkyl Acrylate Crosspolymer, Aloe Vera Extract, Polysorbate 20, Sodium Hydroxide, PEG-12 Dimethicone, Hydroxyethyl Urea, Olive Oil PEG-7 Esters, Ethylenediaminetetraacetic Acid, Polyquaternium 10, PEG-150 Distearate, Perfume",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 79.0,
+    "pts": 86.9,
     "mrp": 181.0,
     "remark": "",
     "photo": null
@@ -18315,7 +18315,7 @@ const CATALOGUE_DATA = [
     "composition": "Purified Water, Sodium Lauryl Sulphate, Cocamidopropyl Betaine, Glycerin, Sodium Cocoyl Glutamate, Sodium Lauryl Ethyl Sulphate, Decyl Glucoside, Sodium Lauryl Sarcocinate, Carbomer, Salicylic Acid, Sodium Methyl Cocoyl Taurate, Dm Dm Hydantion, Acrylates/C10-30 Alkyl Acrylate Crosspolymer, Aloe Vera Extract, Polysorbate 20, Sodium Hydroxide, PEG-12 Dimethicone, Hydroxyethyl Urea, Olive Oil PEG-7 Esters, Ethylenediaminetetraacetic Acid, Polyquaternium 10, PEG-150 Distearate, Perfume",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 45.0,
+    "pts": 49.5,
     "mrp": 96.0,
     "remark": "",
     "photo": null
@@ -18328,7 +18328,7 @@ const CATALOGUE_DATA = [
     "composition": "Soap Noodles, Fine Talc, Glycerine, Olive oil PEG-7 Easters, Sodium PEG-7 Olive oil Carboxylate, Perfume, Titanium Dioxide, Disodium EDTA, Pentaerythrityl Tetra- Di-T-Butyl Hydroxyhydrocinnamate, Aloe Vera extract, BHT, Silicon Oil, Aqua",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 120.0,
+    "pts": 132.0,
     "mrp": 177.0,
     "remark": "",
     "photo": null
@@ -18341,7 +18341,7 @@ const CATALOGUE_DATA = [
     "composition": "Soap Noodles, Kojic Acid, Glutathione, Disodium EDTA, Butylated Hydroxytoluene, Sodium Chloride, Aloe Vera Extract, Pentaerythrityl Tetra-Di-T-Butyl Hydroxyhydrocinnamate (Tinogard TT), Alpha Arbutin, Liquorice Extract, Purified Water, Perfume",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 63.0,
+    "pts": 69.3,
     "mrp": 101.0,
     "remark": "",
     "photo": null
@@ -18354,7 +18354,7 @@ const CATALOGUE_DATA = [
     "composition": "Choline Salicylate Solution B.P. Eq. to Choline Salicylate 8.7% w/w Lignocaine Hydrochloride I.P. 2.0% w/w Benzalkonium Chloride Solution I.P. 0.01% w/w In a pleasant flavoured base",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.0,
+    "pts": 16.5,
     "mrp": 70.0,
     "remark": "",
     "photo": null
@@ -18367,7 +18367,7 @@ const CATALOGUE_DATA = [
     "composition": "Ofloxacin I.P. 0.3% w/v Benzalkonium Chloride Solution I.P. 0.02% w/v (As Preservative) Sterile aqueous vehicle q.s",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 6.75,
+    "pts": 7.43,
     "mrp": 36.0,
     "remark": "",
     "photo": null
@@ -18380,7 +18380,7 @@ const CATALOGUE_DATA = [
     "composition": "Ofloxacin I.P. 200 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.75,
+    "pts": 10.73,
     "mrp": 74.0,
     "remark": "",
     "photo": null
@@ -18393,7 +18393,7 @@ const CATALOGUE_DATA = [
     "composition": "Ofloxacin I.P. 200 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.25,
+    "pts": 10.18,
     "mrp": 74.0,
     "remark": "",
     "photo": null
@@ -18406,7 +18406,7 @@ const CATALOGUE_DATA = [
     "composition": "Ofloxacin I.P. 0.3% w/v Dexamethasone Sodium Phosphate I.P. Eq. to Dexamethasone 0.1% w/v Benzalkonium Chloride Solution I.P. 0.02% v/v (As Preservative) Aqueous buffered Vehicle q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.35,
+    "pts": 9.19,
     "mrp": 42.0,
     "remark": "",
     "photo": null
@@ -18419,7 +18419,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 14.5,
+    "pts": 13.75,
     "mrp": 77.0,
     "remark": "",
     "photo": null
@@ -18432,8 +18432,8 @@ const CATALOGUE_DATA = [
     "composition": "Ofloxacin I.P. 50 mg, Metronidazole I.P. (as Metronidazole Benzoate I.P.) 100 mg, In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.0,
-    "mrp": 0.0,
+    "pts": 13.75,
+    "mrp": 77.0,
     "remark": "",
     "photo": null
   },
@@ -18445,7 +18445,7 @@ const CATALOGUE_DATA = [
     "composition": "Ofloxacin I.P. 50 mg, Metronidazole I.P. (as Metronidazole Benzoate I.P.) 100 mg, In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 21.0,
+    "pts": 23.1,
     "mrp": 138.0,
     "remark": "",
     "photo": null
@@ -18458,7 +18458,7 @@ const CATALOGUE_DATA = [
     "composition": "Omeprazole I.P. 20 mg (As enteric coated pellets)",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.0,
+    "pts": 15.4,
     "mrp": 61.74,
     "remark": "",
     "photo": null
@@ -18471,7 +18471,7 @@ const CATALOGUE_DATA = [
     "composition": "Omeprazole I.P. 20 mg (As enteric coated pellets) Domperidone I.P. 10 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 14.5,
+    "pts": 17.05,
     "mrp": 101.0,
     "remark": "",
     "photo": null
@@ -18510,7 +18510,7 @@ const CATALOGUE_DATA = [
     "composition": "Pantoprazole 40 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 12.0,
+    "pts": 13.2,
     "mrp": 101.0,
     "remark": "",
     "photo": null
@@ -18523,7 +18523,7 @@ const CATALOGUE_DATA = [
     "composition": "Pantoprazole 40 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.25,
+    "pts": 9.08,
     "mrp": 54.24,
     "remark": "",
     "photo": null
@@ -18536,7 +18536,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.0,
+    "pts": 8.8,
     "mrp": 66.0,
     "remark": "",
     "photo": null
@@ -18549,7 +18549,7 @@ const CATALOGUE_DATA = [
     "composition": "Pantoprazole Sodium Sesquihydrate I.P. Eq. to Pantoprazole 40 mg Domperidone I.P. 10 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.5,
+    "pts": 9.35,
     "mrp": 111.0,
     "remark": "",
     "photo": null
@@ -18562,7 +18562,7 @@ const CATALOGUE_DATA = [
     "composition": "Pantoprazole 40 mg (As enteric coated pellets) Domperidone I.P. 30 mg (As sustained release pellets) Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.5,
+    "pts": 14.85,
     "mrp": 128.0,
     "remark": "",
     "photo": null
@@ -18575,7 +18575,7 @@ const CATALOGUE_DATA = [
     "composition": "Pantoprazole 40 mg (As enteric coated pellets) Levosulpiride 75 mg (As sustained release pellets) Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 21.0,
+    "pts": 23.1,
     "mrp": 192.0,
     "remark": "",
     "photo": null
@@ -18627,7 +18627,7 @@ const CATALOGUE_DATA = [
     "composition": "Cefpodoxime Proxetil I.P. Eq. to Cefpodoxime 200 mg Potassium Clavulanate Diluted I.P. Eq. to Clavulanic Acid 125 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 99.8,
+    "pts": 109.78,
     "mrp": 463.0,
     "remark": "",
     "photo": null
@@ -18640,8 +18640,8 @@ const CATALOGUE_DATA = [
     "composition": "Cefpodoxime Proxetil I.P. Eq. to Cefpodoxime 100 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 35.0,
-    "mrp": 159.0,
+    "pts": 39.6,
+    "mrp": 145.0,
     "remark": "",
     "photo": null
   },
@@ -18653,7 +18653,7 @@ const CATALOGUE_DATA = [
     "composition": "Cefpodoxime Proxetil I.P. Eq. to Cefpodoxime 200 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 40.0,
+    "pts": 48.4,
     "mrp": 305.0,
     "remark": "",
     "photo": null
@@ -18666,7 +18666,7 @@ const CATALOGUE_DATA = [
     "composition": "Cefpodoxime Proxetil I.P. Eq. to Cefpodoxime 50 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 24.0,
+    "pts": 27.5,
     "mrp": 117.0,
     "remark": "",
     "photo": null
@@ -18679,7 +18679,7 @@ const CATALOGUE_DATA = [
     "composition": "Rabeprazole Sodium I.P. 20 mg (As enteric coated pellets) Domperidone I.P. 30 mg (As sustained release pellets) Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.0,
+    "pts": 14.3,
     "mrp": 124.0,
     "remark": "",
     "photo": null
@@ -18692,7 +18692,7 @@ const CATALOGUE_DATA = [
     "composition": "Rabeprazole Sodium I.P. 20 mg (As enteric coated pellets) Levosulpiride I.P. 75 mg (As sustained release pellets) Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 21.0,
+    "pts": 23.1,
     "mrp": 205.0,
     "remark": "",
     "photo": null
@@ -18744,7 +18744,7 @@ const CATALOGUE_DATA = [
     "composition": "Each Capsule contains 500mg Dried Herbal Powder Of: Salparni Rt. (Desmodium Gangeticum) (40mg), Lavang Fr. (Syzygium Aromaticum) (60mg), Methi Sd. (Trigonella Fornum-Graceum) (60mg), Hadjod St. (Cissus Quadrangularis) (70mg), Dalchini Bk. (Cinnamomum Zeylanicum,) (70mg), Shallaki Exud (Boswellia Serrata) (60mg), Haldi Rz. (Curcuma Linga) (50mg), Ajwain Sd. (Trachyspermum Ammmi) (50mg), Guggal Exud. (Commiphora Mukul) 40mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 10.87,
+    "pts": 11.96,
     "mrp": 69.0,
     "remark": "",
     "photo": null
@@ -18757,7 +18757,7 @@ const CATALOGUE_DATA = [
     "composition": "Permethrin 5% w/v Cetrimide I.P. 0.01% w/v Aqueous lotion base q.s",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 26.0,
+    "pts": 28.6,
     "mrp": 101.0,
     "remark": "",
     "photo": null
@@ -18770,7 +18770,7 @@ const CATALOGUE_DATA = [
     "composition": "Gamma Benzene Hexachloride I.P. 1% w/v Emulsion base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 42.0,
+    "pts": 47.3,
     "mrp": 159.0,
     "remark": "",
     "photo": null
@@ -18796,7 +18796,7 @@ const CATALOGUE_DATA = [
     "composition": "Chlorhexidine Gluconate (As Chlorhexidine Gluconate solutions I.P.) 0.2% w/v, Sodium Fluoride I.P. 0.05% w/v, Zinc Chloride I.P. 0.09% w/v",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 27.0,
+    "pts": 29.7,
     "mrp": 111.0,
     "remark": "",
     "photo": null
@@ -18809,7 +18809,7 @@ const CATALOGUE_DATA = [
     "composition": "Diclofenac Potassium I.P. 50 mg Paracetamol I.P. 325 mg Serratiopeptidase (Enteric Coated) I.P. 15 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 14.0,
+    "pts": 15.4,
     "mrp": 120.0,
     "remark": "",
     "photo": null
@@ -18822,7 +18822,7 @@ const CATALOGUE_DATA = [
     "composition": "Diclofenac Potassium I.P. 50 mg Paracetamol I.P. 325 mg Serratiopeptidase (Enteric Coated) I.P. 10 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.0,
+    "pts": 14.3,
     "mrp": 124.0,
     "remark": "",
     "photo": null
@@ -18835,7 +18835,7 @@ const CATALOGUE_DATA = [
     "composition": "Silver Sulphadiazine I.P. 1.0% w/w Lignocaine HCI (base) I.P. 2.0% w/w Chlorhexidine Gluconate Solution Eq. to Chlorhexidine Gluconate I.P. 0.2% w/w Cream base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 20.0,
+    "pts": 22.0,
     "mrp": 70.0,
     "remark": "",
     "photo": null
@@ -18848,7 +18848,7 @@ const CATALOGUE_DATA = [
     "composition": "Dicyclomine Hydrochloride I.P. 10 mg Activated Dimethicone I.P. 40 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 11.0,
+    "pts": 12.1,
     "mrp": 34.0,
     "remark": "",
     "photo": null
@@ -18861,7 +18861,7 @@ const CATALOGUE_DATA = [
     "composition": "Dicyclomine Hydrochloride I.P. 10 mg Benzyl Alcohol (As Preservative) I.P. 2% v/v Water for Injection I.P. q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.0,
+    "pts": 14.85,
     "mrp": 67.72,
     "remark": "",
     "photo": null
@@ -18874,7 +18874,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 17.0,
+    "pts": 18.7,
     "mrp": 165.0,
     "remark": "",
     "photo": null
@@ -18887,7 +18887,7 @@ const CATALOGUE_DATA = [
     "composition": "Dicyclomine Hydrochloride I.P. 20 mg Paracetamol I.P. 325 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 7.8,
+    "pts": 8.58,
     "mrp": 61.0,
     "remark": "",
     "photo": null
@@ -18939,7 +18939,7 @@ const CATALOGUE_DATA = [
     "composition": "Each Capsule contains 500mg Dried Herbal Powder Of: Karela Fr (Momordica Charantia) (70mg), Vijaysar St. Bk. (Pterocarpus Marsupium) (70mg), Ashwagandha Rt. (Withania Somnifera) (50mg), Gudmar Lf. (Gymnema Slyvestre) (70mg), Daruharidra St. (Berberis Lycium) (105mg), Methi Sd. (Trigonella Foenum-Graceum) (50mg), Jamun Sd. (Syzygium Cumini) (40mg), Neem Bk. (Azadirachta Indica) (30mg), Vang Bhasm (Classical Formulation) (15mg)",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 11.2,
+    "pts": 12.32,
     "mrp": 90.0,
     "remark": "",
     "photo": null
@@ -18965,7 +18965,7 @@ const CATALOGUE_DATA = [
     "composition": "Cephalexin I.P. Equivalent to Anhydrous Cephalexin 250 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 21.0,
+    "pts": 23.1,
     "mrp": 92.0,
     "remark": "",
     "photo": null
@@ -18991,7 +18991,7 @@ const CATALOGUE_DATA = [
     "composition": "Cephalexin I.P. Equivalent to Anhydrous Cephalexin 500 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 41.0,
+    "pts": 45.1,
     "mrp": 174.0,
     "remark": "",
     "photo": null
@@ -19004,7 +19004,7 @@ const CATALOGUE_DATA = [
     "composition": "Clindamycin Phosphate I.P. Eq. to Clindamycin 1% w/w",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 20.0,
+    "pts": 22.0,
     "mrp": 99.0,
     "remark": "",
     "photo": null
@@ -19017,7 +19017,7 @@ const CATALOGUE_DATA = [
     "composition": "Etoricoxib I.P. 60 mg Thiocolchicoside I.P. 4 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 32.0,
+    "pts": 35.2,
     "mrp": 226.0,
     "remark": "",
     "photo": null
@@ -19030,7 +19030,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 20.0,
+    "pts": 49.5,
     "mrp": 194.0,
     "remark": "",
     "photo": null
@@ -19043,7 +19043,7 @@ const CATALOGUE_DATA = [
     "composition": "Mupirocin I.P. 2.0% w/w In a non-greasy base",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 42.0,
+    "pts": 46.2,
     "mrp": 327.0,
     "remark": "",
     "photo": null
@@ -19056,7 +19056,7 @@ const CATALOGUE_DATA = [
     "composition": "Mupirocin I.P. 2.0% w/w In a non-greasy base",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 17.0,
+    "pts": 18.7,
     "mrp": 109.0,
     "remark": "",
     "photo": null
@@ -19069,7 +19069,7 @@ const CATALOGUE_DATA = [
     "composition": "Dried Aluminium Hydroxide Gel I.P. 291mg Magnesium Hydroxide I.P. 98 mg Oxetacaine B.P. 10 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 30.0,
+    "pts": 36.3,
     "mrp": 178.0,
     "remark": "",
     "photo": null
@@ -19082,7 +19082,7 @@ const CATALOGUE_DATA = [
     "composition": "Vitamin D3 (Cholecalciferol) I.P. 200 I.U. Vitamin B12 I.P. 2.5 mcg Calcium (As mixtures of Calcium Phosphates calculated as 0.21g Ca3(PO4)2 82 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 26.0,
+    "pts": 29.7,
     "mrp": 132.0,
     "remark": "",
     "photo": null
@@ -19121,7 +19121,7 @@ const CATALOGUE_DATA = [
     "composition": "Deflazacort 6 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.0,
+    "pts": 17.6,
     "mrp": 111.0,
     "remark": "",
     "photo": null
@@ -19134,7 +19134,7 @@ const CATALOGUE_DATA = [
     "composition": "Dextromethorphan HBr I.P. 10mg Phenylephrine HCl I.P. 5mg Chlorpheniramine Maleate I.P. 2mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 27.0,
+    "pts": 30.8,
     "mrp": 113.0,
     "remark": "",
     "photo": null
@@ -19147,7 +19147,7 @@ const CATALOGUE_DATA = [
     "composition": "Dextromethorphan HBr I.P. 10mg Phenylephrine HCl I.P. 5mg Chlorpheniramine Maleate I.P. 2mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.0,
+    "pts": 18.15,
     "mrp": 56.0,
     "remark": "",
     "photo": null
@@ -19160,7 +19160,7 @@ const CATALOGUE_DATA = [
     "composition": "Dextromethorphan HBr I.P. 15 mg Phenylephrine HCI I.P. 5 mg Chlorpheniramine Maleate I.P. 2 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 27.0,
+    "pts": 29.7,
     "mrp": 148.0,
     "remark": "",
     "photo": null
@@ -19173,7 +19173,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 25.0,
+    "pts": 28.6,
     "mrp": 160.0,
     "remark": "",
     "photo": null
@@ -19199,7 +19199,7 @@ const CATALOGUE_DATA = [
     "composition": "Ambroxol Hydrochloride I.P. 30 mg Levosalbutamol Sulphate I.P. Eq. to Levosalbutamol 1 mg Guaiphenesin I.P. 50 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 25.0,
+    "pts": 27.5,
     "mrp": 116.0,
     "remark": "",
     "photo": null
@@ -19212,7 +19212,7 @@ const CATALOGUE_DATA = [
     "composition": "Diphenhydramine Hydrochloride I.P. 14.08 mg Ammonium Chloride I.P. 138 mg Sodium Citrate I.P. 57.03 mg Menthol I.P. 1.14 mg Flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 10.0,
+    "pts": 11.55,
     "mrp": 59.0,
     "remark": "",
     "photo": null
@@ -19225,7 +19225,7 @@ const CATALOGUE_DATA = [
     "composition": "Diphenhydramine Hydrochloride I.P. 14.08 mg Ammonium Chloride I.P. 138 mg Sodium Citrate I.P. 57.03 mg Menthol I.P. 1.14 mg Flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.2,
+    "pts": 15.4,
     "mrp": 123.0,
     "remark": "",
     "photo": null
@@ -19238,7 +19238,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.0,
+    "pts": 16.5,
     "mrp": 105.0,
     "remark": "",
     "photo": null
@@ -19277,7 +19277,7 @@ const CATALOGUE_DATA = [
     "composition": "Diphenhydramine HCl I.P. 12.5 mg, Ammonium Chloride I.P. 125 mg, Terpin Hydrate U.S.P. 7.5 mg, Sodium Citrate I.P. 55mg, In a flavoured Mentholated Syrupy base",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 42.0,
+    "pts": 46.2,
     "mrp": 96.0,
     "remark": "",
     "photo": null
@@ -19290,7 +19290,7 @@ const CATALOGUE_DATA = [
     "composition": "Diphenhydramine HCl I.P. 12.5 mg, Ammonium Chloride I.P. 125 mg, Terpin Hydrate U.S.P. 7.5 mg, Sodium Citrate I.P. 55mg, In a flavoured Mentholated Syrupy base",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 65.0,
+    "pts": 71.5,
     "mrp": 154.0,
     "remark": "",
     "photo": null
@@ -19303,7 +19303,7 @@ const CATALOGUE_DATA = [
     "composition": "Phenylephrine HCl I.P. 2.5 mg Chlorpheniramine Maleate I.P. 1 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.0,
+    "pts": 17.05,
     "mrp": 84.0,
     "remark": "",
     "photo": null
@@ -19316,8 +19316,8 @@ const CATALOGUE_DATA = [
     "composition": "Dextromethorphan HBr I.P. 10mg, Chlorpheniramine Maleate I.P. 2mg, In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 40.0,
-    "mrp": 0.0,
+    "pts": 24.2,
+    "mrp": 165.0,
     "remark": "",
     "photo": null
   },
@@ -19329,7 +19329,7 @@ const CATALOGUE_DATA = [
     "composition": "Each 10 ml Syp. contains Extract Derived From: Tulsi (Ocimum Snactum) Lf., Banaphsa (Viola Odarata) Fi., Talispatra (Abies Webbiana) Lf., Pippali (Piper Longum) St. Each 1G Kulanjan (Alpinia Galanga) Rz., Yashtimadhu (Glycyrrhiza Glabra) Rt., Vasa (Adhatoda Vasica) Lf. Each 2G, Kantkari (Solanum Xanthocarpem) Wh.Pl., Sunthi (Zingiber Officinale) Rz. Each 0.5G, Gugglu 9Commiphora Wightii) Exu., Draksha (Vitis Vinifera) Fr. Jatiphal (Myristica Frgrans) Fr.Kr. Vidanga (Emblia Ribes) Fr. Each 0.1G, Aamlaki (Embilca Officinale) Ft. Pr., Kali Mirch (Piper Nigrum) Fr. Pudina (Mentha Spicata) Ar.Pt., Tejpatra (Cinnamomum Tamala) Lf. Each 0.05G Shati (Hedychium Spicatum) Rz. 0.2G, Madhu (Honey) 0.75G, Bibhitaka (Terminalia Chebula) Ft.Pr. 0.075G, Bibhitaka (Terminalia Chebula) Ft.Pr. 0.215G, Nawsadar (Ammonium Chloride) 0.025Gm Glycerin I.P. 0.75G, Liquid Glucose 3G, Flavour Basil Oil 0.5%, Flavoured Syrup Base I.P., Sodium Propyl Paraben I.P., And Sodium Benzoate I.P.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 40.0,
+    "pts": 44.0,
     "mrp": 121.0,
     "remark": "",
     "photo": null
@@ -19342,7 +19342,7 @@ const CATALOGUE_DATA = [
     "composition": "Dextromethorphan HBr I.P. 10 mg Chlorpheniramine Maleate I.P. 2 mg Phenylephrine HCl I.P. 5 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 26.0,
+    "pts": 29.7,
     "mrp": 101.0,
     "remark": "",
     "photo": null
@@ -19355,8 +19355,8 @@ const CATALOGUE_DATA = [
     "composition": "Ambroxol Hydrochloride I.P. 30 mg, Levosalbutamol Sulphate I.P. eqv. to Levosalbutamol 1 mg, Guaiphenesin I.P. 50 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 26.0,
-    "mrp": 0.0,
+    "pts": 29.7,
+    "mrp": 160.0,
     "remark": "",
     "photo": null
   },
@@ -19368,7 +19368,7 @@ const CATALOGUE_DATA = [
     "composition": "Levocetirizine Dihydrochloride I.P. 5 mg Ambroxol Hydrochloride I.P. 30 mg In a flavoured mentholated syrupy base",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 26.0,
+    "pts": 29.15,
     "mrp": 111.0,
     "remark": "",
     "photo": null
@@ -19381,7 +19381,7 @@ const CATALOGUE_DATA = [
     "composition": "Oxymetazoline Hydrochloride I.P. 0.05% w/v Preservative: Benzalkonium Chloride Solution I.P. 0.01% w/v In a buffered aqueous solution",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.5,
+    "pts": 18.15,
     "mrp": 82.0,
     "remark": "",
     "photo": null
@@ -19394,7 +19394,7 @@ const CATALOGUE_DATA = [
     "composition": "Xylometazoline Hydrochloride I.P. 0.1% w/v Preservative: Benzalkonium Chloride Solution I.P. 0.02% v/v In an aqueous isotonic solution using Purified Water I.P. q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.0,
+    "pts": 16.5,
     "mrp": 55.0,
     "remark": "",
     "photo": null
@@ -19407,7 +19407,7 @@ const CATALOGUE_DATA = [
     "composition": "Xylometazoline Hydrochloride I.P. 0.05% w/v Preservative: Benzalkonium Chloride Solution I.P. 0.02% v/v In an aqueous isotonic solution using Water for Injection I.P. q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 14.0,
+    "pts": 15.4,
     "mrp": 45.0,
     "remark": "",
     "photo": null
@@ -19420,7 +19420,7 @@ const CATALOGUE_DATA = [
     "composition": "Each lozenge contains: 2,4-Dichlorobenzyle Alcohol B.P. 1.2 mg Amylmetacresol B.P. 0.6 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.5,
+    "pts": 18.15,
     "mrp": 35.0,
     "remark": "",
     "photo": null
@@ -19433,7 +19433,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 65.0,
+    "pts": 71.5,
     "mrp": 154.0,
     "remark": "",
     "photo": null
@@ -19446,8 +19446,8 @@ const CATALOGUE_DATA = [
     "composition": "Diphenhydramine HCl I.P. 12.5 mg, Ammonium Chloride I.P. 125 mg, Terpin Hydrate U.S.P. 7.5 mg, Sodium Citrate I.P. 55mg, In a flavoured non- syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 26.0,
-    "mrp": 0.0,
+    "pts": 71.5,
+    "mrp": 154.0,
     "remark": "",
     "photo": null
   },
@@ -19459,7 +19459,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 16.0,
+    "pts": 18.15,
     "mrp": 86.0,
     "remark": "",
     "photo": null
@@ -19472,7 +19472,7 @@ const CATALOGUE_DATA = [
     "composition": "Ambroxol Hydrochloride I.P. 30 mg Desloratadine B.P. 2.5 mg Guaiphenesin I.P. 50 mg In a flavoured mentholated syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 26.0,
+    "pts": 28.6,
     "mrp": 96.5,
     "remark": "",
     "photo": null
@@ -19485,7 +19485,7 @@ const CATALOGUE_DATA = [
     "composition": "Ambroxol Hydrochloride I.P. 30 mg Desloratadine B.P. 2.5 mg Guaiphenesin I.P. 50 mg In a flavoured mentholated syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 18.0,
+    "pts": 19.8,
     "mrp": 69.0,
     "remark": "",
     "photo": null
@@ -19498,7 +19498,7 @@ const CATALOGUE_DATA = [
     "composition": "Terbutaline Sulphate I.P. 2.5 mg Bromhexine Hydrochloride I.P. 8 mg Guaiphenesin I.P. 100 mg In a flavoured mentholated syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 26.0,
+    "pts": 28.6,
     "mrp": 95.5,
     "remark": "",
     "photo": null
@@ -19511,7 +19511,7 @@ const CATALOGUE_DATA = [
     "composition": "Terbutaline Sulphate I.P. 2.5 mg Bromhexine Hydrochloride I.P. 8 mg Guaiphenesin I.P. 100 mg In a flavoured mentholated syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.0,
+    "pts": 16.5,
     "mrp": 56.0,
     "remark": "",
     "photo": null
@@ -19524,7 +19524,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 17.0,
+    "pts": 18.7,
     "mrp": 99.0,
     "remark": "",
     "photo": null
@@ -19537,7 +19537,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 21.0,
+    "pts": 24.2,
     "mrp": 165.0,
     "remark": "",
     "photo": null
@@ -19550,7 +19550,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 27.0,
+    "pts": 29.7,
     "mrp": 160.0,
     "remark": "",
     "photo": null
@@ -19563,7 +19563,7 @@ const CATALOGUE_DATA = [
     "composition": "Ambroxol Hydrochloride I.P. 15 mg Levosalbutamol Sulphate I.P. Eq. to Levosalbutamol 0.5 mg Guaiphenesin I.P. 50 mg In a flavoured syrup base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 21.0,
+    "pts": 24.2,
     "mrp": 79.0,
     "remark": "",
     "photo": null
@@ -19576,8 +19576,8 @@ const CATALOGUE_DATA = [
     "composition": "Paracetamol I.P. 250 mg Phenylephrine Hydrochloride I.P 5 mg Chlorpheniramine Maleate I.P. 2 mg Sodium Citrate I.P. 60 mg In a flavoured syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.5,
-    "mrp": 0.0,
+    "pts": 23.65,
+    "mrp": 99.0,
     "remark": "",
     "photo": null
   },
@@ -19589,7 +19589,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 20.7,
+    "pts": 23.65,
     "mrp": 99.0,
     "remark": "",
     "photo": null
@@ -19615,7 +19615,7 @@ const CATALOGUE_DATA = [
     "composition": "Dextromethorphan Hydrobromide I.P. 10 mg Phenylephrine Hydrochloride I.P. 5 mg Chlorpheniramine Maleate I.P. 2 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 14.0,
+    "pts": 15.4,
     "mrp": 66.0,
     "remark": "",
     "photo": null
@@ -19654,7 +19654,7 @@ const CATALOGUE_DATA = [
     "composition": "Terbutaline Sulphate I.P. 1.25 mg Bromhexine Hydrochloride I.P. 4 mg Guaiphenensin I.P. 50 mg In a flavoured mentholated syrupy base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 21.0,
+    "pts": 23.1,
     "mrp": 133.0,
     "remark": "",
     "photo": null
@@ -19667,7 +19667,7 @@ const CATALOGUE_DATA = [
     "composition": "Each Capsule contains 530 mg Dried Herbal Powder Of: Kakamachi Wh.Pl (Solanum Nigrum) (50mg), Punarnava Lf. Rt. (Boerhaavia Kakamachi) (50mg), Guduchi St. (Tinospora Cord Folia (50mg), Kutki Rz (Picrorhiza Kurrooa) (50mg), Ry. (Phyllanthus Niruri) (75mg), Kalmegh St. Lf. (Andrographis Paniculata) (75mg), Mulethi Bk. (Glycyrrhiza Glabra) (70mg), Haridra Rz (Curcuma Longa) (50mg), Amla Fr. P (Emblica Offinalis) (60mg)",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 13.0,
+    "pts": 14.3,
     "mrp": 79.0,
     "remark": "",
     "photo": null
@@ -19680,7 +19680,7 @@ const CATALOGUE_DATA = [
     "composition": "Bhuamla 400 mg, Kutki 10 mg, Punarnava 200 mg, Makoy 150 mg, Vidang 150 mg, Jeerak 150 mg, Sonth 100 mg, Manjistha 200 mg, Chitrak 200 mg, Ajwain 100 mg, Pippali 100 mg, Triphala 200 mg, Amla 200 mg, Bhringraj 250 mg, Sarpunkha 200 mg, Rohitak 200 mg, Arjun 200 mg, Ashwagandha 250 mg, Chirayata 100 mg, Kalmegh 100 mg, Daruhaldi 100 mg, Guduchi 100 mg, Pudina 2 mg. Excipient q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 38.0,
+    "pts": 41.8,
     "mrp": 213.0,
     "remark": "",
     "photo": null
@@ -19706,8 +19706,8 @@ const CATALOGUE_DATA = [
     "composition": "Each sachet of 21.8 g contains: Sodium Chloride I.P. 2.6 g Potassium Chloride I.P. 1.5 g Sodium Citrate I.P. 2.9 g Dextrose (anhydrous) I.P. 13.5 g Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 3.7,
-    "mrp": 24.002,
+    "pts": 4.07,
+    "mrp": 23.3,
     "remark": "",
     "photo": null
   },
@@ -19758,7 +19758,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 49.0,
+    "pts": 53.9,
     "mrp": 180.0,
     "remark": "",
     "photo": null
@@ -19771,7 +19771,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 87.0,
+    "pts": 95.7,
     "mrp": 320.0,
     "remark": "",
     "photo": null
@@ -19784,7 +19784,7 @@ const CATALOGUE_DATA = [
     "composition": "Amoxycillin 500 mg, Clavulanic Acid 125 mg, Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 48.0,
+    "pts": 63.8,
     "mrp": 210.0,
     "remark": "",
     "photo": null
@@ -19797,7 +19797,7 @@ const CATALOGUE_DATA = [
     "composition": "Chameli (Jasminum Grandiflorum) Lf. 2ml, Nariual (Cocos Nucifera 5ml, Til (Sesamum Indicum) Sd. 3ml, Brahmi-Amla 4ml, Perfume, B.H.T. (Preservative), L.L.P. (Oil Bas-Q.S. To Make 100%)",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 22.6,
+    "pts": 24.86,
     "mrp": 61.0,
     "remark": "",
     "photo": null
@@ -19810,7 +19810,7 @@ const CATALOGUE_DATA = [
     "composition": "Amla (Emblica Officinials) Fr.P. Dried 5ml, Til (Sesamum Indicium) Sd. 3ml Jetun (Olea Europaea) Fr. 2ml, Brahmi-Amla 3ml, Mungfali (Arachis Hypogaea) Sd. 2ml, Perfume B.H.T. (Preservative), L.L.P. (Oil Base-Q.S. To Make 100%)",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 22.6,
+    "pts": 24.86,
     "mrp": 56.0,
     "remark": "",
     "photo": null
@@ -19823,7 +19823,7 @@ const CATALOGUE_DATA = [
     "composition": "Badam (Prunus Amygdalus) Fr. Kr. Oil 100ml",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 280.0,
+    "pts": 308.0,
     "mrp": 517.0,
     "remark": "",
     "photo": null
@@ -19836,7 +19836,7 @@ const CATALOGUE_DATA = [
     "composition": "Badam (Prunus Amygdalus) Fr. Kr. Oil 25ml",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 78.0,
+    "pts": 85.8,
     "mrp": 143.0,
     "remark": "",
     "photo": null
@@ -19849,7 +19849,7 @@ const CATALOGUE_DATA = [
     "composition": "Badam (Prunus Amygdalus) Fr. Kr. Oil 50ml",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 145.0,
+    "pts": 159.5,
     "mrp": 269.0,
     "remark": "",
     "photo": null
@@ -19862,7 +19862,7 @@ const CATALOGUE_DATA = [
     "composition": "Cefuroxime Axetil I.P. Eq. to Cefuroxime 250mg, Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 58.8,
+    "pts": 64.68,
     "mrp": 391.0,
     "remark": "",
     "photo": null
@@ -19875,8 +19875,8 @@ const CATALOGUE_DATA = [
     "composition": "Cefuroxime Axetil I.P. Eq. to Cefuroxime 500mg, Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 102.9,
-    "mrp": 594.0,
+    "pts": 113.19,
+    "mrp": 550.0,
     "remark": "",
     "photo": null
   },
@@ -19888,7 +19888,7 @@ const CATALOGUE_DATA = [
     "composition": "Cefuroxime 500mg, Clavulanic Acid 125mg, Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 134.4,
+    "pts": 147.84,
     "mrp": 669.0,
     "remark": "",
     "photo": null
@@ -19901,7 +19901,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 12.5,
+    "pts": 13.75,
     "mrp": 110.0,
     "remark": "",
     "photo": null
@@ -19927,7 +19927,7 @@ const CATALOGUE_DATA = [
     "composition": "Cholecalciferol I.P. 60,000 I.U. (Vitamin D3) Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 10.0,
+    "pts": 11.0,
     "mrp": 132.38,
     "remark": "",
     "photo": null
@@ -19940,7 +19940,7 @@ const CATALOGUE_DATA = [
     "composition": "Diclofenac Diethylamine I.P. 1.16% w/w Eq. to Diclofenac Sodium 1% w/w, Linseed Oil I.P. 3% w/w, Methyl Salicylate I.P. 10% w/w Menthol I.P. 5% w/w In a gel base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.5,
+    "pts": 9.35,
     "mrp": 66.0,
     "remark": "",
     "photo": null
@@ -19953,7 +19953,7 @@ const CATALOGUE_DATA = [
     "composition": "Diclofenac Diethylamine I.P. 1.16% w/w Eq. to Diclofenac Sodium 1% w/w, Linseed Oil I.P. 3% w/w, Methyl Salicylate I.P. 10% w/w Menthol I.P. 5% w/w In a gel base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 12.5,
+    "pts": 13.75,
     "mrp": 117.0,
     "remark": "",
     "photo": null
@@ -19966,7 +19966,7 @@ const CATALOGUE_DATA = [
     "composition": "Diclofenac Diethylamine I.P. 1.16% w/w Eq. to Diclofenac Sodium 1% w/w, Linseed Oil I.P. 3% w/w, Methyl Salicylate I.P. 10% w/w Menthol I.P. 5% w/w In a gel base q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 18.0,
+    "pts": 19.8,
     "mrp": 144.0,
     "remark": "",
     "photo": null
@@ -19992,7 +19992,7 @@ const CATALOGUE_DATA = [
     "composition": "Diclofenac Sodium I.P. 50 mg Paracetamol I.P. 325 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 4.0,
+    "pts": 4.4,
     "mrp": 32.0,
     "remark": "",
     "photo": null
@@ -20005,7 +20005,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 4.0,
+    "pts": 4.4,
     "mrp": 32.0,
     "remark": "",
     "photo": null
@@ -20031,7 +20031,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 54.0,
+    "pts": 64.9,
     "mrp": 180.0,
     "remark": "",
     "photo": null
@@ -20057,7 +20057,7 @@ const CATALOGUE_DATA = [
     "composition": "Diclofenac Sodium I.P. 50 mg Paracetamol I.P. 325 mg Chlorzoxazone U.S.P. 250 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.4,
+    "pts": 9.24,
     "mrp": 111.0,
     "remark": "",
     "photo": null
@@ -20070,7 +20070,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 8.4,
+    "pts": 9.24,
     "mrp": 210.0,
     "remark": "",
     "photo": null
@@ -20148,7 +20148,7 @@ const CATALOGUE_DATA = [
     "composition": "Tailaparna (Eucalyptus Globules) Oil 2ml, Mahanarayana (Classical Formulation) Oil 2ml, Khurasani Ajwain (Hyoscyamus Niger) Oil 2ml, Lavang (Syzygium Aromaticum) Oil 2ml, Dhatura (Datura Stramonium) Satv 0.5G Karpura (Cinnamomum Camphora) Satv 2G, Pudina (Mentha Piperita) Satv 2.5G, Gandhapura (Gaultheria Fragrantissima) Oil 2ml, Til ( Sesamum Indicum) Oil 84 ml",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 70.0,
+    "pts": 77.0,
     "mrp": 214.0,
     "remark": "",
     "photo": null
@@ -20161,7 +20161,7 @@ const CATALOGUE_DATA = [
     "composition": "Tailaparna (Eucalyptus Globules) Oil 2ml, Mahanarayana (Classical Formulation) Oil 2ml, Khurasani Ajwain (Hyoscyamus Niger) Oil 2ml, Lavang (Syzygium Aromaticum) Oil 2ml, Dhatura (Datura Stramonium) Satv 0.5G Karpura (Cinnamomum Camphora) Satv 2G, Pudina (Mentha Piperita) Satv 2.5G, Gandhapura (Gaultheria Fragrantissima) Oil 2ml, Til ( Sesamum Indicum) Oil 84 ml",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 38.0,
+    "pts": 41.8,
     "mrp": 111.0,
     "remark": "",
     "photo": null
@@ -20174,7 +20174,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 7.5,
+    "pts": 9.35,
     "mrp": 47.0,
     "remark": "",
     "photo": null
@@ -20187,8 +20187,8 @@ const CATALOGUE_DATA = [
     "composition": "Diclofenac Potassium I.P. 50 mg, Paracetamol I.P. 325 mg, Cetirizine Hydrochloride I.P. 5 mg, Magnesium Trisilicate I.P. 100 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 38.0,
-    "mrp": 0.0,
+    "pts": 9.35,
+    "mrp": 47.0,
     "remark": "",
     "photo": null
   },
@@ -20200,7 +20200,7 @@ const CATALOGUE_DATA = [
     "composition": "Patsan (Hibiscus Sabdariffa) Rt. Lf. 300mg, Karalla (Momordica Charantia) Fr. Lf. 300mg, Gambhari (Gmelina Arborea) Rt. Bk. 250mg, Neem (Azadirachta Indie) Lf. 300mg, Guduchi (Tinospora Cord Folia) St. 250mg, Haridra (Curcuma Longa) Rz. 650mg, Kumari (Aloe Brabadesnis) Pulp 500mg, Flavoured Syrup Base Q.S.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 38.0,
+    "pts": 41.8,
     "mrp": 107.0,
     "remark": "",
     "photo": null
@@ -20213,8 +20213,8 @@ const CATALOGUE_DATA = [
     "composition": "Amoxycillin Trihydrate I.P. Eq. to Amoxycillin 200 mg Potassium Clavulanate Diluted I.P. Eq. to Clavulanic Acid 28.5 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 30.0,
-    "mrp": 68.0,
+    "pts": 33.0,
+    "mrp": 65.0,
     "remark": "",
     "photo": null
   },
@@ -20226,7 +20226,7 @@ const CATALOGUE_DATA = [
     "composition": "Kakamachi (Solanum Nigrum) Wh. Pi. 100mg, Punaarnava (Boerhaavia Diffusa) Lf. Rt. 130mg, Guduchi ( Tinospora Cord Folia) St. 160mg, Kutki (Picrorhiza Kurroa) Rz. 100mg, (Phyllanthus Nirurui) Rt. 150mg, Amla (Emblica Officinalis) Fr. P. Dried 300mg, Haridra (Curcuma Longa) Rz. 110 mg, Pudina (Mentha Piperita) Lf. 30mg, Mandur Bhasm (Classical Formulation) Powder 70mg, Shilajeet (Ashphaltum) Exud. 20mg, Kashish Bhasm (Classical Formulation) Powder 50mg, Sugar Syrupy Base Q.S.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 38.0,
+    "pts": 41.8,
     "mrp": 165.0,
     "remark": "",
     "photo": null
@@ -20239,7 +20239,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 36.0,
+    "pts": 39.6,
     "mrp": 169.0,
     "remark": "",
     "photo": null
@@ -20252,7 +20252,7 @@ const CATALOGUE_DATA = [
     "composition": "1.25g Calcium Carbonate from an Organic source (Oyster Shell) Eq. to Elemental Calcium 500 mg Vitamin D3 I.P. 250 I.U. Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 5.5,
+    "pts": 6.05,
     "mrp": 94.0,
     "remark": "",
     "photo": null
@@ -20265,8 +20265,8 @@ const CATALOGUE_DATA = [
     "composition": "Calcitriol I.P. 0.25 mcg Calcium Carbonate I.P. 500 mg eq. to Elemental Calcium 200 mg Zinc Sulphate Monohydrate I.P. 20.6 mg eq. to Elemental Zinc 7.5 mg Excipients q.s.",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 15.0,
-    "mrp": 346.0,
+    "pts": 16.5,
+    "mrp": 315.0,
     "remark": "",
     "photo": null
   },
@@ -20278,7 +20278,7 @@ const CATALOGUE_DATA = [
     "composition": "",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 12.0,
+    "pts": 13.2,
     "mrp": 484.0,
     "remark": "",
     "photo": null
@@ -20291,7 +20291,7 @@ const CATALOGUE_DATA = [
     "composition": "Chromium Picolinate 200 mcg Vitamin B1 1 mg Vitamin B2 1 mg Vitamin B6 0.50 mg Vitamin B5 1 mg Calcium 55 mg Iron 2.85 mg Manganese 1 mg Potassium 525 mcg Zinc 2.55 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 12.5,
+    "pts": 13.75,
     "mrp": 127.0,
     "remark": "",
     "photo": null
@@ -20317,7 +20317,7 @@ const CATALOGUE_DATA = [
     "composition": "Lactobacillus Sporogenes 40x106 Diastase (1:800) 25 mg Papain I.P. 20 mg Simethicone I.P. 40 mg Vitamin B1 I.P. 1 mg Vitamin B2 I.P. 2.5 mg Vitamin B6 I.P. 0.5 mg Niacinamide I.P. 15 mg Folic Acid I.P. 75 mcg D-Panthenol I.P. 1 mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 6.75,
+    "pts": 7.43,
     "mrp": 47.0,
     "remark": "",
     "photo": null
@@ -20330,7 +20330,7 @@ const CATALOGUE_DATA = [
     "composition": "Hydroquinone 20mg + Tretinoin 0.25mg + Fluocinolone acetonide 0.1mg",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 65.0,
+    "pts": 71.5,
     "mrp": 222.0,
     "remark": "",
     "photo": null
@@ -20343,7 +20343,7 @@ const CATALOGUE_DATA = [
     "composition": "Soap Noodles, Fine Talc, Titanium Dioxide, Glycerine, Perfume, Disodium EDTA, Lime Extract, Aloevera, Tinogard TT, Olivem 300, Olivem 400, Coco Fatty Acid, Palmitic Acid, Citric Acid, Almond Oil, Aqua",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 120.0,
+    "pts": 132.0,
     "mrp": 268.0,
     "remark": "",
     "photo": null
@@ -20356,7 +20356,7 @@ const CATALOGUE_DATA = [
     "composition": "Each Capsule contains 510mg Dried Herbal Powder Of: Gokshura Fr. (Tribulus Terrestris) 60mg, Atamgupta Sd. (Mucuna Prurita) 50mg, Rajat (Classical Formulation) 0.35Gmg, Vidarikand Tub. Rt. (Pueraria Tubersoa) 50mg, Brahmi Wh. Pl. (Bacopa Monnieri) 40 mg. Sudh Shilajit ( Asphaltum) 15mg, Safed Musli Rt. (Asparagus Adscendens) 50mg, Ashvagandha Rt. (Withania Somnifera) 55mg, Kesar Stg. (Corcus Sativus) 1.65mg, Akarkarabha Rt. (Anacyclus Pyrethrum) 40mg, Jatiphal Sd. (Myristaica Fragrance) 30 mg, Shatavari Tub. Rt. (Asparagus Racemosus) 46mg, Shankh Pushpi Wh. Pl. (Convolvulus Pluricaullis) 20 mg, Jatamansi Rz. (Nardostachys Jatamansi) 22mg, Abhrak (Classical Formulation) 30 mg, Excipients",
     "inBoxes": null,
     "shipperQty": null,
-    "pts": 29.0,
+    "pts": 31.9,
     "mrp": 214.0,
     "remark": "",
     "photo": null
@@ -20369,7 +20369,7 @@ const CATALOGUE_DATA = [
     "composition": "Nandrolone Decanoate I.P. 25 mg Oil base q.s.",
     "inBoxes": null,
     "shipperQty": "480",
-    "pts": 11.0,
+    "pts": 12.1,
     "mrp": 195.0,
     "remark": "",
     "photo": null
@@ -20382,7 +20382,7 @@ const CATALOGUE_DATA = [
     "composition": "Nandrolone Decanoate I.P. 50 mg Oil base q.s.",
     "inBoxes": null,
     "shipperQty": "480",
-    "pts": 13.0,
+    "pts": 14.3,
     "mrp": 380.0,
     "remark": "",
     "photo": null
